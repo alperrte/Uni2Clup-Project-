@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Uni2ClupProject")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2e42fd2088c1760d65f796c1d4b5a6945d541dd7")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+098e75cfe79b0e52a543a63538dfe60cb1d7bc00")]
 [assembly: System.Reflection.AssemblyProductAttribute("Uni2ClupProject")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Uni2ClupProject")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
