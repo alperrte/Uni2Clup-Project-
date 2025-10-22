@@ -10,6 +10,5 @@
         public DateTime EndDate { get; set; }
         public string ClubName { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public int CreatedByUserId { get; set; }
     }
 }

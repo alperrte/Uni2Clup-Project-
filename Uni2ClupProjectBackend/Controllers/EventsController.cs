@@ -16,13 +16,17 @@ namespace Uni2ClupProjectBackend.Controllers
             _context = context;
         }
 
+        // 🟢 Listele
         [HttpGet("list")]
         public IActionResult GetAll()
         {
-            var eventsList = _context.Events.ToList();
+            var eventsList = _context.Events
+                .OrderByDescending(e => e.Id)
+                .ToList();
             return Ok(eventsList);
         }
 
+        // 🟢 Oluştur
         [HttpPost("create")]
         [Consumes("application/json")]
         public IActionResult Create([FromBody] Event newEvent)
@@ -30,12 +34,16 @@ namespace Uni2ClupProjectBackend.Controllers
             if (newEvent == null)
                 return BadRequest(new { message = "Etkinlik bilgisi boş olamaz." });
 
+            if (newEvent.StartDate == default || newEvent.EndDate == default)
+                return BadRequest(new { message = "Tarih formatı hatalı!" });
+
             _context.Events.Add(newEvent);
             _context.SaveChanges();
 
             return Ok(new { message = "✅ Etkinlik başarıyla eklendi.", eventData = newEvent });
         }
 
+        // 🟡 Güncelle
         [HttpPut("update/{id}")]
         [Consumes("application/json")]
         public IActionResult Update(int id, [FromBody] Event updated)
@@ -57,6 +65,7 @@ namespace Uni2ClupProjectBackend.Controllers
             return Ok(new { message = "✅ Etkinlik başarıyla güncellendi.", updatedEvent = existing });
         }
 
+        // 🔴 Sil
         [HttpDelete("delete/{id}")]
         public IActionResult Delete(int id)
         {
