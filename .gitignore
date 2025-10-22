@@ -56,11 +56,8 @@ bld/
 
 # NuGet packages
 *.nupkg
-# The packages folder can be ignored because of Package Restore
 **/[Pp]ackages/*
 !**/[Pp]ackages/build/
-# Uncomment if necessary, but generally restore packages
-#!**/[Pp]ackages/repositories.config
 
 # Microsoft Azure Web App publish settings
 *.PublishSettings
@@ -98,10 +95,6 @@ yarn-error.log*
 # Environment files
 .env
 .env.*
-
-# Docker
-**/[Dd]ockerfile*
-**/[Dd]ocker-compose*
 
 # Publish outputs
 publish/
