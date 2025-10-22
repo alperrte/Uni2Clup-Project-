@@ -1,0 +1,40 @@
+# Visual Studio geçici dosyalarý
+.vs/
+*.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build çýktý dosyalarý
+bin/
+obj/
+Debug/
+Release/
+
+# ASP.NET Core log dosyalarý
+*.log
+
+# Kullanýcýya özel ayarlar
+*.dbmdl
+*.jfm
+
+# HTTP test dosyasý (isteðe baðlý)
+*.http
+
+# Publish profilleri
+Properties/PublishProfiles/
+
+# Paketler (yeniden yüklenebilir)
+packages/
+wwwroot/lib/
+
+# Rider / JetBrains dosyalarý
+.idea/
+*.iml
+
+# MacOS sistem dosyalarý
+.DS_Store
+
+# Windows sistem dosyalarý
+Thumbs.db
