@@ -1,0 +1,6 @@
+@Uni2ClupProject_HostAddress = http://localhost:5287
+
+GET {{Uni2ClupProject_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
