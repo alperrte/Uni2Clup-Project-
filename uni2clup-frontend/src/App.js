@@ -1,12 +1,23 @@
-import * as React from "react";
+﻿import React, { useState } from "react";
 import "./App.css";
-import LoginPage from "./p
-0,+ ages / LoginPage"; // Giri� sayfam�z� i�eri al�yoruz
+import LoginPage from "./pages/LoginPage";
+import EventPage from "./pages/EventPage";
 
 function App() {
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+    const handleLoginSuccess = () => {
+        console.log("✅ App.js: Kullanıcı girişi başarılı — EventPage'e geçiliyor");
+        setIsLoggedIn(true);
+    };
+
     return (
         <div className="App">
-            <LoginPage />
+            {!isLoggedIn ? (
+                <LoginPage onLoginSuccess={handleLoginSuccess} />
+            ) : (
+                <EventPage />
+            )}
         </div>
     );
 }

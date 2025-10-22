@@ -1,11 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Uni2ClupBackend.Models;
 using Uni2ClupProjectBackend.Data;
+using Uni2ClupProjectBackend.Models;
 
 namespace Uni2ClupProjectBackend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Produces("application/json")]
     public class AuthController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -15,22 +16,45 @@ namespace Uni2ClupProjectBackend.Controllers
             _context = context;
         }
 
+        public class LoginRequest
+        {
+            public string Email { get; set; } = string.Empty;
+            public string PasswordHash { get; set; } = string.Empty;
+        }
+
         [HttpPost("register")]
-        public IActionResult Register(User user)
+        [Consumes("application/json")]
+        public IActionResult Register([FromBody] User user)
         {
             if (_context.Users.Any(u => u.Email == user.Email))
-                return BadRequest("Bu e-posta adresi zaten kayıtlı.");
+                return BadRequest(new { message = "❌ Bu e-posta zaten kayıtlı." });
 
             _context.Users.Add(user);
             _context.SaveChanges();
+            return Ok(new { message = "✅ Kullanıcı eklendi." });
+        }
 
-            return Ok("Kullanıcı başarıyla eklendi.");
+        [HttpPost("login")]
+        [Consumes("application/json")]
+        public IActionResult Login([FromBody] LoginRequest loginUser)
+        {
+            var user = _context.Users
+                .FirstOrDefault(u => u.Email == loginUser.Email && u.PasswordHash == loginUser.PasswordHash);
+
+            if (user == null)
+                return BadRequest(new { message = "❌ E-posta veya şifre hatalı." });
+
+            return Ok(new
+            {
+                message = "✅ Giriş başarılı.",
+                user.Id,
+                user.Name,
+                user.Surname,
+                user.Role
+            });
         }
 
         [HttpGet("users")]
-        public IActionResult GetUsers()
-        {
-            return Ok(_context.Users.ToList());
-        }
+        public IActionResult GetUsers() => Ok(_context.Users.ToList());
     }
 }

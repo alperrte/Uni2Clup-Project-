@@ -1,4 +1,4 @@
-﻿namespace Uni2ClupBackend.Models
+﻿namespace Uni2ClupProjectBackend.Models
 {
     public class User
     {

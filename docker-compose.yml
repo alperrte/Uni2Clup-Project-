@@ -1,31 +1,38 @@
 ﻿version: '3.8'
-#Docker COMPOSE YML
+
 services:
   mssql:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: uni2clup-mssql
     environment:
       - ACCEPT_EULA=Y
-      - SA_PASSWORD=YourStrong!Passw0rd
+      - SA_PASSWORD=YourPassword123
     ports:
       - "1433:1433"
     volumes:
       - mssql-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'YourPassword123' -Q 'SELECT 1' -C || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
     networks:
       - uni2clup-net
 
   uni2clup-api:
     build:
-      context: ./Uni2ClupProjectBackend   
+      context: ./Uni2ClupProjectBackend
       dockerfile: Dockerfile
     container_name: uni2clup-api
     ports:
       - "8080:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=mssql,1433;Database=Uni2ClupDB;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True
+      - ConnectionStrings__DefaultConnection=Server=mssql,1433;Database=Uni2ClupDB;User Id=sa;Password=YourPassword123;TrustServerCertificate=True
     depends_on:
-      - mssql
+      mssql:
+        condition: service_healthy
     networks:
       - uni2clup-net
 

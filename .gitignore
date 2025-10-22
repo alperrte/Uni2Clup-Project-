@@ -80,9 +80,6 @@ _ReSharper*/
 *.dbmdl
 *.sqlite
 
-# Entity Framework
-[Mm]igrations/
-
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
 
