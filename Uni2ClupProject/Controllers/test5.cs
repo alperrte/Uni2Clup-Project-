@@ -1,6 +1,6 @@
 ﻿namespace Uni2ClupProject.Controllers
 {
-    public class test2
+    public class test5
     {
     }
 }
