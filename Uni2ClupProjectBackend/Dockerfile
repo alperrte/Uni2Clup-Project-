@@ -15,5 +15,8 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/out ./
 
+
+
+#port
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "Uni2ClupProjectBackend.dll"]
