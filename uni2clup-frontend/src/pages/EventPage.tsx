@@ -10,6 +10,7 @@ interface Event {
     EndDate: string;
     ClubName: string;
     Description: string;
+    CreatedBy?: string;
 }
 
 const EventPage: React.FC = () => {
@@ -19,53 +20,103 @@ const EventPage: React.FC = () => {
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");
 
-    const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+    const API_URL = "http://localhost:8080";
+    const token = localStorage.getItem("token");
+    const userRole = localStorage.getItem("userRole");
+    const userEmail = localStorage.getItem("userEmail");
 
-    // 🟢 Etkinlikleri getir
+    // ✅ Erişim kontrolü
+    useEffect(() => {
+        if (userRole === "Admin") {
+            alert("🚫 Admin bu sayfaya erişemez. Lütfen kullanıcı sayfasına gidin.");
+            window.location.href = "/add-user";
+        } else if (!token || userRole !== "ClubManager") {
+            alert("🔒 Yetkisiz erişim. Lütfen ClubManager olarak giriş yapın.");
+            localStorage.clear();
+            window.location.reload();
+        }
+    }, [userRole, token]);
+
+    // ✅ Tarih biçimlendirici
+    const formatDate = (date: string | null | undefined) => {
+        if (!date) return "Tarih Yok";
+        const d = new Date(date);
+        return d.toLocaleString("tr-TR", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+    };
+
+    // ✅ Token kontrolü
+    const checkTokenValidity = useCallback(() => {
+        if (!token) {
+            alert("🔒 Oturum süresi dolmuş. Lütfen tekrar giriş yapın.");
+            localStorage.clear();
+            window.location.reload();
+            return false;
+        }
+        return true;
+    }, [token]);
+
+    // ✅ Etkinlikleri getir
     const fetchEvents = useCallback(async () => {
+        if (!checkTokenValidity()) return;
         setIsLoading(true);
         try {
             const res = await fetch(`${API_URL}/api/Events/list`, {
-                headers: { Accept: "application/json; charset=utf-8" },
+                headers: {
+                    Accept: "application/json; charset=utf-8",
+                    Authorization: `Bearer ${token}`,
+                },
             });
-            if (!res.ok) throw new Error("Etkinlikler alınamadı");
 
+            if (res.status === 401) {
+                alert("🔒 Oturum süresi doldu. Lütfen tekrar giriş yapın.");
+                localStorage.clear();
+                window.location.reload();
+                return;
+            }
+
+            if (!res.ok) throw new Error("Etkinlikler alınamadı");
             const data = await res.json();
 
-            // 🧩 ID normalize işlemi (Id → id)
             const normalized = data.map((e: any) => ({
-                id: e.id ?? e.Id, // 👈 burada büyük "Id" varsa düzelt
-                Name: e.Name,
-                Capacity: e.Capacity,
-                Location: e.Location,
-                StartDate: e.StartDate,
-                EndDate: e.EndDate,
-                ClubName: e.ClubName,
-                Description: e.Description,
+                id: e.id ?? e.Id,
+                Name: e.Name ?? e.name,
+                Capacity: e.Capacity ?? e.capacity,
+                Location: e.Location ?? e.location,
+                StartDate: e.StartDate ?? e.startDate,
+                EndDate: e.EndDate ?? e.endDate,
+                ClubName: e.ClubName ?? e.clubName,
+                Description: e.Description ?? e.description,
+                CreatedBy: e.CreatedBy ?? e.createdBy,
             }));
 
             setEvents(normalized);
-        } catch {
+        } catch (error) {
+            console.error("🚫 Etkinlikler yüklenemedi:", error);
             alert("🚫 Etkinlikler yüklenemedi, backend açık mı?");
         } finally {
             setIsLoading(false);
         }
-    }, [API_URL]);
+    }, [API_URL, token, checkTokenValidity]);
 
     useEffect(() => {
         fetchEvents();
     }, [fetchEvents]);
 
-    // 🟢 Kayıt / Güncelleme işlemi
+    // ✅ Kayıt / Güncelleme işlemi
     const handleSaveEvent = async (form: any) => {
+        if (!checkTokenValidity()) return;
         setIsLoading(true);
         const isEdit = !!selectedEvent;
         const url = isEdit
-            ? `${API_URL}/api/Events/update/${form.Id}` // ✅ form.Id artık doğru
+            ? `${API_URL}/api/Events/update/${form.Id ?? form.id}`
             : `${API_URL}/api/Events/create`;
         const method = isEdit ? "PUT" : "POST";
-
-        console.log("📡 Gönderilen:", form);
 
         try {
             const res = await fetch(url, {
@@ -73,74 +124,110 @@ const EventPage: React.FC = () => {
                 headers: {
                     "Content-Type": "application/json; charset=utf-8",
                     Accept: "application/json; charset=utf-8",
+                    Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify(form),
             });
+
+            if (res.status === 401) {
+                alert("🔒 Oturum süresi doldu. Lütfen tekrar giriş yapın.");
+                localStorage.clear();
+                window.location.reload();
+                return;
+            }
 
             const data = await res.json();
             setSuccessMessage(data.message || "İşlem tamamlandı.");
             setShowSuccessModal(true);
 
-            // 2 saniye sonra modal'ı kapat
-            setTimeout(() => {
-                setShowSuccessModal(false);
-            }, 2000);
+            setTimeout(() => setShowSuccessModal(false), 2000);
 
             await fetchEvents();
             setSelectedEvent(null);
         } catch (error) {
-            console.error("Sunucu bağlantı hatası:", error);
-            alert("🚫 Sunucuya bağlanılamadı. Backend (8080) çalışıyor mu?");
+            console.error("🚫 Sunucu bağlantı hatası:", error);
+            alert("🚫 Backend (8080) bağlantısı başarısız.");
         } finally {
             setIsLoading(false);
         }
     };
 
-    // 🗑️ Silme işlemi
+    // ✅ Silme işlemi
     const handleDelete = async (id: number) => {
+        if (!checkTokenValidity()) return;
+        const event = events.find(e => e.id === id);
+        if (!event) return;
+        if (event.CreatedBy !== userEmail) {
+            alert("🚫 Bu etkinliği silme yetkiniz yok.");
+            return;
+        }
+
         if (!window.confirm("Etkinliği silmek istiyor musunuz?")) return;
 
         setIsLoading(true);
         try {
             const res = await fetch(`${API_URL}/api/Events/delete/${id}`, {
                 method: "DELETE",
-                headers: { Accept: "application/json; charset=utf-8" },
+                headers: {
+                    Accept: "application/json; charset=utf-8",
+                    Authorization: `Bearer ${token}`,
+                },
             });
+
+            if (res.status === 401) {
+                alert("🔒 Oturum süresi doldu. Lütfen tekrar giriş yapın.");
+                localStorage.clear();
+                window.location.reload();
+                return;
+            }
 
             const data = await res.json();
             setSuccessMessage(data.message || "🗑️ Etkinlik silindi.");
             setShowSuccessModal(true);
 
-            // 2 saniye sonra modal'ı kapat
-            setTimeout(() => {
-                setShowSuccessModal(false);
-            }, 2000);
-
+            setTimeout(() => setShowSuccessModal(false), 2000);
             await fetchEvents();
         } catch (error) {
-            console.error("Sunucu bağlantı hatası:", error);
-            alert("🚫 Sunucuya bağlanılamadı. Backend (8080) çalışıyor mu?");
+            console.error("🚫 Silme hatası:", error);
+            alert("🚫 Backend (8080) bağlantısı başarısız.");
         } finally {
             setIsLoading(false);
         }
     };
 
-    // ✏️ Düzenleme moduna geç
+    // ✏️ Düzenleme
     const handleEdit = (event: Event) => {
+        if (event.CreatedBy !== userEmail) {
+            alert("🚫 Bu etkinliği düzenleme yetkiniz yok.");
+            return;
+        }
         setSelectedEvent({
             ...event,
-            StartDate: event.StartDate.slice(0, 16),
-            EndDate: event.EndDate.slice(0, 16),
+            StartDate: event.StartDate ? event.StartDate.slice(0, 16) : "",
+            EndDate: event.EndDate ? event.EndDate.slice(0, 16) : "",
         });
     };
 
-    const handleNewEvent = () => {
-        setSelectedEvent(null);
+    const handleNewEvent = () => setSelectedEvent(null);
+
+    const handleLogout = () => {
+        if (window.confirm("Oturumu kapatmak istiyor musunuz?")) {
+            localStorage.clear();
+            window.location.reload();
+        }
     };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#0a0a1a] via-[#0f0f2a] to-[#1a1a3a] text-white flex flex-col items-center py-10 px-4 relative overflow-hidden">
-            
+
+            {/* 🚪 Çıkış Yap Butonu */}
+            <button
+                onClick={handleLogout}
+                className="absolute top-6 right-8 z-50 bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition-all duration-300"
+            >
+                Çıkış Yap
+            </button>
+
             {/* Animated Background */}
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-[#2d1b69] to-[#1e3a8a] rounded-full opacity-15 animate-pulse"></div>
@@ -165,7 +252,7 @@ const EventPage: React.FC = () => {
             </div>
 
             <div className="relative z-10 w-full max-w-6xl">
-                {/* Header Section */}
+                {/* Header */}
                 <div className="text-center mb-12">
                     <div className="relative inline-block mb-8">
                         <div className="w-24 h-24 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6] rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl animate-bounce">
@@ -179,28 +266,9 @@ const EventPage: React.FC = () => {
                     <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] bg-clip-text text-transparent animate-pulse">
                         🎉 Uni2Club Etkinlik Paneli
                     </h1>
-
-                    <div className="flex items-center justify-center mb-6">
-                        <div className="flex items-center space-x-2">
-                            <div className="w-8 h-8 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6] rounded-full flex items-center justify-center transform rotate-12">
-                                <span className="text-white font-bold text-sm">2</span>
-                            </div>
-                            <span className="text-3xl font-bold bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] bg-clip-text text-transparent">
-                                Uni2Club
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Etkinlik Sistemi Badge */}
-                    <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-[#1a1a3a] to-[#2a2a4a] border border-[#3b82f6] rounded-full px-4 py-2 mb-4">
-                        <svg className="w-5 h-5 text-[#3b82f6]" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" />
-                        </svg>
-                        <span className="text-sm text-gray-300">Etkinlik Yönetim Sistemi</span>
-                    </div>
                 </div>
 
-                {/* Form Section */}
+                {/* Event Form */}
                 <div className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] border-2 border-transparent bg-clip-padding rounded-xl p-1 hover:border-[#3b82f6] transition-all duration-300 mb-8">
                     <div className="bg-[#0f0f1a] rounded-lg p-6">
                         <div className="flex justify-between items-center mb-6">
@@ -209,7 +277,7 @@ const EventPage: React.FC = () => {
                             </h2>
                             {selectedEvent && (
                                 <button
-                                    onClick={handleNewEvent}
+                                    onClick={() => setSelectedEvent(null)}
                                     className="bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] hover:from-[#4a2a8a] hover:to-[#4f94f6] text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
                                 >
                                     ➕ Yeni Etkinlik
@@ -217,7 +285,6 @@ const EventPage: React.FC = () => {
                             )}
                         </div>
 
-                        {/* 🧩 EventForm bileşeni */}
                         <EventForm
                             onSave={handleSaveEvent}
                             selectedEvent={
@@ -239,7 +306,7 @@ const EventPage: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Events List */}
+                {/* Event List */}
                 <div className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] border-2 border-transparent bg-clip-padding rounded-xl p-1 hover:border-[#3b82f6] transition-all duration-300">
                     <div className="bg-[#0f0f1a] rounded-lg p-6">
                         <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] bg-clip-text text-transparent">
@@ -270,53 +337,45 @@ const EventPage: React.FC = () => {
                                         <div className="flex justify-between items-center">
                                             <div className="flex-1">
                                                 <h3 className="text-xl font-bold text-[#3b82f6] mb-3 group-hover:text-[#4f94f6] transition-colors">
-                                                    {event.Name}
+                                                    {event.Name || "Etkinlik Adı Yok"}
                                                 </h3>
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-300">
                                                     <div className="flex items-center space-x-2">
-                                                        <svg className="w-4 h-4 text-[#3b82f6]" fill="currentColor" viewBox="0 0 24 24">
-                                                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-                                                        </svg>
-                                                        <span>{event.Location}</span>
+                                                        <span>📍 {event.Location || "Belirtilmemiş"}</span>
                                                     </div>
                                                     <div className="flex items-center space-x-2">
-                                                        <svg className="w-4 h-4 text-[#3b82f6]" fill="currentColor" viewBox="0 0 24 24">
-                                                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                                                        </svg>
-                                                        <span>{event.ClubName}</span>
+                                                        <span>🏛 {event.ClubName || "Belirtilmemiş"}</span>
                                                     </div>
                                                     <div className="flex items-center space-x-2">
-                                                        <svg className="w-4 h-4 text-[#3b82f6]" fill="currentColor" viewBox="0 0 24 24">
-                                                            <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.54 8H16c-.8 0-1.54.37-2.01.99L12 11l-1.99-2.01A2.5 2.5 0 0 0 8 8H5.46c-.8 0-1.54.37-2.01.99L1 14.5V22h2v-6h2.5l2.54-7.63A1.5 1.5 0 0 1 9.46 8H12c.8 0 1.54.37 2.01.99L16 11l1.99-2.01A2.5 2.5 0 0 1 20 8h2.5l-2.54 7.63A1.5 1.5 0 0 1 18.54 16H16v6h4z" />
-                                                        </svg>
-                                                        <span>Kontenjan: {event.Capacity}</span>
+                                                        <span>👥 Kontenjan: {event.Capacity || "Belirtilmemiş"}</span>
                                                     </div>
                                                     <div className="flex items-center space-x-2">
-                                                        <svg className="w-4 h-4 text-[#3b82f6]" fill="currentColor" viewBox="0 0 24 24">
-                                                            <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" />
-                                                        </svg>
-                                                        <span>
-                                                            {event.StartDate.split("T")[0]} — {event.EndDate.split("T")[0]}
-                                                        </span>
+                                                        <span>📅 {formatDate(event.StartDate)} — {formatDate(event.EndDate)}</span>
                                                     </div>
                                                 </div>
-                                                <p className="text-gray-400 mt-3 text-sm">{event.Description}</p>
+                                                {event.Description && (
+                                                    <p className="text-gray-400 mt-3 text-sm italic">“{event.Description}”</p>
+                                                )}
+                                                <p className="text-gray-500 text-xs mt-1">
+                                                    👤 Oluşturan: {event.CreatedBy || "Bilinmiyor"}
+                                                </p>
                                             </div>
-
-                                            <div className="flex flex-col gap-2 ml-6">
-                                                <button
-                                                    onClick={() => handleEdit(event)}
-                                                    className="bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] hover:from-[#4a2a8a] hover:to-[#4f94f6] px-4 py-2 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
-                                                >
-                                                    ✏️ Düzenle
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(event.id)}
-                                                    className="bg-gradient-to-r from-[#ff6b6b] to-[#ff8e8e] hover:from-[#ff5252] hover:to-[#ff7979] px-4 py-2 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
-                                                >
-                                                    🗑️ Sil
-                                                </button>
-                                            </div>
+                                            {event.CreatedBy === userEmail && (
+                                                <div className="flex flex-col gap-2 ml-6">
+                                                    <button
+                                                        onClick={() => handleEdit(event)}
+                                                        className="bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] hover:from-[#4a2a8a] hover:to-[#4f94f6] px-4 py-2 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+                                                    >
+                                                        ✏️ Düzenle
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(event.id)}
+                                                        className="bg-gradient-to-r from-[#ff6b6b] to-[#ff8e8e] hover:from-[#ff5252] hover:to-[#ff7979] px-4 py-2 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+                                                    >
+                                                        🗑️ Sil
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -326,48 +385,18 @@ const EventPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Success Modal */}
+            {/* ✅ Success Modal */}
             {showSuccessModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
                     <div className="bg-gradient-to-br from-[#1a1a2e] to-[#2a2a3e] border border-[#3b82f6] rounded-2xl p-8 mx-4 max-w-md w-full transform animate-bounceIn shadow-2xl">
                         <div className="text-center">
-                            {/* Success Icon */}
                             <div className="w-20 h-20 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6] rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
                                 <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
-
-                            {/* Success Message */}
-                            <h3 className="text-2xl font-bold text-white mb-4">
-                                İşlem Başarılı!
-                            </h3>
-
-                            <p className="text-gray-300 mb-6">
-                                {successMessage}
-                            </p>
-
-                            {/* Etkinlik Sistemi Info */}
-                            <div className="bg-gradient-to-r from-[#0f0f1a] to-[#1a1a2e] border border-[#3b82f6] rounded-lg p-4 mb-6">
-                                <div className="flex items-center justify-center space-x-2 mb-2">
-                                    <svg className="w-5 h-5 text-[#3b82f6]" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <span className="text-sm font-semibold text-[#3b82f6]">Uni2Club Etkinlik Sistemi</span>
-                                </div>
-                                <p className="text-xs text-gray-400">
-                                    Etkinlik başarıyla yönetildi! Artık katılımcılar bu etkinliğe kayıt olabilir.
-                                </p>
-                            </div>
-
-                            {/* Loading Bar */}
-                            <div className="w-full bg-[#0f0f1a] rounded-full h-2 mb-4">
-                                <div className="bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] h-2 rounded-full animate-pulse"></div>
-                            </div>
-
-                            <p className="text-xs text-gray-500">
-                                Yönlendiriliyorsunuz...
-                            </p>
+                            <h3 className="text-2xl font-bold text-white mb-4">İşlem Başarılı!</h3>
+                            <p className="text-gray-300 mb-6">{successMessage}</p>
                         </div>
                     </div>
                 </div>
@@ -376,4 +405,4 @@ const EventPage: React.FC = () => {
     );
 };
 
-export default EventPage; 
+export default EventPage;

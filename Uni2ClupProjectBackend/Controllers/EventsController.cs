@@ -1,12 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Uni2ClupProjectBackend.Data;
 using Uni2ClupProjectBackend.Models;
+using System.Security.Claims;
 
 namespace Uni2ClupProjectBackend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Produces("application/json")]
     public class EventsController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -16,67 +17,77 @@ namespace Uni2ClupProjectBackend.Controllers
             _context = context;
         }
 
-        // 🟢 Listele
+        // 🔹 Herkes görebilir
         [HttpGet("list")]
+        [AllowAnonymous]
         public IActionResult GetAll()
         {
-            var eventsList = _context.Events
+            var events = _context.Events
                 .OrderByDescending(e => e.Id)
                 .ToList();
-            return Ok(eventsList);
+            return Ok(events);
         }
 
-        // 🟢 Oluştur
+        // 🔹 Sadece ClubManager oluşturabilir
         [HttpPost("create")]
-        [Consumes("application/json")]
+        [Authorize(Roles = "ClubManager")]
         public IActionResult Create([FromBody] Event newEvent)
         {
-            if (newEvent == null)
-                return BadRequest(new { message = "Etkinlik bilgisi boş olamaz." });
+            var email = User.FindFirst(ClaimTypes.Email)?.Value;
+            if (string.IsNullOrEmpty(email))
+                return Unauthorized(new { message = "Token geçersiz." });
 
-            if (newEvent.StartDate == default || newEvent.EndDate == default)
-                return BadRequest(new { message = "Tarih formatı hatalı!" });
-
+            newEvent.CreatedBy = email;
             _context.Events.Add(newEvent);
             _context.SaveChanges();
 
-            return Ok(new { message = "✅ Etkinlik başarıyla eklendi.", eventData = newEvent });
+            return Ok(new { message = "✅ Etkinlik başarıyla oluşturuldu.", eventData = newEvent });
         }
 
-        // 🟡 Güncelle
+        // 🔹 Sadece kendi etkinliğini güncelleyebilir
         [HttpPut("update/{id}")]
-        [Consumes("application/json")]
+        [Authorize(Roles = "ClubManager")]
         public IActionResult Update(int id, [FromBody] Event updated)
         {
-            var existing = _context.Events.Find(id);
+            var email = User.FindFirst(ClaimTypes.Email)?.Value;
+            var existing = _context.Events.FirstOrDefault(e => e.Id == id);
+
             if (existing == null)
                 return NotFound(new { message = "❌ Etkinlik bulunamadı." });
+
+            if (existing.CreatedBy != email)
+                return Forbid("Bu etkinliği düzenleme izniniz yok.");
 
             existing.Name = updated.Name;
-            existing.Capacity = updated.Capacity;
             existing.Location = updated.Location;
+            existing.Capacity = updated.Capacity;
             existing.ClubName = updated.ClubName;
+            existing.Description = updated.Description;
             existing.StartDate = updated.StartDate;
             existing.EndDate = updated.EndDate;
-            existing.Description = updated.Description;
 
             _context.SaveChanges();
-
-            return Ok(new { message = "✅ Etkinlik başarıyla güncellendi.", updatedEvent = existing });
+            return Ok(new { message = "✅ Etkinlik güncellendi.", updated });
         }
 
-        // 🔴 Sil
+        // 🔹 Sadece kendi etkinliğini silebilir
         [HttpDelete("delete/{id}")]
+        [Authorize(Roles = "ClubManager")]
         public IActionResult Delete(int id)
         {
-            var existing = _context.Events.Find(id);
+            var email = User.FindFirst(ClaimTypes.Email)?.Value;
+            var existing = _context.Events.FirstOrDefault(e => e.Id == id);
+
             if (existing == null)
                 return NotFound(new { message = "❌ Etkinlik bulunamadı." });
+
+            if (existing.CreatedBy != email)
+                return Forbid("Bu etkinliği silme izniniz yok.");
 
             _context.Events.Remove(existing);
             _context.SaveChanges();
 
-            return Ok(new { message = "🗑️ Etkinlik başarıyla silindi." });
+            return Ok(new { message = "🗑️ Etkinlik silindi." });
         }
     }
 }

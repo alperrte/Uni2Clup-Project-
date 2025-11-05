@@ -30,11 +30,14 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Server=mssql,1433;Database=Uni2ClupDB;User Id=sa;Password=YourPassword123;TrustServerCertificate=True
+      - Jwt__Key=qwertyuiopasdfghjklzxcvbnm123456
+      - Jwt__Issuer=Uni2ClupApp
     depends_on:
       mssql:
         condition: service_healthy
     networks:
       - uni2clup-net
+    restart: always  # 🔁 Otomatik yeniden başlatma
 
 volumes:
   mssql-data:

@@ -1,10 +1,6 @@
-﻿import React, { useState, useEffect } from "react";
+﻿import React, { useState } from "react";
 
-interface LoginPageProps {
-    onLoginSuccess?: () => void;
-}
-
-const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
+const LoginPage = ({ onLoginSuccess }) => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -12,9 +8,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");
 
-    const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+    const API_URL = "http://localhost:8080"; // ✅ Backend portu sabit
 
-    const handleLogin = async (e: React.FormEvent) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
         setIsLoading(true);
 
@@ -22,33 +18,46 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             const res = await fetch(`${API_URL}/api/Auth/login`, {
                 method: "POST",
                 headers: {
-                    "Accept": "application/json",
+                    Accept: "application/json",
                     "Content-Type": "application/json; charset=utf-8",
                 },
-                body: JSON.stringify({
-                    email: email,
-                    passwordHash: password,
-                }),
+                body: JSON.stringify({ email, password }),
             });
 
-            if (res.ok) {
-                const data = await res.json();
-                setSuccessMessage(data.message || "Giriş başarılı!");
-                setShowSuccessModal(true);
-
-                // 2 saniye sonra modal'ı kapat ve callback'i çağır
-                setTimeout(() => {
-                    setShowSuccessModal(false);
-                    onLoginSuccess?.();
-                }, 2000);
-            } else {
-                const errorText = await res.text();
-                console.error("Login hata:", errorText);
+            if (!res.ok) {
                 alert("❌ Hatalı e-posta veya şifre.");
+                setIsLoading(false);
+                return;
             }
+
+            const data = await res.json();
+            const token = data.token;
+            const normalizedUser = {
+                name: data.name || data.Name || "",
+                email: data.email || data.Email || email,
+                role: (data.role || data.Role || "User").trim(),
+                token: token,
+            };
+
+            if (!token || !normalizedUser.role) {
+                alert("🚫 Token veya rol alınamadı.");
+                setIsLoading(false);
+                return;
+            }
+
+            localStorage.setItem("token", token);
+            localStorage.setItem("userRole", normalizedUser.role);
+            localStorage.setItem("userName", normalizedUser.name);
+
+            setSuccessMessage("Giriş başarılı!");
+            setShowSuccessModal(true);
+
+            setTimeout(() => {
+                setShowSuccessModal(false);
+                onLoginSuccess?.(normalizedUser); // ✅ Token ile App.js'e gönder
+            }, 1500);
         } catch (error) {
-            console.error("Sunucu bağlantı hatası:", error);
-            alert("🚫 Sunucuya bağlanılamadı. Backend (8080) çalışıyor mu?");
+            alert("🚫 Sunucuya bağlanılamadı. Backend (8800) açık mı?");
         } finally {
             setIsLoading(false);
         }
@@ -144,7 +153,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                             <div className="bg-[#0f0f1a] rounded-lg p-4 flex items-center space-x-3">
                                 <div className="w-6 h-6 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6] rounded-full flex items-center justify-center">
                                     <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
+                                        <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z" />
                                     </svg>
                                 </div>
                                 <input
@@ -162,11 +171,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                                 >
                                     {showPassword ? (
                                         <svg fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
+                                            <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27z" />
                                         </svg>
                                     ) : (
                                         <svg fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                                            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" />
                                         </svg>
                                     )}
                                 </button>
@@ -207,48 +216,42 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 </div>
             </div>
 
-            {/* Success Modal */}
+            {/* ✅ Success Modal */}
             {showSuccessModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
                     <div className="bg-gradient-to-br from-[#1a1a2e] to-[#2a2a3e] border border-[#3b82f6] rounded-2xl p-8 mx-4 max-w-md w-full transform animate-bounceIn shadow-2xl">
                         <div className="text-center">
-                            {/* Success Icon */}
                             <div className="w-20 h-20 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6] rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
                                 <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
 
-                            {/* Success Message */}
                             <h3 className="text-2xl font-bold text-white mb-4">
                                 Giriş Başarılı!
                             </h3>
 
-                            <p className="text-gray-300 mb-6">
-                                {successMessage}
-                            </p>
+                            <p className="text-gray-300 mb-6">{successMessage}</p>
 
-                            {/* Anket Sistemi Info */}
                             <div className="bg-gradient-to-r from-[#0f0f1a] to-[#1a1a2e] border border-[#3b82f6] rounded-lg p-4 mb-6">
                                 <div className="flex items-center justify-center space-x-2 mb-2">
                                     <svg className="w-5 h-5 text-[#3b82f6]" fill="currentColor" viewBox="0 0 24 24">
                                         <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    <span className="text-sm font-semibold text-[#3b82f6]">Uni2Club Etkinlik Sistemi</span>
+                                    <span className="text-sm font-semibold text-[#3b82f6]">
+                                        Uni2Club Etkinlik Sistemi
+                                    </span>
                                 </div>
                                 <p className="text-xs text-gray-400">
                                     Artık etkinliklere ve kulüplere katılabilir, görüşlerinizi paylaşabilir ve topluluk oylamalarına dahil olabilirsiniz!
                                 </p>
                             </div>
 
-                            {/* Loading Bar */}
                             <div className="w-full bg-[#0f0f1a] rounded-full h-2 mb-4">
                                 <div className="bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] h-2 rounded-full animate-pulse"></div>
                             </div>
 
-                            <p className="text-xs text-gray-500">
-                                Yönlendiriliyorsunuz...
-                            </p>
+                            <p className="text-xs text-gray-500">Yönlendiriliyorsunuz...</p>
                         </div>
                     </div>
                 </div>
@@ -257,4 +260,4 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     );
 };
 
-export default LoginPage; 
+export default LoginPage;
