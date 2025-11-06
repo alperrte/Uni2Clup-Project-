@@ -24,9 +24,23 @@ namespace Uni2ClupProjectBackend.Controllers
         {
             var events = _context.Events
                 .OrderByDescending(e => e.Id)
+                .Select(e => new
+                {
+                    e.Id,
+                    e.Name,
+                    e.Capacity,
+                    e.Location,
+                    e.StartDate,
+                    e.EndDate,
+                    e.ClubName,
+                    e.Description,
+                    CreatedBy = e.CreatedBy // ✅ tutarlı isim
+                })
                 .ToList();
+
             return Ok(events);
         }
+
 
         // 🔹 Sadece ClubManager oluşturabilir
         [HttpPost("create")]

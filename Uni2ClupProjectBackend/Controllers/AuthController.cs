@@ -61,7 +61,8 @@ namespace Uni2ClupProjectBackend.Controllers
             {
                 message = result.Message,
                 email = result.Created!.Email,
-                role = result.Created.Role
+                role = result.Created.Role,
+                registrationDate = result.Created.CreatedAt // ✅ yeni kullanıcı tarihini döndür
             });
         }
 
@@ -76,7 +77,8 @@ namespace Uni2ClupProjectBackend.Controllers
                 name = u.Name,
                 surname = u.Surname,
                 email = u.Email,
-                role = u.Role
+                role = u.Role,
+                registrationDate = u.CreatedAt // ✅ frontend’e gönder
             }).ToList();
 
             return Ok(users);
@@ -102,12 +104,11 @@ namespace Uni2ClupProjectBackend.Controllers
             var key = Encoding.UTF8.GetBytes(_config["Jwt__Key"] ?? "qwertyuiopasdfghjklzxcvbnm123456");
             var creds = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256);
 
-            // ✅ DOĞRU ROLE CLAIM
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Name, user.Name),
-                new Claim(ClaimTypes.Role, user.Role) // 👈 ÖNEMLİ: Role tipi .NET standardı
+                new Claim(ClaimTypes.Role, user.Role)
             };
 
             var token = new JwtSecurityToken(

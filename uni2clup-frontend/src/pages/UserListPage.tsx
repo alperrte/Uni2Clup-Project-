@@ -120,18 +120,17 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
         if (!dateString) return "Bilinmiyor";
         try {
             const date = new Date(dateString);
+            // Sadece tarih göster (GG.AA.YYYY)
             return date.toLocaleDateString('tr-TR', {
                 year: 'numeric',
                 month: '2-digit',
                 day: '2-digit'
-            }) + ' ' + date.toLocaleTimeString('tr-TR', {
-                hour: '2-digit',
-                minute: '2-digit'
             });
         } catch {
-            return dateString;
+            return "Bilinmiyor";
         }
     };
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#0a0a1a] via-[#0f0f2a] to-[#1a1a3a] text-white flex flex-col items-center py-10 px-4 relative overflow-hidden">

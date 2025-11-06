@@ -22,6 +22,9 @@ namespace Uni2ClupProjectBackend.Models
         public string PasswordHash { get; set; } = string.Empty;
 
         [Required, MaxLength(20)]
-        public string Role { get; set; } = string.Empty;
+        public string Role { get; set; } = "User";
+
+        // ✅ Yeni alan: sistem otomatik olarak o anki zamanı ekler
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

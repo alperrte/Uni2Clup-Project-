@@ -8,6 +8,7 @@ namespace Uni2ClupProjectBackend.Services
     public class UserService
     {
         private readonly AppDbContext _db;
+
         public UserService(AppDbContext db)
         {
             _db = db;
@@ -34,7 +35,8 @@ namespace Uni2ClupProjectBackend.Services
                 Surname = dto.Surname,
                 Email = email,
                 PasswordHash = passwordHash,
-                Role = string.IsNullOrWhiteSpace(dto.Role) ? "User" : dto.Role
+                Role = string.IsNullOrWhiteSpace(dto.Role) ? "User" : dto.Role,
+                CreatedAt = DateTime.UtcNow // ✅ otomatik kayıt zamanı
             };
 
             _db.Users.Add(user);
