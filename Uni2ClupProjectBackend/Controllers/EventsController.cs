@@ -34,44 +34,42 @@ namespace Uni2ClupProjectBackend.Controllers
                     e.EndDate,
                     e.ClubName,
                     e.Description,
-                    CreatedBy = e.CreatedBy // ✅ tutarlı isim
+                    CreatedBy = e.CreatedBy // sadece bilgi olarak
                 })
                 .ToList();
 
             return Ok(events);
         }
 
-
-        // 🔹 Sadece ClubManager oluşturabilir
+        // 🔹 ClubManager oluşturabilir
         [HttpPost("create")]
         [Authorize(Roles = "ClubManager")]
         public IActionResult Create([FromBody] Event newEvent)
         {
             var email = User.FindFirst(ClaimTypes.Email)?.Value;
-            if (string.IsNullOrEmpty(email))
-                return Unauthorized(new { message = "Token geçersiz." });
+            newEvent.CreatedBy = email ?? "unknown@system";
 
-            newEvent.CreatedBy = email;
             _context.Events.Add(newEvent);
             _context.SaveChanges();
 
-            return Ok(new { message = "✅ Etkinlik başarıyla oluşturuldu.", eventData = newEvent });
+            return Ok(new
+            {
+                message = "✅ Etkinlik başarıyla oluşturuldu.",
+                eventData = newEvent
+            });
         }
 
-        // 🔹 Sadece kendi etkinliğini güncelleyebilir
+        // 🔹 ClubManager güncelleyebilir (her etkinlik için)
         [HttpPut("update/{id}")]
         [Authorize(Roles = "ClubManager")]
         public IActionResult Update(int id, [FromBody] Event updated)
         {
-            var email = User.FindFirst(ClaimTypes.Email)?.Value;
             var existing = _context.Events.FirstOrDefault(e => e.Id == id);
 
             if (existing == null)
                 return NotFound(new { message = "❌ Etkinlik bulunamadı." });
 
-            if (existing.CreatedBy != email)
-                return Forbid("Bu etkinliği düzenleme izniniz yok.");
-
+            // 🚫 Artık CreatedBy kontrolü yok
             existing.Name = updated.Name;
             existing.Location = updated.Location;
             existing.Capacity = updated.Capacity;
@@ -81,23 +79,21 @@ namespace Uni2ClupProjectBackend.Controllers
             existing.EndDate = updated.EndDate;
 
             _context.SaveChanges();
+
             return Ok(new { message = "✅ Etkinlik güncellendi.", updated });
         }
 
-        // 🔹 Sadece kendi etkinliğini silebilir
+        // 🔹 ClubManager silebilir (her etkinlik için)
         [HttpDelete("delete/{id}")]
         [Authorize(Roles = "ClubManager")]
         public IActionResult Delete(int id)
         {
-            var email = User.FindFirst(ClaimTypes.Email)?.Value;
             var existing = _context.Events.FirstOrDefault(e => e.Id == id);
 
             if (existing == null)
                 return NotFound(new { message = "❌ Etkinlik bulunamadı." });
 
-            if (existing.CreatedBy != email)
-                return Forbid("Bu etkinliği silme izniniz yok.");
-
+            // 🚫 Artık CreatedBy kontrolü yok
             _context.Events.Remove(existing);
             _context.SaveChanges();
 

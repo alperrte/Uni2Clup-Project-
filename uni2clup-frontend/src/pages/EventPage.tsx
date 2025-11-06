@@ -157,11 +157,6 @@ const EventPage: React.FC = () => {
         if (!checkTokenValidity()) return;
         const event = events.find(e => e.id === id);
         if (!event) return;
-        if (event.CreatedBy !== userEmail) {
-            alert("🚫 Bu etkinliği silme yetkiniz yok.");
-            return;
-        }
-
         if (!window.confirm("Etkinliği silmek istiyor musunuz?")) return;
 
         setIsLoading(true);
@@ -197,10 +192,6 @@ const EventPage: React.FC = () => {
 
     // ✏️ Düzenleme
     const handleEdit = (event: Event) => {
-        if (event.CreatedBy !== userEmail) {
-            alert("🚫 Bu etkinliği düzenleme yetkiniz yok.");
-            return;
-        }
         setSelectedEvent({
             ...event,
             StartDate: event.StartDate ? event.StartDate.slice(0, 16) : "",
@@ -360,22 +351,22 @@ const EventPage: React.FC = () => {
                                                     👤 Oluşturan: {event.CreatedBy || "Bilinmiyor"}
                                                 </p>
                                             </div>
-                                            {event.CreatedBy === userEmail && (
-                                                <div className="flex flex-col gap-2 ml-6">
-                                                    <button
-                                                        onClick={() => handleEdit(event)}
-                                                        className="bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] hover:from-[#4a2a8a] hover:to-[#4f94f6] px-4 py-2 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
-                                                    >
-                                                        ✏️ Düzenle
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(event.id)}
-                                                        className="bg-gradient-to-r from-[#ff6b6b] to-[#ff8e8e] hover:from-[#ff5252] hover:to-[#ff7979] px-4 py-2 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
-                                                    >
-                                                        🗑️ Sil
-                                                    </button>
-                                                </div>
-                                            )}
+                                            <div className="flex flex-col gap-2 ml-6">
+                                                <button
+                                                    onClick={() => handleEdit(event)}
+                                                    className="bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] hover:from-[#4a2a8a] hover:to-[#4f94f6] px-4 py-2 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+                                                >
+                                                    ✏️ Düzenle
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(event.id)}
+                                                    className="bg-gradient-to-r from-[#ff6b6b] to-[#ff8e8e] hover:from-[#ff5252] hover:to-[#ff7979] px-4 py-2 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+                                                >
+                                                    🗑️ Sil
+                                                </button>
+                                            </div>
+
+
                                         </div>
                                     </div>
                                 ))}
