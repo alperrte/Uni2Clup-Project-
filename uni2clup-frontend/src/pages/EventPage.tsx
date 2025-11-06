@@ -223,9 +223,9 @@ const EventPage: React.FC = () => {
             {/* 🚪 Çıkış Yap Butonu */}
             <button
                 onClick={handleLogout}
-                className="absolute top-6 right-8 z-50 bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition-all duration-300"
+                className="absolute top-6 right-8 z-50 bg-indigo-700 hover:bg-indigo-900 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition-all duration-300"
             >
-                Çıkış Yap
+               ➜] Çıkış Yap
             </button>
 
             {/* Animated Background */}
@@ -264,7 +264,7 @@ const EventPage: React.FC = () => {
                     </div>
 
                     <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] bg-clip-text text-transparent animate-pulse">
-                        🎉 Uni2Club Etkinlik Paneli
+                        🎉 Uni2Clup Etkinlik Paneli
                     </h1>
                 </div>
 

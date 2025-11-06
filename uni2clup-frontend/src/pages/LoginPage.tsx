@@ -110,7 +110,7 @@ const LoginPage = ({ onLoginSuccess }) => {
                                 <span className="text-white font-bold text-sm">2</span>
                             </div>
                             <span className="text-3xl font-bold bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] bg-clip-text text-transparent">
-                                Uni2Club
+                                Uni2Clup
                             </span>
                         </div>
                     </div>
@@ -137,7 +137,7 @@ const LoginPage = ({ onLoginSuccess }) => {
                                 </div>
                                 <input
                                     type="email"
-                                    placeholder="E-posta adresi"
+                                    placeholder="E-posta Adresi"
                                     className="flex-1 bg-transparent text-white placeholder-gray-400 outline-none text-lg"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}

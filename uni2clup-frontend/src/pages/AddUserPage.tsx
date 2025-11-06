@@ -1,4 +1,5 @@
-﻿import React, { useState, useEffect } from "react";
+﻿// pages/AddUserPage.tsx (Güncellenmiş)
+import React, { useState } from "react";
 
 const API_URL = "http://localhost:8080"; // senin backend portun
 
@@ -11,58 +12,9 @@ const AddUserPage: React.FC = () => {
     });
 
     const [response, setResponse] = useState<{ message?: string; email?: string; password?: string } | null>(null);
-    const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
-    const [fetching, setFetching] = useState(false);
 
     const token = localStorage.getItem("token")?.trim() || "";
-    const userRole = localStorage.getItem("userRole");
-
-    // ✅ Sayfa açıldığında kontrol ve listeleme
-    useEffect(() => {
-        if (!token) {
-            alert("🔒 Oturum süresi dolmuş. Lütfen tekrar giriş yapın.");
-            localStorage.clear();
-            window.location.reload();
-            return;
-        }
-
-        if (userRole !== "Admin") {
-            alert("🚫 Bu sayfaya sadece admin erişebilir.");
-            localStorage.clear();
-            window.location.reload();
-            return;
-        }
-
-        fetchUsers();
-    }, []);
-
-    // 👥 Kullanıcıları Listele
-    const fetchUsers = async () => {
-        setFetching(true);
-        try {
-            const res = await fetch(`${API_URL}/api/Auth/users`, {
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (res.status === 401) {
-                alert("🔒 Oturum süresi dolmuş. Lütfen tekrar giriş yapın.");
-                localStorage.clear();
-                window.location.reload();
-                return;
-            }
-
-            const data = await res.json();
-            setUsers(data);
-        } catch (error) {
-            console.error("🚫 Kullanıcı listesi alınamadı:", error);
-        } finally {
-            setFetching(false);
-        }
-    };
 
     // Form input değişikliği
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -74,6 +26,13 @@ const AddUserPage: React.FC = () => {
         e.preventDefault();
         setLoading(true);
         setResponse(null);
+
+        if (!token) {
+            alert("🔒 Oturum süresi dolmuş. Lütfen tekrar giriş yapın.");
+            localStorage.clear();
+            window.location.reload();
+            return;
+        }
 
         try {
             const res = await fetch(`${API_URL}/api/Auth/register`, {
@@ -100,8 +59,6 @@ const AddUserPage: React.FC = () => {
                     email: data.email,
                     password: data.password, // backend'den gelen şifre
                 });
-
-                await fetchUsers();
             } else {
                 setResponse({
                     message: data.message || "❌ Kullanıcı oluşturulamadı.",
@@ -116,75 +73,34 @@ const AddUserPage: React.FC = () => {
         }
     };
 
-    const handleDelete = async (id: number) => {
-        if (!window.confirm("Bu kullanıcıyı silmek istiyor musunuz?")) return;
-
-        try {
-            const res = await fetch(`${API_URL}/api/Auth/delete/${id}`, {
-                method: "DELETE",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (res.status === 401) {
-                alert("🚫 Token geçersiz. Lütfen tekrar giriş yapın.");
-                localStorage.clear();
-                window.location.reload();
-                return;
-            }
-
-            if (res.ok) {
-                setUsers(users.filter((u) => u.id !== id));
-            } else {
-                alert("❌ Kullanıcı silinemedi.");
-            }
-        } catch {
-            alert("🚫 Sunucu bağlantı hatası!");
-        }
-    };
-
-    const translateRole = (role: string) => {
-        switch (role) {
-            case "Admin":
-                return "Yönetici";
-            case "Student":
-                return "Öğrenci";
-            case "Academic":
-                return "Akademisyen";
-            case "ClubManager":
-                return "Kulüp Yöneticisi";
-            default:
-                return role;
-        }
-    };
-
     // 🧱 UI
     return (
-        <div className="p-6 max-w-5xl mx-auto bg-white shadow rounded-lg mt-10">
-            <h1 className="text-2xl font-semibold text-center mb-5 text-indigo-700">
+        <div className="p-8 max-w-xl mx-auto bg-gray-800 shadow-2xl rounded-xl">
+            <h1 className="text-3xl font-extrabold text-center mb-8 text-indigo-400">
                 Yeni Kullanıcı Oluştur
             </h1>
 
             {/* FORM */}
-            <form onSubmit={handleSubmit} className="space-y-4 mb-8">
-                <input
-                    name="name"
-                    placeholder="İsim"
-                    value={form.name}
-                    onChange={handleChange}
-                    required
-                    className="w-full border border-gray-300 rounded-md p-2"
-                />
-                <input
-                    name="surname"
-                    placeholder="Soyisim"
-                    value={form.surname}
-                    onChange={handleChange}
-                    required
-                    className="w-full border border-gray-300 rounded-md p-2"
-                />
+            <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                    <input
+                        name="name"
+                        placeholder="İsim"
+                        value={form.name}
+                        onChange={handleChange}
+                        required
+                        className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-3 placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
+                    />
+                    <input
+                        name="surname"
+                        placeholder="Soyisim"
+                        value={form.surname}
+                        onChange={handleChange}
+                        required
+                        className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-3 placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
+                    />
+                </div>
+
                 <input
                     name="password"
                     type="password"
@@ -193,13 +109,14 @@ const AddUserPage: React.FC = () => {
                     onChange={handleChange}
                     required
                     minLength={6}
-                    className="w-full border border-gray-300 rounded-md p-2"
+                    className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-3 placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
                 />
+
                 <select
                     name="role"
                     value={form.role}
                     onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-md p-2"
+                    className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-3 appearance-none focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
                 >
                     <option value="Student">Öğrenci</option>
                     <option value="Academic">Akademisyen</option>
@@ -210,74 +127,35 @@ const AddUserPage: React.FC = () => {
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-md"
+                    className={`w-full py-3 px-4 text-lg font-bold rounded-lg transition duration-200 ${loading
+                            ? "bg-indigo-700 text-indigo-200 cursor-not-allowed"
+                            : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg"
+                        }`}
                 >
-                    {loading ? "Kaydediliyor..." : "Kullanıcı Ekle"}
+                    {loading ? "Kaydediliyor..." : "Kullanıcı Oluştur"}
                 </button>
             </form>
 
             {/* RESPONSE */}
             {response && (
                 <div
-                    className={`mt-4 p-3 rounded ${response.message?.startsWith("✅")
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
+                    className={`mt-6 p-4 rounded-lg shadow-inner ${response.message?.startsWith("✅")
+                            ? "bg-green-800 text-green-200 border border-green-700"
+                            : "bg-red-800 text-red-200 border border-red-700"
                         }`}
                 >
-                    <p>{response.message}</p>
+                    <p className="font-semibold mb-1">{response.message}</p>
                     {response.email && (
                         <p>
-                            📧 <strong>E-posta:</strong> {response.email}
+                            📧 <strong className="font-bold">E-posta:</strong> {response.email}
                         </p>
                     )}
                     {response.password && (
                         <p>
-                            🔑 <strong>Geçici Şifre:</strong> {response.password}
+                            🔑 <strong className="font-bold">Geçici Şifre:</strong> {response.password}
                         </p>
                     )}
                 </div>
-            )}
-
-            {/* USER LIST */}
-            <h2 className="text-xl font-semibold text-indigo-700 mt-8 mb-3">
-                Mevcut Kullanıcılar
-            </h2>
-            {fetching ? (
-                <p>🔄 Kullanıcılar yükleniyor...</p>
-            ) : users.length === 0 ? (
-                <p className="text-gray-500">Henüz kullanıcı yok.</p>
-            ) : (
-                <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-                    <thead className="bg-indigo-100 text-indigo-700">
-                        <tr>
-                            <th className="py-2 px-3 text-left">ID</th>
-                            <th className="py-2 px-3 text-left">Ad Soyad</th>
-                            <th className="py-2 px-3 text-left">Email</th>
-                            <th className="py-2 px-3 text-left">Rol</th>
-                            <th className="py-2 px-3 text-center">İşlem</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {users.map((user) => (
-                            <tr key={user.id} className="border-t hover:bg-gray-50">
-                                <td className="py-2 px-3">{user.id}</td>
-                                <td className="py-2 px-3">
-                                    {user.name} {user.surname}
-                                </td>
-                                <td className="py-2 px-3">{user.email}</td>
-                                <td className="py-2 px-3">{translateRole(user.role)}</td>
-                                <td className="py-2 px-3 text-center">
-                                    <button
-                                        onClick={() => handleDelete(user.id)}
-                                        className="text-red-600 hover:text-red-800 font-semibold"
-                                    >
-                                        Sil
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
             )}
         </div>
     );
