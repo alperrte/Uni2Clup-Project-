@@ -1,5 +1,4 @@
-﻿// pages/UserListPage.tsx
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect, useCallback } from "react";
 
 const API_URL = "http://localhost:8080";
 
@@ -9,7 +8,7 @@ interface User {
     surname: string;
     email: string;
     role: string;
-    registrationDate: string; // Backend'den bu isimle geldiğini varsayıyorum
+    registrationDate: string;
 }
 
 interface UserListPageProps {
@@ -34,16 +33,27 @@ const translateRole = (role: string) => {
 const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
     const [users, setUsers] = useState<User[]>([]);
     const [fetching, setFetching] = useState(true);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [successMessage, setSuccessMessage] = useState("");
     const token = localStorage.getItem("token")?.trim() || "";
-
     const pageTitle = `${translateRole(targetRole)} Listesi`;
+
+    // ✅ Token kontrolü
+    const checkTokenValidity = useCallback(() => {
+        if (!token) {
+            alert("🔒 Oturum süresi dolmuş. Lütfen tekrar giriş yapın.");
+            localStorage.clear();
+            window.location.reload();
+            return false;
+        }
+        return true;
+    }, [token]);
 
     // 👥 Kullanıcıları Listele (Filtreli)
     const fetchUsers = async () => {
+        if (!checkTokenValidity()) return;
         setFetching(true);
         try {
-            // Backend'in tüm kullanıcıları çekip frontend'de filtreleme yaptığını varsayıyoruz. 
-            // Daha iyi performans için backend'de filtreleme API'si olmalıydı.
             const res = await fetch(`${API_URL}/api/Auth/users`, {
                 headers: {
                     "Content-Type": "application/json",
@@ -63,6 +73,7 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
             setUsers(filteredUsers);
         } catch (error) {
             console.error(`🚫 ${targetRole} listesi alınamadı:`, error);
+            alert("🚫 Sunucuya bağlanılamadı. Backend (8080) açık mı?");
         } finally {
             setFetching(false);
         }
@@ -73,6 +84,7 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
     }, [targetRole, token]);
 
     const handleDelete = async (id: number) => {
+        if (!checkTokenValidity()) return;
         if (!window.confirm("Bu kullanıcıyı silmek istediğinizden emin misiniz?")) return;
 
         try {
@@ -84,13 +96,18 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
                 },
             });
 
-            if (res.ok) {
-                setUsers(users.filter((u) => u.id !== id));
-                alert("✅ Kullanıcı başarıyla silindi.");
-            } else if (res.status === 401) {
+            if (res.status === 401) {
                 alert("🚫 Token geçersiz. Lütfen tekrar giriş yapın.");
                 localStorage.clear();
                 window.location.reload();
+                return;
+            }
+
+            if (res.ok) {
+                setUsers(users.filter((u) => u.id !== id));
+                setSuccessMessage("✅ Kullanıcı başarıyla silindi.");
+                setShowSuccessModal(true);
+                setTimeout(() => setShowSuccessModal(false), 2000);
             } else {
                 alert("❌ Kullanıcı silinemedi.");
             }
@@ -103,54 +120,145 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
         if (!dateString) return "Bilinmiyor";
         try {
             const date = new Date(dateString);
-            return date.toLocaleDateString('tr-TR', { year: 'numeric', month: '2-digit', day: '2-digit' }) + ' ' + date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+            return date.toLocaleDateString('tr-TR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            }) + ' ' + date.toLocaleTimeString('tr-TR', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
         } catch {
             return dateString;
         }
     };
 
     return (
-        <div className="p-6 bg-gray-800 shadow rounded-lg">
-            <h1 className="text-3xl font-bold mb-6 text-indigo-400">{pageTitle}</h1>
+        <div className="min-h-screen bg-gradient-to-br from-[#0a0a1a] via-[#0f0f2a] to-[#1a1a3a] text-white flex flex-col items-center py-10 px-4 relative overflow-hidden">
+            {/* Animated Background */}
+            <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-[#2d1b69] to-[#1e3a8a] rounded-full opacity-15 animate-pulse"></div>
+                <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-[#1e3a8a] to-[#2d1b69] rounded-full opacity-10 animate-pulse delay-1000"></div>
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-[#2d1b69] to-[#1e3a8a] rounded-full opacity-8 animate-pulse delay-500"></div>
+            </div>
 
-            {fetching ? (
-                <p className="text-indigo-300">🔄 Kullanıcılar yükleniyor...</p>
-            ) : users.length === 0 ? (
-                <p className="text-gray-400">Bu rolde kayıtlı kullanıcı yok.</p>
-            ) : (
-                <div className="overflow-x-auto">
-                    <table className="min-w-full border-separate" style={{ borderSpacing: '0 8px' }}>
-                        <thead className="text-sm uppercase bg-gray-700 text-gray-400">
-                            <tr>
-                                <th className="py-3 px-6 text-left rounded-l-lg">Ad Soyad</th>
-                                <th className="py-3 px-6 text-left">E-posta</th>
-                                <th className="py-3 px-6 text-left">Rol</th>
-                                <th className="py-3 px-6 text-left">Kayıt Tarihi</th>
-                                <th className="py-3 px-6 text-center rounded-r-lg">İşlemler</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {users.map((user) => (
-                                <tr key={user.id} className="bg-gray-700 hover:bg-gray-600 transition-colors duration-150">
-                                    <td className="py-3 px-6 rounded-l-lg font-medium text-white">
-                                        {user.name} {user.surname}
-                                    </td>
-                                    <td className="py-3 px-6 text-gray-300">{user.email}</td>
-                                    <td className="py-3 px-6 text-gray-300">{translateRole(user.role)}</td>
-                                    <td className="py-3 px-6 text-gray-300 text-sm">{formatDate(user.registrationDate)}</td>
-                                    <td className="py-3 px-6 text-center rounded-r-lg">
-                                        {/* Dropdown yerine direkt Sil butonu (basitlik için) */}
-                                        <button
-                                            onClick={() => handleDelete(user.id)}
-                                            className="text-red-400 hover:text-red-500 font-semibold text-sm transition-colors duration-150 p-2 rounded hover:bg-red-900/20"
-                                        >
-                                            Sil
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+            {/* Floating Particles */}
+            <div className="absolute inset-0">
+                {[...Array(15)].map((_, i) => (
+                    <div
+                        key={i}
+                        className="absolute w-1 h-1 bg-[#3b82f6] rounded-full animate-ping"
+                        style={{
+                            left: `${Math.random() * 100}%`,
+                            top: `${Math.random() * 100}%`,
+                            animationDelay: `${Math.random() * 3}s`,
+                            animationDuration: `${2 + Math.random() * 2}s`
+                        }}
+                    ></div>
+                ))}
+            </div>
+
+            <div className="relative z-10 w-full max-w-6xl">
+                {/* Header */}
+                <div className="text-center mb-12">
+                    <div className="relative inline-block mb-8">
+                        <div className="w-24 h-24 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6] rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl animate-bounce">
+                            <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </div>
+                        <div className="absolute -top-2 -right-2 w-28 h-28 border-2 border-[#3b82f6] rounded-full animate-spin" style={{ animationDuration: '8s' }}></div>
+                    </div>
+
+                    <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] bg-clip-text text-transparent animate-pulse">
+                        {pageTitle}
+                    </h1>
+                </div>
+
+                {/* User List */}
+                <div className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] border-2 border-transparent bg-clip-padding rounded-xl p-1 hover:border-[#3b82f6] transition-all duration-300">
+                    <div className="bg-[#0f0f1a] rounded-lg p-6">
+                        {fetching ? (
+                            <div className="flex items-center justify-center py-12">
+                                <div className="w-8 h-8 border-2 border-[#3b82f6] border-t-transparent rounded-full animate-spin"></div>
+                                <span className="ml-3 text-gray-300 text-lg">Kullanıcılar yükleniyor...</span>
+                            </div>
+                        ) : users.length === 0 ? (
+                            <div className="text-center py-12">
+                                <div className="w-16 h-16 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6] rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                </div>
+                                <p className="text-gray-400 text-lg">Bu rolde kayıtlı kullanıcı yok.</p>
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full">
+                                    <thead>
+                                        <tr className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] border-b-2 border-[#3b82f6]">
+                                            <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">Ad Soyad</th>
+                                            <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">E-posta</th>
+                                            <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">Rol</th>
+                                            <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">Kayıt Tarihi</th>
+                                            <th className="py-4 px-6 text-center text-lg font-bold text-[#3b82f6]">İşlemler</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-700">
+                                        {users.map((user) => (
+                                            <tr
+                                                key={user.id}
+                                                className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] hover:from-[#2a2a3e] hover:to-[#3a3a4e] transition-all duration-300 group"
+                                            >
+                                                <td className="py-4 px-6 font-medium text-white text-lg">
+                                                    <div className="flex items-center space-x-3">
+                                                        <div className="w-10 h-10 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6] rounded-full flex items-center justify-center">
+                                                            <span className="text-white font-bold text-sm">
+                                                                {user.name.charAt(0).toUpperCase()}
+                                                            </span>
+                                                        </div>
+                                                        <span>{user.name} {user.surname}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="py-4 px-6 text-gray-300">{user.email}</td>
+                                                <td className="py-4 px-6">
+                                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] text-white">
+                                                        {translateRole(user.role)}
+                                                    </span>
+                                                </td>
+                                                <td className="py-4 px-6 text-gray-300 text-sm">{formatDate(user.registrationDate)}</td>
+                                                <td className="py-4 px-6 text-center">
+                                                    <button
+                                                        onClick={() => handleDelete(user.id)}
+                                                        className="bg-indigo-700 hover:bg-indigo-900 px-4 py-2 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+                                                    >
+                                                        🗑️ Sil
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* ✅ Success Modal */}
+            {showSuccessModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
+                    <div className="bg-gradient-to-br from-[#1a1a2e] to-[#2a2a3e] border border-[#3b82f6] rounded-2xl p-8 mx-4 max-w-md w-full transform animate-bounceIn shadow-2xl">
+                        <div className="text-center">
+                            <div className="w-20 h-20 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6] rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+                                <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-2xl font-bold text-white mb-4">İşlem Başarılı!</h3>
+                            <p className="text-gray-300 mb-6">{successMessage}</p>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
