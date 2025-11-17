@@ -1,6 +1,5 @@
-﻿using System.Net;
-using System.Net.Mail;
-using System.Threading.Tasks;
+﻿using MailKit.Net.Smtp;
+using MimeKit;
 
 namespace Uni2ClupProjectBackend.Services
 {
@@ -12,45 +11,47 @@ namespace Uni2ClupProjectBackend.Services
         private readonly string _password;
         private readonly string _displayName;
 
-        public EmailService(IConfiguration configuration)
+        public EmailService(IConfiguration config)
         {
-            var emailSettings = configuration.GetSection("EmailSettings");
-            _host = emailSettings["SMTP_HOST"] ?? "smtp.office365.com";
-            _port = int.Parse(emailSettings["SMTP_PORT"] ?? "587");
-            _username = emailSettings["SMTP_USERNAME"] ?? "";
-            _password = emailSettings["SMTP_PASSWORD"] ?? "";
-            _displayName = emailSettings["SMTP_DISPLAY_NAME"] ?? "Uni2Clup Etkinlik Sistemi";
+            _host = config["EmailSettings:SMTP_HOST"];
+            _port = int.Parse(config["EmailSettings:SMTP_PORT"]);
+            _username = config["EmailSettings:SMTP_USERNAME"];
+            _password = config["EmailSettings:SMTP_PASSWORD"];
+            _displayName = config["EmailSettings:SMTP_DISPLAY_NAME"];
         }
 
-        public async Task SendEmailAsync(string toEmail, string subject, string body)
+        public async Task SendEmailAsync(string to, string subject, string html)
         {
-            try
-            {
-                using (var client = new SmtpClient(_host, _port))
-                {
-                    client.EnableSsl = true;
-                    client.DeliveryMethod = SmtpDeliveryMethod.Network;
-                    client.UseDefaultCredentials = false; // ✅ gerekli
-                    client.Credentials = new NetworkCredential(_username, _password);
-                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12; // ✅ Outlook şartı
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(_displayName, _username));
+            message.To.Add(MailboxAddress.Parse(to));
+            message.Subject = subject;
 
-                    var mail = new MailMessage
-                    {
-                        From = new MailAddress(_username, _displayName),
-                        Subject = subject,
-                        Body = body,
-                        IsBodyHtml = false
-                    };
-
-                    mail.To.Add(toEmail);
-                    await client.SendMailAsync(mail);
-                }
-            }
-            catch (Exception ex)
+            var bodyBuilder = new BodyBuilder
             {
-                Console.WriteLine($"[EMAIL ERROR] {ex.Message}");
-                throw;
-            }
+                HtmlBody = html,
+                TextBody = html.Replace("<br>", "\n")
+            };
+
+            message.Body = bodyBuilder.ToMessageBody();
+
+            using var client = new SmtpClient();
+
+            Console.WriteLine("[MAILKIT] Bağlanıyor...");
+
+            await client.ConnectAsync(_host, _port, MailKit.Security.SecureSocketOptions.StartTls);
+
+            Console.WriteLine("[MAILKIT] Giriş yapılıyor...");
+
+            await client.AuthenticateAsync(_username, _password);
+
+            Console.WriteLine("[MAILKIT] Gönderiliyor...");
+
+            await client.SendAsync(message);
+
+            await client.DisconnectAsync(true);
+
+            Console.WriteLine("[MAILKIT] Başarılı!");
         }
     }
 }
