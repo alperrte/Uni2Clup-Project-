@@ -1,15 +1,22 @@
-﻿// App.js (DÜZELTİLMİŞ VE KESİNLEŞTİRİLMİŞ)
+﻿// App.tsx (TSX UYUMLU VE HATASIZ)
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
-// TSX Bileşenlerinizi import ediyoruz
+// TSX component importları
 import LoginPage from "./pages/LoginPage";
 import EventPage from "./pages/EventPage";
 import AdminLayout from "./components/AdminLayout";
 import AddUserPage from "./pages/AddUserPage";
 import UserListPage from "./pages/UserListPage";
+import StudentApplicationsPage from "./pages/StudentApplicationsPage";
 
-const translateRole = (role) => {
+interface UserData {
+    name: string;
+    role: string;
+    token: string;
+}
+
+const translateRole = (role: string): string => {
     switch (role) {
         case "Admin":
             return "Yönetici";
@@ -24,8 +31,8 @@ const translateRole = (role) => {
     }
 };
 
-function App() {
-    const [user, setUser] = useState(null);
+const App: React.FC = () => {
+    const [user, setUser] = useState<UserData | null>(null);
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -39,11 +46,13 @@ function App() {
         }
     }, []);
 
-    const handleLoginSuccess = (userData) => {
+    const handleLoginSuccess = (userData: UserData) => {
         if (!userData?.role || !userData?.name || !userData?.token) return;
+
         localStorage.setItem("token", userData.token);
         localStorage.setItem("userRole", userData.role);
         localStorage.setItem("userName", userData.name);
+
         setUser(userData);
     };
 
@@ -56,70 +65,76 @@ function App() {
         return <LoginPage onLoginSuccess={handleLoginSuccess} />;
     }
 
-    // Admin Rotalarını tanımla (Layout içinde)
-    const AdminRoutes = () => (
+    // ---- ADMIN ROUTES ----
+    const AdminRoutes: React.FC = () => (
         <AdminLayout handleLogout={handleLogout}>
-            {/* AdminLayout'un içindeki rotaların kök dizini ("/admin") olarak kabul edilmesi için Routes'u kullanıyoruz */}
             <Routes>
-                {/* 1. Varsayılan Sayfa: /admin'e veya /admin/'e gelenleri Kullanıcı Ekle sayfasına yönlendir */}
-                <Route index element={<Navigate to="add-user" replace />} /> {/* /admin/ için */}
+                {/* Varsayılan admin sayfası */}
+                <Route index element={<Navigate to="add-user" replace />} />
+
+                {/* Kullanıcı ekleme */}
                 <Route path="add-user" element={<AddUserPage />} />
 
-                {/* 2. Dinamik Kullanıcı Listesi Rotaları */}
+                {/* Yeni eklenen ROUTELAR */}
+                <Route path="users" element={<UserListPage />} />
+                <Route path="applications" element={<StudentApplicationsPage />} />
+
+                {/* Dinamik kullanıcı listeleri */}
                 <Route path="students" element={<UserListPage targetRole="Student" />} />
                 <Route path="academics" element={<UserListPage targetRole="Academic" />} />
                 <Route path="club-managers" element={<UserListPage targetRole="ClubManager" />} />
                 <Route path="admins" element={<UserListPage targetRole="Admin" />} />
 
-                {/* 3. Yanlış URL girilirse geri yönlendir */}
+                {/* Hatalı URL → add-user */}
                 <Route path="*" element={<Navigate to="add-user" replace />} />
             </Routes>
         </AdminLayout>
     );
 
-    // Ana uygulama render yapısı
     return (
         <Router>
             <Routes>
-                {/* Admin Rolü Ana Rotası */}
+                {/* Admin */}
                 {user.role === "Admin" && (
-                    // path="/admin/*" tanımı, tüm alt rotaları AdminRoutes bileşenine yönlendirir.
-                    <Route path="/admin/*" element={<AdminRoutes />} />
+                    <>
+                        <Route path="/admin/*" element={<AdminRoutes />} />
+                        <Route path="/" element={<Navigate to="/admin" replace />} />
+                    </>
                 )}
 
-                {/* Eğer Admin giriş yaptıysa ve kök dizine (/) gelirse, /admin'e yönlendir */}
-                {user.role === "Admin" && (
-                    <Route path="/" element={<Navigate to="/admin" replace />} />
-                )}
-
-                {/* ClubManager Rolü İçin Rota */}
+                {/* Club Manager */}
                 {user.role === "ClubManager" && (
                     <Route path="*" element={<EventPage handleLogout={handleLogout} />} />
                 )}
 
-                {/* Diğer Roller (Student, Academic) İçin Default Sayfa */}
+                {/* Student & Academic */}
                 {(user.role === "Student" || user.role === "Academic") && (
-                    <Route path="*" element={
-                        <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-indigo-900 to-indigo-700 text-white">
-                            <h1 className="text-4xl font-bold mb-4">👋 Hoş geldin {user.name}!</h1>
-                            <p className="text-lg mb-2">
-                                Şu anda <strong>{translateRole(user.role)}</strong> rolündesin.
-                            </p>
-                            <button
-                                onClick={handleLogout}
-                                className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded"
-                            >
-                                Çıkış Yap
-                            </button>
-                        </div>
-                    } />
+                    <Route
+                        path="*"
+                        element={
+                            <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-indigo-900 to-indigo-700 text-white">
+                                <h1 className="text-4xl font-bold mb-4">
+                                    👋 Hoş geldin {user.name}!
+                                </h1>
+                                <p className="text-lg mb-2">
+                                    Şu anda <strong>{translateRole(user.role)}</strong> rolündesin.
+                                </p>
+                                <button
+                                    onClick={handleLogout}
+                                    className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded"
+                                >
+                                    Çıkış Yap
+                                </button>
+                            </div>
+                        }
+                    />
                 )}
 
-                {/* Eğer kullanıcı giriş yaptıysa ve hiçbir rotaya uymuyorsa, anasayfaya yönlendir (Bu satır genellikle login ekranına düşmeyi engeller) */}
+                {/* Hiçbir rota uymuyorsa yönlendir */}
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </Router>
     );
-}
+};
 
 export default App;

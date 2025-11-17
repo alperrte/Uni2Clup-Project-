@@ -9,6 +9,7 @@ namespace Uni2ClupProjectBackend.Data
 
         public DbSet<User> Users => Set<User>();
         public DbSet<Event> Events => Set<Event>();
+        public DbSet<StudentApplication> StudentApplications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

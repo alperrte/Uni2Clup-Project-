@@ -41,6 +41,9 @@ builder.Services.AddCors(options =>
 
 // ✅ Servis Injection
 builder.Services.AddScoped<UserService>();
+//email servisi
+builder.Services.AddScoped<EmailService>();
+
 
 // ✅ JWT Ayarları
 var jwtKey = builder.Configuration["Jwt__Key"] ?? "qwertyuiopasdfghjklzxcvbnm123456";

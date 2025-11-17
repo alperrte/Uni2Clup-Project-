@@ -32,6 +32,24 @@ namespace Uni2ClupProjectBackend.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "StudentApplications",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Surname = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Department = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StudentApplications", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
@@ -61,6 +79,9 @@ namespace Uni2ClupProjectBackend.Migrations
         {
             migrationBuilder.DropTable(
                 name: "Events");
+
+            migrationBuilder.DropTable(
+                name: "StudentApplications");
 
             migrationBuilder.DropTable(
                 name: "Users");

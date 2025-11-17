@@ -12,6 +12,7 @@ const navItems = [
     { name: "Akademisyenler", path: "/admin/academics", role: "Academic", icon: "👨‍🏫" },
     { name: "Kulüp Yöneticileri", path: "/admin/club-managers", role: "ClubManager", icon: "👔" },
     { name: "Adminler", path: "/admin/admins", role: "Admin", icon: "👑" },
+    { name: "Öğrenci Başvuruları", path: "/admin/applications", role: "Admin", icon: "📩" },
 ];
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children, handleLogout }) => {

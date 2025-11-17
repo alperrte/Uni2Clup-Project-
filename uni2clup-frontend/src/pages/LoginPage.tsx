@@ -7,6 +7,7 @@ const LoginPage = ({ onLoginSuccess }) => {
     const [showPassword, setShowPassword] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");
+    const [showRegisterModal, setShowRegisterModal] = useState(false); // ✅ Yeni state
 
     const API_URL = "http://localhost:8080"; // ✅ Backend portu sabit
 
@@ -60,6 +61,34 @@ const LoginPage = ({ onLoginSuccess }) => {
             alert("🚫 Sunucuya bağlanılamadı. Backend (8800) açık mı?");
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    // ✅ Öğrenci kayıt formu (modal) işlemi
+    const handleRegister = async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const name = form.name.value;
+        const surname = form.surname.value;
+        const email = form.email.value;
+        const department = form.department.value;
+
+        try {
+            const res = await fetch(`${API_URL}/api/Auth/student-apply`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, surname, email, department }),
+            });
+
+            if (res.ok) {
+                alert("🎉 Başvurunuz alınmıştır. Onay sonrası e-posta gönderilecektir.");
+                setShowRegisterModal(false);
+            } else {
+                const err = await res.json();
+                alert(err.message || "Kayıt sırasında bir hata oluştu");
+            }
+        } catch {
+            alert("🚫 Sunucuya ulaşılamadı!");
         }
     };
 
@@ -213,8 +242,46 @@ const LoginPage = ({ onLoginSuccess }) => {
                     <p className="text-gray-400 text-sm">
                         Güvenli giriş için bilgilerinizi doğru girin
                     </p>
+
+                    {/* ✅ Yeni: Kayıt Ol Butonu */}
+                    <p className="text-gray-400 text-sm mt-4">
+                        Hesabın yok mu?{" "}
+                        <button
+                            onClick={() => setShowRegisterModal(true)}
+                            className="text-[#3b82f6] hover:underline"
+                        >
+                            Kayıt Ol
+                        </button>
+                    </p>
                 </div>
             </div>
+
+            {/* ✅ Yeni: Kayıt Ol Modal */}
+            {showRegisterModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
+                    <div className="bg-gradient-to-br from-[#1a1a2e] to-[#2a2a3e] border border-[#3b82f6] rounded-2xl p-8 w-full max-w-lg shadow-2xl animate-bounceIn">
+                        <h2 className="text-2xl font-bold text-white mb-6 text-center">🎓 Öğrenci Kayıt Başvurusu</h2>
+
+                        <form onSubmit={handleRegister} className="space-y-4">
+                            <input name="name" placeholder="Ad" className="w-full p-3 rounded-lg bg-[#0f0f1a] border border-[#3b82f6] text-white" required />
+                            <input name="surname" placeholder="Soyad" className="w-full p-3 rounded-lg bg-[#0f0f1a] border border-[#3b82f6] text-white" required />
+                            <input name="email" type="email" placeholder="E-posta (@dogus.edu.tr)" className="w-full p-3 rounded-lg bg-[#0f0f1a] border border-[#3b82f6] text-white" required />
+                            <input name="department" placeholder="Bölüm" className="w-full p-3 rounded-lg bg-[#0f0f1a] border border-[#3b82f6] text-white" required />
+
+                            <button type="submit" className="w-full bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] text-white font-bold py-3 rounded-lg hover:opacity-90">
+                                Başvuruyu Gönder
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setShowRegisterModal(false)}
+                                className="w-full mt-2 bg-[#222] text-gray-300 py-3 rounded-lg hover:bg-[#333]"
+                            >
+                                İptal
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* ✅ Success Modal */}
             {showSuccessModal && (

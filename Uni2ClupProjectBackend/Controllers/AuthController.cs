@@ -8,6 +8,7 @@ using Uni2ClupProjectBackend.DTOs;
 using Uni2ClupProjectBackend.Models;
 using Uni2ClupProjectBackend.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 
 namespace Uni2ClupProjectBackend.Controllers
 {
@@ -15,37 +16,148 @@ namespace Uni2ClupProjectBackend.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly AppDbContext _db;
         private readonly IConfiguration _config;
         private readonly UserService _userService;
+        private readonly EmailService _emailService;
 
-        public AuthController(AppDbContext context, IConfiguration config, UserService userService)
+        public AuthController(AppDbContext db, IConfiguration config, UserService userService, EmailService emailService)
         {
-            _context = context;
+            _db = db;
             _config = config;
             _userService = userService;
+            _emailService = emailService;
         }
 
         // 🔐 Login
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginRequest request)
         {
-            var user = _context.Users.FirstOrDefault(u => u.Email == request.Email);
-            if (user == null || !BCrypt.Net.BCrypt.EnhancedVerify(request.Password, user.PasswordHash))
-                return Unauthorized(new { message = "❌ Hatalı e-posta veya şifre." });
-
-            var token = GenerateJwtToken(user);
-
-            return Ok(new
+            try
             {
-                message = "✅ Giriş başarılı.",
-                id = user.Id,
-                name = user.Name,
-                surname = user.Surname,
-                role = user.Role,
-                email = user.Email,
-                token = token
-            });
+                var user = _db.Users.FirstOrDefault(u => u.Email == request.Email);
+                if (user == null)
+                    return Unauthorized(new { message = "❌ Kullanıcı bulunamadı." });
+
+                bool isPasswordValid = BCrypt.Net.BCrypt.EnhancedVerify(request.Password, user.PasswordHash);
+                if (!isPasswordValid)
+                    return Unauthorized(new { message = "❌ Hatalı e-posta veya şifre." });
+
+                var token = GenerateJwtToken(user);
+
+                return Ok(new
+                {
+                    message = "✅ Giriş başarılı.",
+                    id = user.Id,
+                    name = user.Name,
+                    surname = user.Surname,
+                    role = user.Role,
+                    email = user.Email,
+                    token = token
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Sunucu hatası.", error = ex.Message });
+            }
+        }
+
+        // 🧾 Öğrenci Başvuru
+        [HttpPost("student-apply")]
+        public async Task<IActionResult> StudentApply([FromBody] StudentApplicationCreateDto dto)
+        {
+            if (!dto.Email.EndsWith("@dogus.edu.tr"))
+                return BadRequest(new { message = "Lütfen @dogus.edu.tr uzantılı bir e-posta kullanın." });
+
+            var existing = await _db.StudentApplications
+                .FirstOrDefaultAsync(x => x.Email == dto.Email);
+            if (existing != null)
+                return BadRequest(new { message = "Bu e-posta ile daha önce başvuru yapılmış." });
+
+            var application = new StudentApplication
+            {
+                Name = dto.Name,
+                Surname = dto.Surname,
+                Email = dto.Email,
+                Department = dto.Department,
+                Status = "Beklemede",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _db.StudentApplications.Add(application);
+            await _db.SaveChangesAsync();
+
+            return Ok(new { message = "Başvurunuz alınmıştır. Admin onayı sonrası mail gönderilecektir." });
+        }
+
+        // ✅ Onaylama
+        [HttpPost("approve/{id}")]
+        public async Task<IActionResult> ApproveStudent(int id)
+        {
+            var application = await _db.StudentApplications.FindAsync(id);
+            if (application == null)
+                return NotFound(new { message = "Başvuru bulunamadı." });
+
+            if (application.Status == "Onaylandı")
+                return BadRequest(new { message = "Bu başvuru zaten onaylanmış." });
+
+            string tempPassword = GenerateTemporaryPassword(8);
+            string passwordHash = BCrypt.Net.BCrypt.EnhancedHashPassword(tempPassword);
+
+            var user = new User
+            {
+                Name = application.Name,
+                Surname = application.Surname,
+                Email = application.Email,
+                PasswordHash = passwordHash,
+                Role = "Student",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _db.Users.Add(user);
+            application.Status = "Onaylandı";
+            await _db.SaveChangesAsync();
+
+            await _emailService.SendEmailAsync(
+                application.Email,
+                "Üyeliğiniz Onaylandı",
+                $"Merhaba {application.Name},\n\nKaydınız başarıyla oluşturulmuştur.\nGeçici şifreniz: {tempPassword}\n\nLütfen giriş yaptıktan sonra şifrenizi değiştiriniz.\n\nUni2Clup"
+            );
+
+            return Ok(new { message = "Başvuru onaylandı ve kullanıcı oluşturuldu." });
+        }
+
+        // ❌ Reddetme
+        [HttpPost("reject/{id}")]
+        public async Task<IActionResult> RejectStudent(int id)
+        {
+            var application = await _db.StudentApplications.FindAsync(id);
+            if (application == null)
+                return NotFound(new { message = "Başvuru bulunamadı." });
+
+            if (application.Status == "Reddedildi")
+                return BadRequest(new { message = "Bu başvuru zaten reddedilmiş." });
+
+            application.Status = "Reddedildi";
+            await _db.SaveChangesAsync();
+
+            await _emailService.SendEmailAsync(
+                application.Email,
+                "Üyeliğiniz Reddedildi",
+                $"Merhaba {application.Name},\n\nÜyelik başvurunuz değerlendirilmiş ve maalesef reddedilmiştir.\n\nİyi günler dileriz.\nUni2Clup"
+            );
+
+            return Ok(new { message = "Başvuru reddedildi." });
+        }
+
+        // 📋 Başvuruları Listele
+        [HttpGet("get-applications")]
+        public async Task<IActionResult> GetApplications()
+        {
+            var apps = await _db.StudentApplications
+                .OrderByDescending(x => x.CreatedAt)
+                .ToListAsync();
+            return Ok(apps);
         }
 
         // 🧩 Kullanıcı Ekle (sadece Admin)
@@ -62,7 +174,7 @@ namespace Uni2ClupProjectBackend.Controllers
                 message = result.Message,
                 email = result.Created!.Email,
                 role = result.Created.Role,
-                registrationDate = result.Created.CreatedAt // ✅ yeni kullanıcı tarihini döndür
+                registrationDate = result.Created.CreatedAt
             });
         }
 
@@ -71,30 +183,42 @@ namespace Uni2ClupProjectBackend.Controllers
         [Authorize(Roles = "Admin")]
         public IActionResult GetAllUsers()
         {
-            var users = _context.Users.Select(u => new
+            var users = _db.Users.Select(u => new
             {
                 id = u.Id,
                 name = u.Name,
                 surname = u.Surname,
                 email = u.Email,
                 role = u.Role,
-                registrationDate = u.CreatedAt // ✅ frontend’e gönder
+                registrationDate = u.CreatedAt
             }).ToList();
 
             return Ok(users);
         }
 
-        // ❌ Kullanıcı Sil (sadece Admin)
+        [HttpGet("test-email")]
+        public async Task<IActionResult> TestEmail()
+        {
+            await _emailService.SendEmailAsync(
+                "202303011110@dogus.edu.tr",
+                "Test Mail",
+                "Bu bir test mailidir — Uni2Clup sistemi üzerinden gönderildi."
+            );
+            return Ok("Mail gönderildi.");
+        }
+
+
+        // 🗑️ Kullanıcı Sil
         [HttpDelete("delete/{id}")]
         [Authorize(Roles = "Admin")]
         public IActionResult DeleteUser(int id)
         {
-            var user = _context.Users.Find(id);
+            var user = _db.Users.Find(id);
             if (user == null)
                 return NotFound(new { message = "❌ Kullanıcı bulunamadı." });
 
-            _context.Users.Remove(user);
-            _context.SaveChanges();
+            _db.Users.Remove(user);
+            _db.SaveChanges();
             return Ok(new { message = "🗑️ Kullanıcı silindi." });
         }
 
@@ -120,6 +244,15 @@ namespace Uni2ClupProjectBackend.Controllers
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        // 🔐 Geçici Şifre Üretimi
+        private string GenerateTemporaryPassword(int length)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            var random = new Random();
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
         }
 
         // 📩 Login DTO
