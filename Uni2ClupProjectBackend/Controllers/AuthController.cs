@@ -265,14 +265,51 @@ Saygılarımızla,<br>
         // 🔄 Aktif/Pasif Toggle
         [HttpPut("toggle-active/{id}")]
         [Authorize(Roles = "Admin")]
-        public IActionResult ToggleUserActive(int id)
+        public async Task<IActionResult> ToggleUserActive(int id)
         {
-            var user = _db.Users.Find(id);
+            var user = await _db.Users.FindAsync(id);
             if (user == null)
                 return NotFound(new { message = "❌ Kullanıcı bulunamadı." });
 
             user.IsActive = !user.IsActive;
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
+
+            // 📧 Mail gönderme
+            if (!user.IsActive)
+            {
+                // PASİF YAPILDI → YÖNETİCİLİK DONDURMA MAİLİ
+                await _emailService.SendEmailAsync(
+                    user.Email,
+                    "Uni2Clup - Kulüp Yöneticiliği Durum Güncellemesi",
+        $@"
+Sayın {user.Name} {user.Surname},<br><br>
+
+Uni2Clup sistemindeki hesabınıza ait yöneticilik yetkileriniz <strong>pasif</strong> konuma getirilmiştir.<br><br>
+
+Bu işlem sonucunda kulüp üzerindeki yönetici yetkileriniz geçici olarak dondurulmuştur.<br>
+Gerekli durumlarda sistem yöneticileri ile iletişime geçebilirsiniz.<br><br>
+
+Saygılarımızla,<br>
+<strong>Uni2Clup Sistem Yönetimi</strong>
+");
+            }
+            else
+            {
+                // AKTİF YAPILDI → YENİDEN AKTİFLEŞME MAİLİ
+                await _emailService.SendEmailAsync(
+                    user.Email,
+                    "Uni2Clup - Kulüp Yöneticiliğiniz Aktifleştirildi",
+        $@"
+Sayın {user.Name} {user.Surname},<br><br>
+
+Uni2Clup sistemindeki yöneticilik yetkileriniz <strong>yeniden aktif</strong> hale getirilmiştir.<br><br>
+
+Artık kulübünüzü yönetebilir, etkinlikler oluşturabilir ve üyeleri yönetebilirsiniz.<br><br>
+
+Başarılar dileriz.<br>
+<strong>Uni2Clup Sistem Yönetimi</strong>
+");
+            }
 
             return Ok(new
             {
@@ -281,6 +318,7 @@ Saygılarımızla,<br>
             });
         }
 
+        // 🎯 Kulüp Yöneticisi Atama
         // 🎯 Kulüp Yöneticisi Atama
         [HttpPut("assign-club-manager/{userId}")]
         [Authorize(Roles = "Admin")]
@@ -300,10 +338,29 @@ Saygılarımızla,<br>
             if (!club.IsActive)
                 return BadRequest(new { message = "Pasif kulübe yönetici atanamaz." });
 
+            // 🎯 Rol ve Kulüp Atama
             user.Role = "ClubManager";
             user.ClubId = dto.ClubId;
 
             await _db.SaveChangesAsync();
+
+            // 📧 Yeni EKLEDİĞİMİZ YÖNETİCİLİK BİLGİLENDİRME MAİLİ
+            await _emailService.SendEmailAsync(
+                user.Email,
+                $"Uni2Clup - {club.Name} Kulübü Yönetici Atamanız",
+        $@"
+Sayın {user.Name} {user.Surname},<br><br>
+
+Üniversitemiz öğrenci kulüpleri platformu <strong>Uni2Clup</strong> üzerinde yapılan değerlendirme sonucunda,<br>
+<strong>{club.Name}</strong> kulübüne <strong>Kulüp Yöneticisi</strong> olarak atanmış bulunmaktasınız.<br><br>
+
+Yeni görevinizde başarılar dileriz. Kulübünüzün etkinliklerini yönetebilir, duyurular oluşturabilir ve öğrenci topluluğuna katkıda bulunabilirsiniz.<br><br>
+
+Herhangi bir sorunda sistem yöneticileri ile iletişime geçebilirsiniz.<br><br>
+
+Saygılarımızla,<br>
+<strong>Uni2Clup Sistem Yönetimi</strong>
+");
 
             return Ok(new
             {
@@ -313,6 +370,7 @@ Saygılarımızla,<br>
                 clubName = club.Name
             });
         }
+
 
         // 🔑 Token Üretimi
         private string GenerateJwtToken(User user)
