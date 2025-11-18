@@ -26,5 +26,14 @@ namespace Uni2ClupProjectBackend.Models
 
         // ✅ Yeni alan: sistem otomatik olarak o anki zamanı ekler
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // ✅ Aktif/Pasif durumu
+        public bool IsActive { get; set; } = true;
+
+        // ✅ Kulüp Yöneticisi için kulüp ID (nullable)
+        public int? ClubId { get; set; }
+
+        // ✅ Bölüm ID (nullable)
+        public int? DepartmentId { get; set; }
     }
 }

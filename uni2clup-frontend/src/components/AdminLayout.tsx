@@ -13,6 +13,7 @@ const navItems = [
     { name: "Kulüp Yöneticileri", path: "/admin/club-managers", role: "ClubManager", icon: "👔" },
     { name: "Adminler", path: "/admin/admins", role: "Admin", icon: "👑" },
     { name: "Öğrenci Başvuruları", path: "/admin/applications", role: "Admin", icon: "📩" },
+    { name: "Kulüp Yönetimi", path: "/admin/clubs", role: "Admin", icon: "🏛️" },
 ];
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children, handleLogout }) => {
@@ -24,10 +25,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, handleLogout }) => 
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-[#2d1b69] to-[#1e3a8a] rounded-full opacity-15 animate-pulse"></div>
                 <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-[#1e3a8a] to-[#2d1b69] rounded-full opacity-10 animate-pulse delay-1000"></div>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-[#2d1b69] to-[#1e3a8a] rounded-full opacity-8 animate-pulse delay-500"></div>
+                <div className="absolute top-1/2 left-1/4 transform -translate-x-1/2 -translate-y-1/32 w-64 h-64 bg-gradient-to-r from-[#2d1b69] to-[#1e3a8a] rounded-full opacity-8 animate-pulse delay-500"></div>
             </div>
 
-            {/* Floating Particles */}
+            {/* Floating Particles */}  
             <div className="absolute inset-0">
                 {[...Array(15)].map((_, i) => (
                     <div
@@ -44,7 +45,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, handleLogout }) => 
             </div>
 
             {/* Sidebar */}
-            <div className="relative z-10 w-72 bg-gradient-to-b from-[#1a1a2e] to-[#2a2a3e] border-r-2 border-[#3b82f6] flex flex-col p-6 shadow-2xl">
+            <div className="relative z-10 w-72   border-r-2 border-[#3b82f6] flex flex-col p-6 shadow-2xl">
                 {/* Logo/Header */}
                 <div className="mb-10">
                     <div className="relative inline-block mb-4">
@@ -91,7 +92,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, handleLogout }) => 
                 <div className="pt-6 border-t-2 border-[#3b82f6]/30">
                     <button
                         onClick={handleLogout}
-                        className="w-full bg-indigo-700 hover:bg-indigo-900 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl flex items-center justify-center space-x-2"
+                        className="w-full bg-indigo-700 hover:bg-indigo-900 text-white font-bold py-6 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl flex items-center justify-center space-x-2"
                     >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.59L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />

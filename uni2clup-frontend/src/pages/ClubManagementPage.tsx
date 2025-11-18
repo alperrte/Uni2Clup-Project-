@@ -1,0 +1,431 @@
+import React, { useState, useEffect } from "react";
+
+const API_URL = "http://localhost:8080";
+
+interface Club {
+    id: number;
+    name: string;
+    departmentId: number;
+    departmentName: string;
+    description: string;
+    isActive: boolean;
+    createdAt: string;
+    closedAt: string | null;
+}
+
+interface Department {
+    id: number;
+    name: string;
+    code?: string;
+}
+
+const ClubManagementPage: React.FC = () => {
+    const [clubs, setClubs] = useState<Club[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
+    const [showEditModal, setShowEditModal] = useState<boolean>(false);
+    const [editingClub, setEditingClub] = useState<Club | null>(null);
+    const [formData, setFormData] = useState({
+        name: "",
+        departmentId: 0,
+        description: "",
+    });
+    const [departments, setDepartments] = useState<Department[]>([]);
+
+    const token = localStorage.getItem("token")?.trim() || "";
+
+    const fetchClubs = async () => {
+        if (!token) return;
+        setLoading(true);
+        try {
+            const res = await fetch(`${API_URL}/api/Club`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (res.status === 401) {
+                alert("🔒 Oturum süresi dolmuş. Lütfen tekrar giriş yapın.");
+                localStorage.clear();
+                window.location.reload();
+                return;
+            }
+
+            const data: Club[] = await res.json();
+            setClubs(data);
+        } catch (error) {
+            console.error("Kulüp listesi alınamadı:", error);
+            alert("🚫 Sunucuya bağlanılamadı.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchDepartments = async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/Department`, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (res.ok) {
+                const data: Department[] = await res.json();
+                setDepartments(data);
+            }
+        } catch (error) {
+            console.error("Bölümler yüklenemedi:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchClubs();
+        fetchDepartments();
+    }, []);
+
+    const handleCreate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!token) return;
+
+        try {
+            const res = await fetch(`${API_URL}/api/Club`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(formData),
+            });
+
+            if (res.ok) {
+                alert("✅ Kulüp başarıyla oluşturuldu.");
+                setShowCreateModal(false);
+                setFormData({ name: "", departmentId: 0, description: "" });
+                fetchClubs();
+            } else {
+                const data = await res.json();
+                alert(data.message || "❌ Kulüp oluşturulamadı.");
+            }
+        } catch (error) {
+            alert("🚫 Sunucu bağlantı hatası!");
+        }
+    };
+
+    const handleEdit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!token || !editingClub) return;
+
+        try {
+            const res = await fetch(`${API_URL}/api/Club/${editingClub.id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(formData),
+            });
+
+            if (res.ok) {
+                alert("✅ Kulüp başarıyla güncellendi.");
+                setShowEditModal(false);
+                setEditingClub(null);
+                setFormData({ name: "", department: "", description: "" });
+                fetchClubs();
+            } else {
+                const data = await res.json();
+                alert(data.message || "❌ Kulüp güncellenemedi.");
+            }
+        } catch (error) {
+            alert("🚫 Sunucu bağlantı hatası!");
+        }
+    };
+
+    const handleToggleActive = async (id: number) => {
+        if (!token) return;
+        if (!window.confirm("Kulübün aktif/pasif durumunu değiştirmek istediğinizden emin misiniz?")) return;
+
+        try {
+            const res = await fetch(`${API_URL}/api/Club/toggle-active/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (res.ok) {
+                fetchClubs();
+            } else {
+                alert("❌ İşlem başarısız.");
+            }
+        } catch (error) {
+            alert("🚫 Sunucu bağlantı hatası!");
+        }
+    };
+
+    const handleDelete = async (id: number) => {
+        if (!token) return;
+        if (!window.confirm("Bu kulübü silmek istediğinizden emin misiniz?")) return;
+
+        try {
+            const res = await fetch(`${API_URL}/api/Club/${id}`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (res.ok) {
+                alert("✅ Kulüp başarıyla silindi.");
+                fetchClubs();
+            } else {
+                alert("❌ Kulüp silinemedi.");
+            }
+        } catch (error) {
+            alert("🚫 Sunucu bağlantı hatası!");
+        }
+    };
+
+    const openEditModal = (club: Club) => {
+        setEditingClub(club);
+        setFormData({
+            name: club.name,
+            departmentId: club.departmentId,
+            description: club.description,
+        });
+        setShowEditModal(true);
+    };
+
+    const formatDate = (dateString: string) => {
+        if (!dateString) return "-";
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('tr-TR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+        } catch {
+            return "-";
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center py-12">
+                <div className="w-8 h-8 border-2 border-[#3b82f6] border-t-transparent rounded-full animate-spin"></div>
+                <span className="ml-3 text-gray-300 text-lg">Yükleniyor...</span>
+            </div>
+        );
+    }
+
+    return (
+        <div className="relative">
+            {/* Header */}
+            <div className="mb-8 flex items-center justify-between">
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] bg-clip-text text-transparent">
+                    Kulüp Yönetimi
+                </h1>
+                <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] px-6 py-3 rounded-xl font-bold text-white hover:from-[#3d2b79] hover:to-[#4b92ff] transition-all duration-200 shadow-lg"
+                >
+                    ➕ Yeni Kulüp Oluştur
+                </button>
+            </div>
+
+            {/* Clubs Table */}
+            <div className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] border-2 border-transparent bg-clip-padding rounded-xl p-1 hover:border-[#3b82f6] transition-all duration-300">
+                <div className="bg-[#0f0f1a] rounded-lg p-6">
+                    {clubs.length === 0 ? (
+                        <div className="text-center py-12">
+                            <p className="text-gray-400 text-lg">Henüz kulüp bulunmamaktadır.</p>
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full">
+                                <thead>
+                                    <tr className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] border-b-2 border-[#3b82f6]">
+                                        <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">Kulüp Adı</th>
+                                        <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">Bölüm</th>
+                                        <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">Açıklama</th>
+                                        <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">Durum</th>
+                                        <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">Açılış Tarihi</th>
+                                        <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">Kapanış Tarihi</th>
+                                        <th className="py-4 px-6 text-center text-lg font-bold text-[#3b82f6]">İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-700">
+                                    {clubs.map((club) => (
+                                        <tr
+                                            key={club.id}
+                                            className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] hover:from-[#2a2a3e] hover:to-[#3a3a4e] transition-all duration-300"
+                                        >
+                                            <td className="py-4 px-6 font-medium text-white">{club.name}</td>
+                                            <td className="py-4 px-6 text-gray-300">{club.departmentName}</td>
+                                            <td className="py-4 px-6 text-gray-300 max-w-xs truncate" title={club.description}>
+                                                {club.description || "-"}
+                                            </td>
+                                            <td className="py-4 px-6">
+                                                <button
+                                                    onClick={() => handleToggleActive(club.id)}
+                                                    className={`px-4 py-2 rounded-lg font-semibold text-white transition-all ${
+                                                        club.isActive
+                                                            ? "bg-green-600 hover:bg-green-700"
+                                                            : "bg-red-600 hover:bg-red-700"
+                                                    }`}
+                                                >
+                                                    {club.isActive ? "✅ Aktif" : "⏸️ Pasif"}
+                                                </button>
+                                            </td>
+                                            <td className="py-4 px-6 text-gray-300 text-sm">{formatDate(club.createdAt)}</td>
+                                            <td className="py-4 px-6 text-gray-300 text-sm">
+                                                {club.isActive ? "-" : formatDate(club.closedAt || "")}
+                                            </td>
+                                            <td className="py-4 px-6 text-center">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <button
+                                                        onClick={() => openEditModal(club)}
+                                                        className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-semibold text-white transition-all"
+                                                    >
+                                                        ✏️ Düzenle
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(club.id)}
+                                                        className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-semibold text-white transition-all"
+                                                    >
+                                                        🗑️ Sil
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Create Modal */}
+            {showCreateModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-[#1a1a2e] p-8 rounded-xl border border-[#3b82f6] max-w-md w-full mx-4">
+                        <h2 className="text-2xl font-bold mb-6">Yeni Kulüp Oluştur</h2>
+                        <form onSubmit={handleCreate} className="space-y-4">
+                            <input
+                                type="text"
+                                placeholder="Kulüp Adı *"
+                                value={formData.name}
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                required
+                                className="w-full p-4 bg-[#0f0f1a] rounded-lg text-white border border-[#3b82f6]/20 focus:outline-none focus:ring-2 focus:ring-[#3b82f6]"
+                            />
+                            <select
+                                value={formData.departmentId}
+                                onChange={(e) => setFormData({ ...formData, departmentId: parseInt(e.target.value) })}
+                                required
+                                className="w-full p-4 bg-[#0f0f1a] rounded-lg text-white border border-[#3b82f6]/20 focus:outline-none focus:ring-2 focus:ring-[#3b82f6] cursor-pointer"
+                            >
+                                <option value={0}>Bölüm Seçin *</option>
+                                {departments.map((dept) => (
+                                    <option key={dept.id} value={dept.id}>
+                                        {dept.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <textarea
+                                placeholder="Açıklama"
+                                value={formData.description}
+                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                rows={4}
+                                className="w-full p-4 bg-[#0f0f1a] rounded-lg text-white border border-[#3b82f6]/20 focus:outline-none focus:ring-2 focus:ring-[#3b82f6]"
+                            />
+                            <div className="flex gap-3">
+                                <button
+                                    type="submit"
+                                    className="flex-1 bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] py-3 rounded-xl font-bold text-white"
+                                >
+                                    Oluştur
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowCreateModal(false);
+                                        setFormData({ name: "", departmentId: 0, description: "" });
+                                    }}
+                                    className="flex-1 bg-gray-600 hover:bg-gray-700 py-3 rounded-xl font-bold text-white"
+                                >
+                                    İptal
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Modal */}
+            {showEditModal && editingClub && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-[#1a1a2e] p-8 rounded-xl border border-[#3b82f6] max-w-md w-full mx-4">
+                        <h2 className="text-2xl font-bold mb-6">Kulüp Düzenle</h2>
+                        <form onSubmit={handleEdit} className="space-y-4">
+                            <input
+                                type="text"
+                                placeholder="Kulüp Adı *"
+                                value={formData.name}
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                required
+                                className="w-full p-4 bg-[#0f0f1a] rounded-lg text-white border border-[#3b82f6]/20 focus:outline-none focus:ring-2 focus:ring-[#3b82f6]"
+                            />
+                            <select
+                                value={formData.departmentId}
+                                onChange={(e) => setFormData({ ...formData, departmentId: parseInt(e.target.value) })}
+                                required
+                                className="w-full p-4 bg-[#0f0f1a] rounded-lg text-white border border-[#3b82f6]/20 focus:outline-none focus:ring-2 focus:ring-[#3b82f6] cursor-pointer"
+                            >
+                                <option value={0}>Bölüm Seçin *</option>
+                                {departments.map((dept) => (
+                                    <option key={dept.id} value={dept.id}>
+                                        {dept.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <textarea
+                                placeholder="Açıklama"
+                                value={formData.description}
+                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                rows={4}
+                                className="w-full p-4 bg-[#0f0f1a] rounded-lg text-white border border-[#3b82f6]/20 focus:outline-none focus:ring-2 focus:ring-[#3b82f6]"
+                            />
+                            <div className="flex gap-3">
+                                <button
+                                    type="submit"
+                                    className="flex-1 bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] py-3 rounded-xl font-bold text-white"
+                                >
+                                    Güncelle
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowEditModal(false);
+                                        setEditingClub(null);
+                                        setFormData({ name: "", departmentId: 0, description: "" });
+                                    }}
+                                    className="flex-1 bg-gray-600 hover:bg-gray-700 py-3 rounded-xl font-bold text-white"
+                                >
+                                    İptal
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default ClubManagementPage;
+

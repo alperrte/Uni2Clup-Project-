@@ -9,6 +9,7 @@ interface User {
     email: string;
     role: string;
     registrationDate: string;
+    isActive: boolean;
 }
 
 interface UserListPageProps {
@@ -35,6 +36,10 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
     const [fetching, setFetching] = useState(true);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");
+    const [showClubModal, setShowClubModal] = useState(false);
+    const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+    const [clubs, setClubs] = useState<Array<{ id: number; name: string; departmentName: string }>>([]);
+    const [selectedClubId, setSelectedClubId] = useState<number | null>(null);
     const token = localStorage.getItem("token")?.trim() || "";
     const pageTitle = `${translateRole(targetRole)} Listesi`;
 
@@ -79,17 +84,93 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
         }
     };
 
+    // Kulüpleri yükle
+    const fetchClubs = async () => {
+        if (!token) return;
+        try {
+            const res = await fetch(`${API_URL}/api/Club`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                // Sadece aktif kulüpleri göster
+                setClubs(data.filter((c: any) => c.isActive).map((c: any) => ({
+                    id: c.id,
+                    name: c.name,
+                    departmentName: c.departmentName || ""
+                })));
+            }
+        } catch (error) {
+            console.error("Kulüpler yüklenemedi:", error);
+        }
+    };
+
     useEffect(() => {
         fetchUsers();
+        if (targetRole === "Student") {
+            fetchClubs();
+        }
     }, [targetRole, token]);
 
-    const handleDelete = async (id: number) => {
-        if (!checkTokenValidity()) return;
-        if (!window.confirm("Bu kullanıcıyı silmek istediğinizden emin misiniz?")) return;
+    const handleAssignClubManager = async () => {
+        if (!checkTokenValidity() || !selectedUserId || !selectedClubId) return;
 
         try {
-            const res = await fetch(`${API_URL}/api/Auth/delete/${id}`, {
-                method: "DELETE",
+            const res = await fetch(`${API_URL}/api/Auth/assign-club-manager/${selectedUserId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ clubId: selectedClubId }),
+            });
+
+            if (res.status === 401) {
+                alert("🚫 Token geçersiz. Lütfen tekrar giriş yapın.");
+                localStorage.clear();
+                window.location.reload();
+                return;
+            }
+
+            if (res.ok) {
+                const data = await res.json();
+                setSuccessMessage(data.message);
+                setShowSuccessModal(true);
+                setShowClubModal(false);
+                setSelectedUserId(null);
+                setSelectedClubId(null);
+                fetchUsers(); // Listeyi yenile
+                setTimeout(() => setShowSuccessModal(false), 3000);
+            } else {
+                const errorData = await res.json();
+                alert(errorData.message || "❌ İşlem başarısız.");
+            }
+        } catch (error) {
+            alert("🚫 Sunucu bağlantı hatası!");
+        }
+    };
+
+    const openClubModal = (userId: number) => {
+        setSelectedUserId(userId);
+        setSelectedClubId(null);
+        setShowClubModal(true);
+    };
+
+    const handleToggleActive = async (id: number) => {
+        if (!checkTokenValidity()) return;
+        
+        const user = users.find(u => u.id === id);
+        const action = user?.isActive ? "pasif" : "aktif";
+        
+        if (!window.confirm(`Bu kullanıcıyı ${action} etmek istediğinizden emin misiniz?`)) return;
+
+        try {
+            const res = await fetch(`${API_URL}/api/Auth/toggle-active/${id}`, {
+                method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
@@ -104,12 +185,16 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
             }
 
             if (res.ok) {
-                setUsers(users.filter((u) => u.id !== id));
-                setSuccessMessage("✅ Kullanıcı başarıyla silindi.");
+                const data = await res.json();
+                // Kullanıcı listesini güncelle
+                setUsers(users.map(u => 
+                    u.id === id ? { ...u, isActive: data.isActive } : u
+                ));
+                setSuccessMessage(data.message);
                 setShowSuccessModal(true);
                 setTimeout(() => setShowSuccessModal(false), 2000);
             } else {
-                alert("❌ Kullanıcı silinemedi.");
+                alert("❌ İşlem başarısız.");
             }
         } catch {
             alert("🚫 Sunucu bağlantı hatası!");
@@ -227,12 +312,26 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
                                                 </td>
                                                 <td className="py-4 px-6 text-gray-300 text-sm">{formatDate(user.registrationDate)}</td>
                                                 <td className="py-4 px-6 text-center">
-                                                    <button
-                                                        onClick={() => handleDelete(user.id)}
-                                                        className="bg-indigo-700 hover:bg-indigo-900 px-4 py-2 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
-                                                    >
-                                                        🗑️ Sil
-                                                    </button>
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        {targetRole === "Student" && (
+                                                            <button
+                                                                onClick={() => openClubModal(user.id)}
+                                                                className="px-4 py-2 rounded-lg font-semibold text-white bg-purple-600 hover:bg-purple-700 transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+                                                            >
+                                                                🎯 Kulüp Yöneticisi Yap
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            onClick={() => handleToggleActive(user.id)}
+                                                            className={`px-4 py-2 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-xl ${
+                                                                user.isActive
+                                                                    ? "bg-green-600 hover:bg-green-700"
+                                                                    : "bg-red-600 hover:bg-red-700"
+                                                            }`}
+                                                        >
+                                                            {user.isActive ? "✅ Aktif" : "⏸️ Pasif"}
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}
@@ -256,6 +355,48 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
                             </div>
                             <h3 className="text-2xl font-bold text-white mb-4">İşlem Başarılı!</h3>
                             <p className="text-gray-300 mb-6">{successMessage}</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 🎯 Kulüp Seçim Modal */}
+            {showClubModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-gradient-to-br from-[#1a1a2e] to-[#2a2a3e] border border-[#3b82f6] rounded-2xl p-8 mx-4 max-w-md w-full">
+                        <h2 className="text-2xl font-bold mb-6 text-white">Kulüp Yöneticisi Ata</h2>
+                        <div className="space-y-4">
+                            <select
+                                value={selectedClubId || ""}
+                                onChange={(e) => setSelectedClubId(e.target.value ? parseInt(e.target.value) : null)}
+                                className="w-full p-4 bg-[#0f0f1a] rounded-lg text-white border border-[#3b82f6]/20 focus:outline-none focus:ring-2 focus:ring-[#3b82f6] cursor-pointer"
+                            >
+                                <option value="">Kulüp Seçin *</option>
+                                {clubs.map((club) => (
+                                    <option key={club.id} value={club.id}>
+                                        {club.name} {club.departmentName ? `(${club.departmentName})` : ""}
+                                    </option>
+                                ))}
+                            </select>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={handleAssignClubManager}
+                                    disabled={!selectedClubId}
+                                    className="flex-1 bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] py-3 rounded-xl font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Ata
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowClubModal(false);
+                                        setSelectedUserId(null);
+                                        setSelectedClubId(null);
+                                    }}
+                                    className="flex-1 bg-gray-600 hover:bg-gray-700 py-3 rounded-xl font-bold text-white"
+                                >
+                                    İptal
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -62,24 +62,27 @@ namespace Uni2ClupProjectBackend.Controllers
             }
         }
 
-        // 🧾 Öğrenci Başvuru
+        // 🧾 Öğrenci Başvurusu
         [HttpPost("student-apply")]
         public async Task<IActionResult> StudentApply([FromBody] StudentApplicationCreateDto dto)
         {
             if (!dto.Email.EndsWith("@dogus.edu.tr"))
                 return BadRequest(new { message = "Lütfen @dogus.edu.tr uzantılı bir e-posta kullanın." });
 
-            var existing = await _db.StudentApplications
-                .FirstOrDefaultAsync(x => x.Email == dto.Email);
+            var existing = await _db.StudentApplications.FirstOrDefaultAsync(x => x.Email == dto.Email);
             if (existing != null)
                 return BadRequest(new { message = "Bu e-posta ile daha önce başvuru yapılmış." });
+
+            var department = await _db.Departments.FindAsync(dto.DepartmentId);
+            if (department == null)
+                return BadRequest(new { message = "❌ Geçersiz bölüm seçimi." });
 
             var application = new StudentApplication
             {
                 Name = dto.Name,
                 Surname = dto.Surname,
                 Email = dto.Email,
-                Department = dto.Department,
+                DepartmentId = dto.DepartmentId,
                 Status = "Beklemede",
                 CreatedAt = DateTime.UtcNow
             };
@@ -87,7 +90,7 @@ namespace Uni2ClupProjectBackend.Controllers
             _db.StudentApplications.Add(application);
             await _db.SaveChangesAsync();
 
-            return Ok(new { message = "Başvurunuz alınmıştır. Admin onayı sonrası mail gönderilecektir." });
+            return Ok(new { message = "Başvurunuz alınmıştır. Yönetici onayı sonrası geçici şifreniz mail ile gönderilecektir." });
         }
 
         // ✅ Onaylama
@@ -111,6 +114,7 @@ namespace Uni2ClupProjectBackend.Controllers
                 Email = application.Email,
                 PasswordHash = passwordHash,
                 Role = "Student",
+                DepartmentId = application.DepartmentId,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -120,9 +124,21 @@ namespace Uni2ClupProjectBackend.Controllers
 
             await _emailService.SendEmailAsync(
                 application.Email,
-                "Üyeliğiniz Onaylandı",
-                $"Merhaba {application.Name},\n\nKaydınız başarıyla oluşturulmuştur.\nGeçici şifreniz: {tempPassword}\n\nLütfen giriş yaptıktan sonra şifrenizi değiştiriniz.\n\nUni2Clup"
-            );
+                "Uni2Clup - Öğrencilik Başvurunuz Onaylandı",
+$@"
+Sayın {application.Name} {application.Surname},<br><br>
+
+Üniversitemiz öğrenci kulüpleri ve etkinlik platformu <strong>Uni2Clup</strong> sistemine yaptığınız öğrencilik başvurusu <strong>başarıyla onaylanmıştır</strong>.<br><br>
+
+Hesabınız oluşturulmuş olup sisteme giriş yapabilmeniz için geçici şifreniz aşağıda belirtilmiştir:<br><br>
+
+<strong>Geçici Şifreniz:</strong> <span style='font-size:18px; font-weight:bold;'>{tempPassword}</span><br><br>
+
+Lütfen hesabınıza giriş yaptıktan sonra şifrenizi güncelleyiniz.<br><br>
+
+Saygılarımızla,<br>
+<strong>Uni2Clup Sistem Yönetimi</strong>
+");
 
             return Ok(new { message = "Başvuru onaylandı ve kullanıcı oluşturuldu." });
         }
@@ -143,9 +159,17 @@ namespace Uni2ClupProjectBackend.Controllers
 
             await _emailService.SendEmailAsync(
                 application.Email,
-                "Üyeliğiniz Reddedildi",
-                $"Merhaba {application.Name},\n\nÜyelik başvurunuz değerlendirilmiş ve maalesef reddedilmiştir.\n\nİyi günler dileriz.\nUni2Clup"
-            );
+                "Uni2Clup - Başvurunuz Hakkında",
+$@"
+Sayın {application.Name} {application.Surname},<br><br>
+
+Uni2Clup sistemine yapmış olduğunuz öğrencilik başvurusu değerlendirilmiş olup <strong>maalesef uygun bulunmamıştır</strong>.<br><br>
+
+Detaylı bilgi için ilgili birim ile iletişime geçebilirsiniz.<br><br>
+
+Saygılarımızla,<br>
+<strong>Uni2Clup Sistem Yönetimi</strong>
+");
 
             return Ok(new { message = "Başvuru reddedildi." });
         }
@@ -155,12 +179,25 @@ namespace Uni2ClupProjectBackend.Controllers
         public async Task<IActionResult> GetApplications()
         {
             var apps = await _db.StudentApplications
+                .Include(a => a.Department)
                 .OrderByDescending(x => x.CreatedAt)
+                .Select(a => new
+                {
+                    id = a.Id,
+                    name = a.Name,
+                    surname = a.Surname,
+                    email = a.Email,
+                    departmentId = a.DepartmentId,
+                    department = a.Department != null ? a.Department.Name : "",
+                    createdAt = a.CreatedAt,
+                    status = a.Status
+                })
                 .ToListAsync();
+
             return Ok(apps);
         }
 
-        // 🧩 Kullanıcı Ekle (sadece Admin)
+        // 🧩 Kullanıcı Ekle (Admin)
         [HttpPost("register")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Register([FromBody] UserCreateDto dto)
@@ -169,16 +206,44 @@ namespace Uni2ClupProjectBackend.Controllers
             if (!result.Success)
                 return BadRequest(new { message = result.Message });
 
+            try
+            {
+                await _emailService.SendEmailAsync(
+                    result.Created!.Email,
+                    "Uni2Clup - Hesabınız Oluşturuldu",
+$@"
+Sayın {result.Created!.Name} {result.Created!.Surname},<br><br>
+
+Tarafınıza Uni2Clup sisteminde kullanılmak üzere bir kullanıcı hesabı oluşturulmuştur.<br><br>
+
+<strong>Geçici Şifreniz:</strong> 
+<span style='font-size:18px; font-weight:bold;'>{result.PlainPassword}</span><br><br>
+
+Lütfen ilk girişinizden sonra güvenliğiniz için şifrenizi değiştiriniz.<br><br>
+
+Saygılarımızla,<br>
+<strong>Uni2Clup Sistem Yönetimi</strong>
+");
+            }
+            catch
+            {
+                return Ok(new
+                {
+                    message = result.Message + " (Mail gönderilemedi, şifre aşağıda)",
+                    email = result.Created!.Email,
+                    password = result.PlainPassword
+                });
+            }
+
             return Ok(new
             {
                 message = result.Message,
                 email = result.Created!.Email,
-                role = result.Created.Role,
-                registrationDate = result.Created.CreatedAt
+                password = result.PlainPassword
             });
         }
 
-        // 📋 Kullanıcıları Listele (sadece Admin)
+        // 📋 Kullanıcıları Listele
         [HttpGet("users")]
         [Authorize(Roles = "Admin")]
         public IActionResult GetAllUsers()
@@ -190,36 +255,63 @@ namespace Uni2ClupProjectBackend.Controllers
                 surname = u.Surname,
                 email = u.Email,
                 role = u.Role,
-                registrationDate = u.CreatedAt
+                registrationDate = u.CreatedAt,
+                isActive = u.IsActive
             }).ToList();
 
             return Ok(users);
         }
 
-        [HttpGet("test-email")]
-        public async Task<IActionResult> TestEmail()
-        {
-            await _emailService.SendEmailAsync(
-                "202303011110@dogus.edu.tr",
-                "Test Mail",
-                "Bu bir test mailidir — Uni2Clup sistemi üzerinden gönderildi."
-            );
-            return Ok("Mail gönderildi.");
-        }
-
-
-        // 🗑️ Kullanıcı Sil
-        [HttpDelete("delete/{id}")]
+        // 🔄 Aktif/Pasif Toggle
+        [HttpPut("toggle-active/{id}")]
         [Authorize(Roles = "Admin")]
-        public IActionResult DeleteUser(int id)
+        public IActionResult ToggleUserActive(int id)
         {
             var user = _db.Users.Find(id);
             if (user == null)
                 return NotFound(new { message = "❌ Kullanıcı bulunamadı." });
 
-            _db.Users.Remove(user);
+            user.IsActive = !user.IsActive;
             _db.SaveChanges();
-            return Ok(new { message = "🗑️ Kullanıcı silindi." });
+
+            return Ok(new
+            {
+                message = user.IsActive ? "Kullanıcı aktif edildi." : "Kullanıcı pasif edildi.",
+                isActive = user.IsActive
+            });
+        }
+
+        // 🎯 Kulüp Yöneticisi Atama
+        [HttpPut("assign-club-manager/{userId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AssignClubManager(int userId, [FromBody] AssignClubManagerDto dto)
+        {
+            var user = await _db.Users.FindAsync(userId);
+            if (user == null)
+                return NotFound(new { message = "❌ Kullanıcı bulunamadı." });
+
+            if (user.Role != "Student")
+                return BadRequest(new { message = "Sadece öğrenciler atanabilir." });
+
+            var club = await _db.Clubs.FindAsync(dto.ClubId);
+            if (club == null)
+                return NotFound(new { message = "❌ Kulüp bulunamadı." });
+
+            if (!club.IsActive)
+                return BadRequest(new { message = "Pasif kulübe yönetici atanamaz." });
+
+            user.Role = "ClubManager";
+            user.ClubId = dto.ClubId;
+
+            await _db.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = $"{user.Name} {user.Surname} artık {club.Name} kulübünün yöneticisi.",
+                userId = user.Id,
+                clubId = club.Id,
+                clubName = club.Name
+            });
         }
 
         // 🔑 Token Üretimi
@@ -255,11 +347,18 @@ namespace Uni2ClupProjectBackend.Controllers
                 .Select(s => s[random.Next(s.Length)]).ToArray());
         }
 
-        // 📩 Login DTO
-        public class LoginRequest
-        {
-            public string Email { get; set; } = string.Empty;
-            public string Password { get; set; } = string.Empty;
-        }
-    }
+    } // END AuthController CLASS
+
+} // END NAMESPACE
+
+// DTO'lar
+public class LoginRequest
+{
+    public string Email { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+}
+
+public class AssignClubManagerDto
+{
+    public int ClubId { get; set; }
 }

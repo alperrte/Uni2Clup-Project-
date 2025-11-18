@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+﻿import React, { useState, useEffect } from "react";
 
 const LoginPage = ({ onLoginSuccess }) => {
     const [email, setEmail] = useState("");
@@ -7,10 +7,22 @@ const LoginPage = ({ onLoginSuccess }) => {
     const [showPassword, setShowPassword] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");
-    const [showRegisterModal, setShowRegisterModal] = useState(false); // ✅ Yeni state
+    const [showRegisterModal, setShowRegisterModal] = useState(false);
 
-    const API_URL = "http://localhost:8080"; // ✅ Backend portu sabit
+    // ✅ Bölüm listesi
+    const [departments, setDepartments] = useState([]);
 
+    const API_URL = "http://localhost:8080";
+
+    // ✅ Bölümleri backend’den çek
+    useEffect(() => {
+        fetch(`${API_URL}/api/Department`)
+            .then((res) => res.json())
+            .then((data) => setDepartments(data))
+            .catch((e) => console.error("Department fetch error:", e));
+    }, []);
+
+    // LOGIN -----
     const handleLogin = async (e) => {
         e.preventDefault();
         setIsLoading(true);
@@ -55,29 +67,30 @@ const LoginPage = ({ onLoginSuccess }) => {
 
             setTimeout(() => {
                 setShowSuccessModal(false);
-                onLoginSuccess?.(normalizedUser); // ✅ Token ile App.js'e gönder
+                onLoginSuccess?.(normalizedUser);
             }, 1500);
         } catch (error) {
-            alert("🚫 Sunucuya bağlanılamadı. Backend (8800) açık mı?");
+            alert("🚫 Sunucuya bağlanılamadı.");
         } finally {
             setIsLoading(false);
         }
     };
 
-    // ✅ Öğrenci kayıt formu (modal) işlemi
+    // REGISTER -----
     const handleRegister = async (e) => {
         e.preventDefault();
         const form = e.target;
+
         const name = form.name.value;
         const surname = form.surname.value;
         const email = form.email.value;
-        const department = form.department.value;
+        const departmentId = form.departmentId.value;  // 👈 DÜZELTİLDİ
 
         try {
             const res = await fetch(`${API_URL}/api/Auth/student-apply`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, surname, email, department }),
+                body: JSON.stringify({ name, surname, email, departmentId }), // 👈 DÜZELTİLDİ
             });
 
             if (res.ok) {
@@ -94,14 +107,15 @@ const LoginPage = ({ onLoginSuccess }) => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#0a0a1a] via-[#0f0f2a] to-[#1a1a3a] text-white flex items-center justify-center relative overflow-hidden">
-            {/* Animated Background */}
+
+            {/* ANIMATED BACKGROUND (SENİN KODUN) */}
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-[#2d1b69] to-[#1e3a8a] rounded-full opacity-15 animate-pulse"></div>
                 <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-[#1e3a8a] to-[#2d1b69] rounded-full opacity-10 animate-pulse delay-1000"></div>
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-[#2d1b69] to-[#1e3a8a] rounded-full opacity-8 animate-pulse delay-500"></div>
             </div>
 
-            {/* Floating Particles */}
+            {/* FLOATING PARTICLES */}
             <div className="absolute inset-0">
                 {[...Array(15)].map((_, i) => (
                     <div
@@ -117,8 +131,10 @@ const LoginPage = ({ onLoginSuccess }) => {
                 ))}
             </div>
 
+            {/* CONTENT */}
             <div className="relative z-10 w-full max-w-md mx-4">
-                {/* Welcome Section */}
+
+                {/* WELCOME SECTION */}
                 <div className="text-center mb-12">
                     <div className="relative inline-block mb-8">
                         <div className="w-24 h-24 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6] rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl animate-bounce">
@@ -144,7 +160,6 @@ const LoginPage = ({ onLoginSuccess }) => {
                         </div>
                     </div>
 
-                    {/* Anket Sistemi Badge */}
                     <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-[#1a1a3a] to-[#2a2a4a] border border-[#3b82f6] rounded-full px-4 py-2 mb-4">
                         <svg className="w-5 h-5 text-[#3b82f6]" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -153,9 +168,10 @@ const LoginPage = ({ onLoginSuccess }) => {
                     </div>
                 </div>
 
-                {/* Login Form */}
+                {/* LOGIN */}
                 <form onSubmit={handleLogin} className="space-y-6">
-                    {/* Email Input */}
+
+                    {/* EMAIL */}
                     <div className="group">
                         <div className="relative bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] border-2 border-transparent bg-clip-padding rounded-xl p-1 hover:border-[#3b82f6] transition-all duration-300">
                             <div className="bg-[#0f0f1a] rounded-lg p-4 flex items-center space-x-3">
@@ -164,6 +180,7 @@ const LoginPage = ({ onLoginSuccess }) => {
                                         <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
                                     </svg>
                                 </div>
+
                                 <input
                                     type="email"
                                     placeholder="E-posta Adresi"
@@ -176,7 +193,7 @@ const LoginPage = ({ onLoginSuccess }) => {
                         </div>
                     </div>
 
-                    {/* Password Input */}
+                    {/* PASSWORD INPUT */}
                     <div className="group">
                         <div className="relative bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] border-2 border-transparent bg-clip-padding rounded-xl p-1 hover:border-[#3b82f6] transition-all duration-300">
                             <div className="bg-[#0f0f1a] rounded-lg p-4 flex items-center space-x-3">
@@ -185,6 +202,7 @@ const LoginPage = ({ onLoginSuccess }) => {
                                         <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z" />
                                     </svg>
                                 </div>
+
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     placeholder="Şifre"
@@ -193,6 +211,7 @@ const LoginPage = ({ onLoginSuccess }) => {
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
                                 />
+
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
@@ -212,7 +231,7 @@ const LoginPage = ({ onLoginSuccess }) => {
                         </div>
                     </div>
 
-                    {/* Login Button */}
+                    {/* LOGIN BUTTON */}
                     <button
                         type="submit"
                         disabled={isLoading}
@@ -237,13 +256,12 @@ const LoginPage = ({ onLoginSuccess }) => {
                     </button>
                 </form>
 
-                {/* Footer */}
+                {/* FOOTER */}
                 <div className="text-center mt-8">
                     <p className="text-gray-400 text-sm">
                         Güvenli giriş için bilgilerinizi doğru girin
                     </p>
 
-                    {/* ✅ Yeni: Kayıt Ol Butonu */}
                     <p className="text-gray-400 text-sm mt-4">
                         Hesabın yok mu?{" "}
                         <button
@@ -256,21 +274,40 @@ const LoginPage = ({ onLoginSuccess }) => {
                 </div>
             </div>
 
-            {/* ✅ Yeni: Kayıt Ol Modal */}
+            {/* REGISTER MODAL */}
             {showRegisterModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
                     <div className="bg-gradient-to-br from-[#1a1a2e] to-[#2a2a3e] border border-[#3b82f6] rounded-2xl p-8 w-full max-w-lg shadow-2xl animate-bounceIn">
-                        <h2 className="text-2xl font-bold text-white mb-6 text-center">🎓 Öğrenci Kayıt Başvurusu</h2>
+                        <h2 className="text-2xl font-bold text-white mb-6 text-center">
+                            🎓 Öğrenci Kayıt Başvurusu
+                        </h2>
 
                         <form onSubmit={handleRegister} className="space-y-4">
                             <input name="name" placeholder="Ad" className="w-full p-3 rounded-lg bg-[#0f0f1a] border border-[#3b82f6] text-white" required />
                             <input name="surname" placeholder="Soyad" className="w-full p-3 rounded-lg bg-[#0f0f1a] border border-[#3b82f6] text-white" required />
                             <input name="email" type="email" placeholder="E-posta (@dogus.edu.tr)" className="w-full p-3 rounded-lg bg-[#0f0f1a] border border-[#3b82f6] text-white" required />
-                            <input name="department" placeholder="Bölüm" className="w-full p-3 rounded-lg bg-[#0f0f1a] border border-[#3b82f6] text-white" required />
 
-                            <button type="submit" className="w-full bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] text-white font-bold py-3 rounded-lg hover:opacity-90">
+                            {/* 🔽 DROPDOWN EKLENDİ */}
+                            <select
+                                name="departmentId"
+                                className="w-full p-3 rounded-lg bg-[#0f0f1a] border border-[#3b82f6] text-white"
+                                required
+                            >
+                                <option value="">Bölüm Seçin</option>
+                                {departments.map((dept) => (
+                                    <option key={dept.id} value={dept.id}>
+                                        {dept.name}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <button
+                                type="submit"
+                                className="w-full bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] text-white font-bold py-3 rounded-lg hover:opacity-90"
+                            >
                                 Başvuruyu Gönder
                             </button>
+
                             <button
                                 type="button"
                                 onClick={() => setShowRegisterModal(false)}
@@ -283,7 +320,7 @@ const LoginPage = ({ onLoginSuccess }) => {
                 </div>
             )}
 
-            {/* ✅ Success Modal */}
+            {/* SUCCESS MODAL */}
             {showSuccessModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
                     <div className="bg-gradient-to-br from-[#1a1a2e] to-[#2a2a3e] border border-[#3b82f6] rounded-2xl p-8 mx-4 max-w-md w-full transform animate-bounceIn shadow-2xl">
@@ -310,7 +347,7 @@ const LoginPage = ({ onLoginSuccess }) => {
                                     </span>
                                 </div>
                                 <p className="text-xs text-gray-400">
-                                    Artık etkinliklere ve kulüplere katılabilir, görüşlerinizi paylaşabilir ve topluluk oylamalarına dahil olabilirsiniz!
+                                    Artık etkinliklere katılabilir, kulüp başvurusu yapabilir ve topluluk oylamalarına dahil olabilirsiniz!
                                 </p>
                             </div>
 

@@ -9,6 +9,7 @@ import AdminLayout from "./components/AdminLayout";
 import AddUserPage from "./pages/AddUserPage";
 import UserListPage from "./pages/UserListPage";
 import StudentApplicationsPage from "./pages/StudentApplicationsPage";
+import ClubManagementPage from "./pages/ClubManagementPage";
 
 interface UserData {
     name: string;
@@ -78,6 +79,7 @@ const App: React.FC = () => {
                 {/* Yeni eklenen ROUTELAR */}
                 <Route path="users" element={<UserListPage />} />
                 <Route path="applications" element={<StudentApplicationsPage />} />
+                <Route path="clubs" element={<ClubManagementPage />} />
 
                 {/* Dinamik kullanıcı listeleri */}
                 <Route path="students" element={<UserListPage targetRole="Student" />} />

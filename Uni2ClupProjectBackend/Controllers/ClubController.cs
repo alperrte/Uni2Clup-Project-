@@ -1,0 +1,185 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using Uni2ClupProjectBackend.Data;
+using Uni2ClupProjectBackend.Models;
+
+namespace Uni2ClupProjectBackend.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class ClubController : ControllerBase
+    {
+        private readonly AppDbContext _db;
+
+        public ClubController(AppDbContext db)
+        {
+            _db = db;
+        }
+
+        // 📋 Tüm kulüpleri listele
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetAllClubs()
+        {
+            var clubs = await _db.Clubs
+                .Include(c => c.Department)
+                .OrderByDescending(c => c.CreatedAt)
+                .Select(c => new
+                {
+                    id = c.Id,
+                    name = c.Name,
+                    departmentId = c.DepartmentId,
+                    departmentName = c.Department != null ? c.Department.Name : "",
+                    description = c.Description,
+                    isActive = c.IsActive,
+                    createdAt = c.CreatedAt,
+                    closedAt = c.ClosedAt
+                })
+                .ToListAsync();
+
+            return Ok(clubs);
+        }
+
+        // ➕ Yeni kulüp oluştur
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> CreateClub([FromBody] ClubCreateDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Name))
+                return BadRequest(new { message = "❌ Kulüp adı gereklidir." });
+
+            if (dto.DepartmentId <= 0)
+                return BadRequest(new { message = "❌ Bölüm seçimi gereklidir." });
+
+            var department = await _db.Departments.FindAsync(dto.DepartmentId);
+            if (department == null)
+                return NotFound(new { message = "❌ Bölüm bulunamadı." });
+
+            var club = new Club
+            {
+                Name = dto.Name.Trim(),
+                DepartmentId = dto.DepartmentId,
+                Description = dto.Description?.Trim() ?? "",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _db.Clubs.Add(club);
+            await _db.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "✅ Kulüp başarıyla oluşturuldu.",
+                id = club.Id,
+                name = club.Name,
+                departmentId = club.DepartmentId,
+                departmentName = department.Name,
+                description = club.Description,
+                isActive = club.IsActive,
+                createdAt = club.CreatedAt
+            });
+        }
+
+        // ✏️ Kulüp güncelle
+        [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdateClub(int id, [FromBody] ClubUpdateDto dto)
+        {
+            var club = await _db.Clubs.FindAsync(id);
+            if (club == null)
+                return NotFound(new { message = "❌ Kulüp bulunamadı." });
+
+            if (string.IsNullOrWhiteSpace(dto.Name))
+                return BadRequest(new { message = "❌ Kulüp adı gereklidir." });
+
+            if (dto.DepartmentId <= 0)
+                return BadRequest(new { message = "❌ Bölüm seçimi gereklidir." });
+
+            var department = await _db.Departments.FindAsync(dto.DepartmentId);
+            if (department == null)
+                return NotFound(new { message = "❌ Bölüm bulunamadı." });
+
+            club.Name = dto.Name.Trim();
+            club.DepartmentId = dto.DepartmentId;
+            club.Description = dto.Description?.Trim() ?? "";
+
+            await _db.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "✅ Kulüp başarıyla güncellendi.",
+                id = club.Id,
+                name = club.Name,
+                departmentId = club.DepartmentId,
+                departmentName = department.Name,
+                description = club.Description,
+                isActive = club.IsActive,
+                createdAt = club.CreatedAt,
+                closedAt = club.ClosedAt
+            });
+        }
+
+        // 🔄 Aktif/Pasif Toggle
+        [HttpPut("toggle-active/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ToggleClubActive(int id)
+        {
+            var club = await _db.Clubs.FindAsync(id);
+            if (club == null)
+                return NotFound(new { message = "❌ Kulüp bulunamadı." });
+
+            club.IsActive = !club.IsActive;
+            
+            // Pasif edilirse kapanış tarihi ekle, aktif edilirse kaldır
+            if (!club.IsActive && club.ClosedAt == null)
+            {
+                club.ClosedAt = DateTime.UtcNow;
+            }
+            else if (club.IsActive)
+            {
+                club.ClosedAt = null;
+            }
+
+            await _db.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = club.IsActive ? "✅ Kulüp aktif edildi." : "⏸️ Kulüp pasif edildi.",
+                isActive = club.IsActive,
+                closedAt = club.ClosedAt
+            });
+        }
+
+        // 🗑️ Kulüp sil
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteClub(int id)
+        {
+            var club = await _db.Clubs.FindAsync(id);
+            if (club == null)
+                return NotFound(new { message = "❌ Kulüp bulunamadı." });
+
+            _db.Clubs.Remove(club);
+            await _db.SaveChangesAsync();
+
+            return Ok(new { message = "🗑️ Kulüp başarıyla silindi." });
+        }
+    }
+
+    // DTOs
+    public class ClubCreateDto
+    {
+        public string Name { get; set; } = string.Empty;
+        public int DepartmentId { get; set; }
+        public string? Description { get; set; }
+    }
+
+    public class ClubUpdateDto
+    {
+        public string Name { get; set; } = string.Empty;
+        public int DepartmentId { get; set; }
+        public string? Description { get; set; }
+    }
+}
+
