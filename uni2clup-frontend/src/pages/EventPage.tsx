@@ -175,89 +175,115 @@ const EventPage: React.FC = () => {
 
     return (
         <>
-        <div className="max-w-6xl mx-auto mt-10">
-            <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl text-white font-bold">📅 Etkinlik Listesi</h1>
-
-                <div className="relative z-50">
-                    <button
-                        onClick={() => setOpen(!open)}
-                        className="bg-blue-700 px-4 py-2 rounded-lg"
-                    >
-                        {filter} ⌄
-                    </button>
-
-                    {open && (
-                        <div className="absolute right-0 bg-[#0f0f1a] border border-[#3b82f6] rounded-lg mt-2 w-40">
-                            {["Tümü", "Devam Ediyor", "Yaklaşıyor", "Bitti"].map(item => (
-                                <button
-                                    key={item}
-                                    onClick={() => {
-                                        setFilter(item);
-                                        setOpen(false);
-                                    }}
-                                    className="block w-full text-left px-4 py-2 hover:bg-[#3b82f6]"
-                                >
-                                    {item}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {isLoading ? (
-                <p className="text-white">Yükleniyor...</p>
-            ) : filtered.length === 0 ? (
-                <p className="text-gray-400">Gösterilecek etkinlik bulunamadı.</p>
-            ) : (
-                <div className="space-y-4">
-                    {filtered.map(ev => {
-                        const status = getStatus(ev.StartDate, ev.EndDate);
-
-                        const color =
-                            status === "Devam Ediyor" ? "bg-green-600"
-                                : status === "Yaklaşıyor" ? "bg-yellow-600"
-                                    : "bg-red-600";
-
-                        return (
-                            <div
-                                key={ev.id}
-                                className="p-6 rounded-xl bg-[#1a1a2e] border border-[#3b82f6] relative"
-                            >
-                                <span className={`${color} absolute top-3 right-3 px-3 py-1 rounded-full text-sm`}>
-                                    {status}
-                                </span>
-
-                                <h3 className="text-xl text-[#3b82f6] font-bold">{ev.Name}</h3>
-                                <p className="text-gray-300 mt-1">📍 {ev.Location}</p>
-                                <p className="text-gray-300">👥 Kontenjan: {ev.Capacity}</p>
-                                <p className="text-gray-300">🏛 {ev.ClubName}</p>
-                                <p className="text-gray-300 mt-2">
-                                    📅 {formatForDisplay(ev.StartDate)} — {formatForDisplay(ev.EndDate)}
-                                </p>
-                                <p className="text-gray-400 italic mt-2">“{ev.Description}”</p>
-
-                                <div className="flex gap-3 mt-4">
+        <div className="relative">
+            <div className="absolute inset-0 -z-10 opacity-40 blur-3xl bg-gradient-to-r from-indigo-900 via-purple-900 to-blue-900"></div>
+            <div className="max-w-6xl mx-auto py-10 space-y-8 text-white">
+                <div className="bg-gradient-to-br from-[#1c1f44] to-[#111326] border border-[#3b82f6]/30 rounded-3xl p-8 shadow-2xl flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <p className="text-sm uppercase tracking-[0.4em] text-[#93c5fd] mb-2">Kulüp Etkinlikleri</p>
+                        <h1 className="text-4xl font-extrabold">Etkinlik Paneli</h1>
+                        <p className="text-gray-300 mt-2 max-w-xl">
+                                Kulübünüzün yaklaşan ve devam eden etkinliklerini burada görüntüleyebilir, düzenleyebilir veya silebilirsiniz.
+                        </p>
+                    </div>
+                    <div className="relative">
+                        <button
+                            onClick={() => setOpen(!open)}
+                            className="px-6 py-3 rounded-2xl bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] shadow-lg flex items-center gap-2"
+                        >
+                            {filter}
+                            <span className="text-sm opacity-80">⌄</span>
+                        </button>
+                        {open && (
+                            <div className="absolute right-0 mt-3 w-48 bg-[#0f0f1a] border border-[#3b82f6]/40 rounded-2xl shadow-2xl overflow-hidden">
+                                {["Tümü", "Devam Ediyor", "Yaklaşıyor", "Bitti"].map(item => (
                                     <button
-                                        onClick={() => onEdit(ev)}
-                                        className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700"
+                                        key={item}
+                                        onClick={() => {
+                                            setFilter(item);
+                                            setOpen(false);
+                                        }}
+                                        className={`block w-full text-left px-5 py-3 text-sm transition ${filter === item ? "bg-[#1d2760] text-white" : "text-gray-300 hover:bg-[#111a3b]"}`}
                                     >
-                                        ✏️ Düzenle
+                                        {item}
                                     </button>
-
-                                    <button
-                                        onClick={() => onDelete(ev.id)}
-                                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                                    >
-                                        🗑 Sil
-                                    </button>
-                                </div>
+                                ))}
                             </div>
-                        );
-                    })}
+                        )}
+                    </div>
                 </div>
-            )}
+
+                {isLoading ? (
+                    <div className="bg-[#0f0f1a]/80 border border-[#3b82f6]/20 rounded-3xl p-12 text-center text-gray-300">
+                        Etkinlikler yükleniyor...
+                    </div>
+                ) : filtered.length === 0 ? (
+                    <div className="bg-[#0f0f1a]/80 border border-[#3b82f6]/20 rounded-3xl p-12 text-center text-gray-300">
+                        Gösterilecek etkinlik bulunamadı.
+                    </div>
+                ) : (
+                    <div className="space-y-5">
+                        {filtered.map(ev => {
+                            const status = getStatus(ev.StartDate, ev.EndDate);
+                            const color =
+                                status === "Devam Ediyor" ? "from-green-500/70 to-green-700/40"
+                                    : status === "Yaklaşıyor" ? "from-yellow-500/70 to-yellow-700/40"
+                                        : "from-red-500/70 to-red-700/40";
+
+                            return (
+                                <div
+                                    key={ev.id}
+                                    className="relative overflow-hidden rounded-3xl border border-[#3b82f6]/20 bg-[#0f0f1a]/80 shadow-xl p-6"
+                                >
+                                    <div className={`absolute top-4 right-4 px-4 py-1 rounded-full text-sm bg-gradient-to-r ${color}`}>
+                                        {status}
+                                    </div>
+
+                                    <div className="flex flex-col gap-3">
+                                        <h3 className="text-2xl font-bold text-[#93c5fd]">{ev.Name}</h3>
+                                        <p className="text-gray-300 flex items-center gap-2">
+                                            <span className="text-lg">📍</span>
+                                            {ev.Location}
+                                        </p>
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                                            <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                                                <p className="text-xs uppercase tracking-wider text-gray-400">Kontenjan</p>
+                                                <p className="text-lg font-semibold text-white">{ev.Capacity} kişi</p>
+                                            </div>
+                                            <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                                                <p className="text-xs uppercase tracking-wider text-gray-400">Kulüp</p>
+                                                <p className="text-lg font-semibold text-white">{ev.ClubName}</p>
+                                            </div>
+                                            <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                                                <p className="text-xs uppercase tracking-wider text-gray-400">Tarih</p>
+                                                <p className="text-lg font-semibold text-white">
+                                                    {formatForDisplay(ev.StartDate)} <span className="opacity-60">→</span> {formatForDisplay(ev.EndDate)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <p className="text-gray-300 italic">“{ev.Description}”</p>
+
+                                        <div className="flex flex-wrap gap-3 mt-4">
+                                            <button
+                                                onClick={() => onEdit(ev)}
+                                                className="px-5 py-3 rounded-2xl bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-semibold shadow-lg hover:scale-[1.02] transition"
+                                            >
+                                                ✏️ Düzenle
+                                            </button>
+                                            <button
+                                                onClick={() => onDelete(ev.id)}
+                                                className="px-5 py-3 rounded-2xl bg-gradient-to-r from-red-500 to-red-700 text-white font-semibold shadow-lg hover:scale-[1.02] transition"
+                                            >
+                                                🗑 Sil
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
         </div>
 
         {isModalOpen && editingEvent && (

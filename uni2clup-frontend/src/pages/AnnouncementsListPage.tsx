@@ -67,49 +67,80 @@ const AnnouncementsListPage: React.FC = () => {
     }, []);
 
     return (
-        <div className="max-w-4xl mx-auto mt-10 text-white">
-            <div className="flex items-center justify-between mb-6">
-                <h1 className="text-4xl font-bold">📰 Mevcut Duyurular</h1>
-                <button
-                    onClick={fetchAnnouncements}
-                    className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-sm"
-                >
-                    Yenile
-                </button>
-            </div>
+        <div className="relative text-white">
+            <div className="absolute inset-0 -z-10 opacity-40 blur-3xl bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900"></div>
 
-            {loading ? (
-                <p className="text-gray-300">Duyurular yükleniyor...</p>
-            ) : error ? (
-                <div className="text-red-400">
-                    <p>{error}</p>
+            <div className="max-w-5xl mx-auto py-10 space-y-8">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 bg-gradient-to-br from-[#1c1f44] to-[#111326] border border-[#3b82f6]/30 rounded-3xl p-8 shadow-2xl">
+                    <div>
+                        <p className="text-sm uppercase tracking-[0.4em] text-[#93c5fd] mb-2">Kulüp Duyuruları</p>
+                        <h1 className="text-4xl font-extrabold">Mevcut Duyurular</h1>
+                        <p className="text-gray-300 mt-3 max-w-2xl">
+                            Kulübünüz için yayımlanmış tüm duyuruları burada görüntüleyebilir ve hızlıca güncel durumu takip edebilirsiniz.
+                        </p>
+                    </div>
                     <button
                         onClick={fetchAnnouncements}
-                        className="mt-2 px-4 py-2 rounded-lg bg-blue-600"
+                        className="px-6 py-3 rounded-2xl bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] shadow-lg font-semibold"
                     >
-                        Tekrar Dene
+                        Yenile
                     </button>
                 </div>
-            ) : announcements.length === 0 ? (
-                <p className="text-gray-400">Henüz duyuru bulunmuyor.</p>
-            ) : (
-                <div className="space-y-4">
-                    {announcements.map((a) => (
-                        <div
-                            key={a.id}
-                            className="p-5 bg-[#1a1a2e] border border-[#3b82f6] rounded-2xl shadow-lg"
+
+                {loading ? (
+                    <div className="bg-[#0f0f1a]/80 border border-[#3b82f6]/20 rounded-3xl p-12 text-center text-gray-300">
+                        Duyurular yükleniyor...
+                    </div>
+                ) : error ? (
+                    <div className="bg-[#2b1b3f]/80 border border-red-500/30 rounded-3xl p-8 text-red-200 space-y-3">
+                        <p>{error}</p>
+                        <button
+                            onClick={fetchAnnouncements}
+                            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-[#ef4444] to-[#b91c1c] text-white font-semibold"
                         >
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-xl text-[#3b82f6] font-bold">{a.eventName}</h3>
-                                <span className="text-sm text-gray-400 flex items-center gap-2">
-                                    📅 {formatDate(a.createdAt)}
-                                </span>
+                            Tekrar Dene
+                        </button>
+                    </div>
+                ) : announcements.length === 0 ? (
+                    <div className="bg-[#0f0f1a]/80 border border-[#3b82f6]/20 rounded-3xl p-12 text-center text-gray-300">
+                        Henüz duyuru bulunmuyor.
+                    </div>
+                ) : (
+                    <div className="space-y-5">
+                        {announcements.map((a) => (
+                            <div
+                                key={a.id}
+                                className="p-6 bg-[#0f0f1a]/80 border border-[#3b82f6]/20 rounded-3xl shadow-xl relative overflow-hidden"
+                            >
+                                <div className="flex items-center justify-between gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#2d1b69] to-[#3b82f6] flex items-center justify-center text-2xl">
+                                            📌
+                                        </div>
+                                        <div>
+                                            <p className="text-xs uppercase tracking-[0.4em] text-[#93c5fd]">Etkinlik İsmi</p>
+                                            <h3 className="text-2xl text-white font-bold">{a.eventName}</h3>
+                                        </div>
+                                    </div>
+                                    <span className="text-sm text-gray-400 flex items-center gap-2">
+                                        <span className="text-lg">📅</span>
+                                        {formatDate(a.createdAt)}
+                                    </span>
+                                </div>
+                                <div className="mt-4 bg-white/5 border border-white/10 rounded-2xl p-4">
+                                    <div className="flex items-center gap-2 text-[#93c5fd] uppercase tracking-[0.3em] text-xs">
+                                        <span className="text-lg">📢</span>
+                                        Duyuru Açıklaması
+                                    </div>
+                                    <p className="mt-3 text-gray-200 leading-relaxed">
+                                        {a.message}
+                                    </p>
+                                </div>
                             </div>
-                            <p className="mt-3 text-gray-200">{a.message}</p>
-                        </div>
-                    ))}
-                </div>
-            )}
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
     );
 };
