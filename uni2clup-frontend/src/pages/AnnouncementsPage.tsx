@@ -12,6 +12,7 @@ const AnnouncementsPage: React.FC = () => {
     const [events, setEvents] = useState<EventItem[]>([]);
     const [selectedEventId, setSelectedEventId] = useState("");
     const [message, setMessage] = useState("");
+    const clubId = localStorage.getItem("clubId");
 
     // 1️⃣ Etkinlikleri Yükle
     useEffect(() => {

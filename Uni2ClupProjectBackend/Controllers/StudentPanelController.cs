@@ -50,7 +50,7 @@ public class StudentPanelController : ControllerBase
                 c.Id,
                 c.Name,
                 c.Description,
-                departmentName = c.Department.Name,
+                departmentName = c.Department != null ? c.Department.Name : "-",
                 c.DepartmentId,
                 isMember = myClubs.Contains(c.Id)
             })
@@ -58,6 +58,7 @@ public class StudentPanelController : ControllerBase
 
         return Ok(clubs);
     }
+
 
     [HttpPost("clubs/{clubId}/join")]
     public async Task<IActionResult> JoinClub(int clubId)
@@ -148,9 +149,15 @@ public class StudentPanelController : ControllerBase
     {
         int userId = GetUserId();
 
-        var clubIds = await _db.ClubMembers.Where(x => x.UserId == userId).Select(x => x.ClubId).ToListAsync();
+        var clubIds = await _db.ClubMembers
+            .Where(x => x.UserId == userId)
+            .Select(x => x.ClubId)
+            .ToListAsync();
 
-        var clubNames = await _db.Clubs.Where(c => clubIds.Contains(c.Id)).Select(c => c.Name).ToListAsync();
+        var clubNames = await _db.Clubs
+            .Where(c => clubIds.Contains(c.Id))
+            .Select(c => c.Name)
+            .ToListAsync();
 
         var events = await _db.Events
             .Where(e => clubNames.Contains(e.ClubName))
@@ -158,6 +165,7 @@ public class StudentPanelController : ControllerBase
 
         return Ok(events);
     }
+
 
     [HttpGet("events/past")]
     public async Task<IActionResult> PastEvents()
@@ -241,7 +249,7 @@ public class StudentPanelController : ControllerBase
             {
                 cm.Club.Id,
                 cm.Club.Name,
-                departmentName = cm.Club.Department.Name
+                departmentName = cm.Club.Department != null ? cm.Club.Department.Name : "-"
             })
             .ToListAsync();
 
@@ -250,10 +258,10 @@ public class StudentPanelController : ControllerBase
             user.Name,
             user.Surname,
             user.Email,
-            departmentName = user.Department?.Name,
+            departmentName = user.Department != null ? user.Department.Name : "-",
             clubs
         });
     }
-}
 
+}
 

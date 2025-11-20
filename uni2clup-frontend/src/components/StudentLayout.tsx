@@ -186,7 +186,7 @@ const StudentLayout: React.FC = () => {
 
     const filteredClubs = clubs.filter((club: any) => {
         const matchesSearch =
-            (club.Name || club.name || "").toLowerCase().includes(searchTerm.toLowerCase());
+            (club.name || "").toLowerCase().includes(searchTerm.toLowerCase());
 
         const matchesDept =
             selectedDept === "" || club.departmentId === Number(selectedDept);

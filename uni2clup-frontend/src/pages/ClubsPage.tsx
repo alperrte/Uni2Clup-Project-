@@ -88,7 +88,7 @@ const ClubsPage: React.FC<ClubsPageProps> = ({
                                             {club.name}
                                         </h3>
                                         <p className="text-gray-400 text-sm mb-2">
-                                            {club.departmentName || club.department}
+                                            {club.departmentName}
                                         </p>
                                         <p className="text-gray-400 text-sm">
                                             {club.description || "Açıklama bulunmuyor."}

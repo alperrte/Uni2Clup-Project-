@@ -186,7 +186,7 @@ const EventPage: React.FC = () => {
                                 Kulübünüzün yaklaşan ve devam eden etkinliklerini burada görüntüleyebilir, düzenleyebilir veya silebilirsiniz.
                         </p>
                     </div>
-                    <div className="relative">
+                        <div className="relative z-50">
                         <button
                             onClick={() => setOpen(!open)}
                             className="px-6 py-3 rounded-2xl bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] shadow-lg flex items-center gap-2"

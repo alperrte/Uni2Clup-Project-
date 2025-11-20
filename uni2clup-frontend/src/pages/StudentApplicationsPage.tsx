@@ -23,6 +23,7 @@ const StudentApplicationsPage: React.FC = () => {
     const [statusFilter, setStatusFilter] = useState<StatusFilter>("Tümü");
     const [sortField, setSortField] = useState<SortField>(null);
     const [sortOrder, setSortOrder] = useState<SortOrder>(null);
+    const [search, setSearch] = useState("");
 
     const api = axios.create({
         baseURL: "http://localhost:8080/api/Auth",
@@ -71,6 +72,18 @@ const StudentApplicationsPage: React.FC = () => {
     // Filtreleme ve Sıralama
     const filteredAndSortedApplications = useMemo(() => {
         let filtered = applications;
+
+        // 🔍 Arama
+        if (search.trim() !== "") {
+            const s = search.toLowerCase();
+            filtered = filtered.filter(app =>
+                app.name.toLowerCase().includes(s) ||
+                app.surname.toLowerCase().includes(s) ||
+                app.email.toLowerCase().includes(s) ||
+                app.department.toLowerCase().includes(s)
+            );
+        }
+
 
         // Durum filtresi
         if (statusFilter !== "Tümü") {
@@ -235,6 +248,17 @@ const StudentApplicationsPage: React.FC = () => {
 
                 {/* Filtreler ve Sıralama */}
                 <div className="mb-6 flex flex-wrap gap-4 items-center justify-between">
+                    {/* Arama Kutusu */}
+                    <input
+                        type="text"
+                        placeholder="Başvuru Ara..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="px-4 py-2 rounded-lg bg-[#1a1a2e] text-white 
+               border border-[#3b82f6]/30 focus:border-[#3b82f6] 
+               w-64"
+                    />
+
                     {/* Durum Filtresi */}
                     <div className="flex items-center gap-2">
                         <label className="text-gray-300 font-semibold">Durum:</label>

@@ -10,6 +10,8 @@ interface User {
     role: string;
     registrationDate: string;
     isActive: boolean;
+    clubId?: number;
+    departmentName?: string;
 }
 
 interface UserListPageProps {
@@ -33,12 +35,16 @@ const translateRole = (role: string) => {
 
 const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
     const [users, setUsers] = useState<User[]>([]);
+    const [search, setSearch] = useState("");
+    const [filterDept, setFilterDept] = useState("Hepsi");
+    const [filterClub, setFilterClub] = useState("Hepsi");
     const [fetching, setFetching] = useState(true);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");
     const [showClubModal, setShowClubModal] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
     const [clubs, setClubs] = useState<Array<{ id: number; name: string; departmentName: string }>>([]);
+    const [departments, setDepartments] = useState<Array<{ id: number; name: string; code: string }>>([]);
     const [selectedClubId, setSelectedClubId] = useState<number | null>(null);
     const token = localStorage.getItem("token")?.trim() || "";
     const pageTitle = `${translateRole(targetRole)} Listesi`;
@@ -109,12 +115,28 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
         }
     };
 
+    const fetchDepartments = async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/Department`);
+            if (res.ok) {
+                const data = await res.json();
+                setDepartments(data);
+            }
+        } catch {
+            console.error("Bölümler yüklenemedi.");
+        }
+    };
+
+
     useEffect(() => {
         fetchUsers();
-        if (targetRole === "Student") {
+        fetchDepartments();  // ⭐ BURAYA EKLENDİ
+
+        if (targetRole === "Student" || targetRole === "ClubManager") {
             fetchClubs();
         }
     }, [targetRole, token]);
+
 
     const handleAssignClubManager = async () => {
         if (!checkTokenValidity() || !selectedUserId || !selectedClubId) return;
@@ -216,6 +238,50 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
         }
     };
 
+    const getSearchPlaceholder = () => {
+        switch (targetRole) {
+            case "Student":
+                return "Öğrenci Ara...";
+            case "Academic":
+                return "Akademisyen Ara...";
+            case "ClubManager":
+                return "Kulüp Yöneticisi Ara...";
+            case "Admin":
+                return "Yönetici Ara...";
+            default:
+                return "Kullanıcı Ara...";
+        }
+    };
+
+
+    const filteredUsers = users.filter((u) => {
+        const deptName = departments.find(d => d.id === (u as any).departmentId)?.name || "";
+        const clubName = clubs.find(c => c.id === u.clubId)?.name || "";
+
+        const matchSearch =
+            u.name.toLowerCase().includes(search.toLowerCase()) ||
+            u.surname.toLowerCase().includes(search.toLowerCase()) ||
+            u.email.toLowerCase().includes(search.toLowerCase()) ||
+            deptName.toLowerCase().includes(search.toLowerCase());
+
+        // 🎯 Bölüm filtresi (Student, Academic, Admin için)
+        const matchDept =
+            filterDept === "Hepsi" || deptName === filterDept;
+
+        // 🎯 Kulüp filtresi (Sadece Kulüp Yöneticisi sayfasında)
+        const matchClub =
+            filterClub === "Hepsi" || clubName === filterClub;
+
+        if (targetRole === "ClubManager") {
+            return matchSearch && matchClub;
+        }
+
+        // 🎯 Diğer roller (Student, Academic, Admin)
+        return matchSearch && matchDept;
+    });
+
+
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#0a0a1a] via-[#0f0f2a] to-[#1a1a3a] text-white flex flex-col items-center py-10 px-4 relative overflow-hidden">
@@ -254,10 +320,56 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
                         <div className="absolute -top-2 -right-2 w-28 h-28 border-2 border-[#3b82f6] rounded-full animate-spin" style={{ animationDuration: '8s' }}></div>
                     </div>
 
-                    <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] bg-clip-text text-transparent animate-pulse">
+                    <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] bg-clip-text text-transparent">
                         {pageTitle}
                     </h1>
                 </div>
+
+                <div className="flex items-center gap-4 justify-center mb-6">
+
+                    {/* Arama */}
+                    <input
+                        type="text"
+                        placeholder={getSearchPlaceholder()}
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="px-4 py-2 w-1/3 rounded-lg bg-[#1f1f2f] text-white border border-gray-600 focus:border-blue-500"
+                    />
+
+
+                    {/* Filtre Alanı */}
+                    {targetRole === "Student" && (
+                        // 🎯 Yalnızca Öğrenci sayfasında Bölüm filtresi
+                        <select
+                            value={filterDept}
+                            onChange={(e) => setFilterDept(e.target.value)}
+                            className="px-4 py-2 rounded-lg bg-[#1f1f2f] text-white border border-gray-600 focus:border-blue-500"
+                        >
+                            <option value="Hepsi">Tüm Bölümler</option>
+                            {departments.map((dept) => (
+                                <option key={dept.id} value={dept.name}>{dept.name}</option>
+                            ))}
+                        </select>
+                    )}
+
+                    {targetRole === "ClubManager" && (
+                        // 🎯 Yalnızca Kulüp Yöneticilerinde kulüp filtresi
+                        <select
+                            value={filterClub}
+                            onChange={(e) => setFilterClub(e.target.value)}
+                            className="px-4 py-2 rounded-lg bg-[#1f1f2f] text-white border border-gray-600 focus:border-blue-500"
+                        >
+                            <option value="Hepsi">Tüm Kulüpler</option>
+                            {clubs.map((club) => (
+                                <option key={club.id} value={club.name}>{club.name}</option>
+                            ))}
+                        </select>
+                    )}
+
+
+
+                </div>
+
 
                 {/* User List */}
                 <div className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] border-2 border-transparent bg-clip-padding rounded-xl p-1 hover:border-[#3b82f6] transition-all duration-300">
@@ -284,12 +396,19 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
                                             <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">Ad Soyad</th>
                                             <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">E-posta</th>
                                             <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">Rol</th>
-                                            <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">Kayıt Tarihi</th>
+                                            <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">Bölüm</th>
+                                            <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">Kayıt Tarihi
+                                            </th>
+                                                    {targetRole === "ClubManager" && (
+                                                        <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">
+                                                            Yönettiği Kulüp
+                                                        </th>
+                                                    )}
                                             <th className="py-4 px-6 text-center text-lg font-bold text-[#3b82f6]">İşlemler</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-700">
-                                        {users.map((user) => (
+                                        {filteredUsers.map((user) => (
                                             <tr
                                                 key={user.id}
                                                 className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] hover:from-[#2a2a3e] hover:to-[#3a3a4e] transition-all duration-300 group"
@@ -310,7 +429,16 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
                                                         {translateRole(user.role)}
                                                     </span>
                                                 </td>
+                                                <td className="py-4 px-6 text-gray-300">
+                                                    {departments.find(d => d.id === (user as any).departmentId)?.name || "-"}
+                                                </td>
                                                 <td className="py-4 px-6 text-gray-300 text-sm">{formatDate(user.registrationDate)}</td>
+                                                {targetRole === "ClubManager" && (
+                                                    <td className="py-4 px-6 text-gray-300">
+                                                        {clubs.find(c => c.id === user.clubId)?.name || "—"}
+                                                    </td>
+                                                )}
+
                                                 <td className="py-4 px-6 text-center">
                                                     <div className="flex items-center justify-center gap-2">
                                                         {targetRole === "Student" && (

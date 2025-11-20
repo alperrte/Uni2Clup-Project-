@@ -12,7 +12,7 @@ using Uni2ClupProjectBackend.Data;
 namespace Uni2ClupProjectBackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251120190551_InitialCreate")]
+    [Migration("20251120220308_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
