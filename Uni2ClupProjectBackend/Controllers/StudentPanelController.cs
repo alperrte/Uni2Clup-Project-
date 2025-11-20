@@ -128,12 +128,13 @@ public class StudentPanelController : ControllerBase
         var events = await _db.EventParticipants
             .Where(ep => ep.UserId == userId)
             .Include(ep => ep.Event)
+            .ThenInclude(e => e.Club)
             .Select(ep => new
             {
                 ep.Event.Id,
                 ep.Event.Name,
                 ep.Event.Location,
-                ep.Event.ClubName,
+                ClubName = ep.Event.Club.Name,   // ✔ DÜZELTİLDİ
                 ep.Event.Capacity,
                 ep.Event.Description,
                 ep.Event.StartDate,
@@ -144,27 +145,38 @@ public class StudentPanelController : ControllerBase
         return Ok(events);
     }
 
+
     [HttpGet("events/member-clubs")]
     public async Task<IActionResult> MemberClubEvents()
     {
         int userId = GetUserId();
+        var now = DateTime.UtcNow;
 
         var clubIds = await _db.ClubMembers
             .Where(x => x.UserId == userId)
             .Select(x => x.ClubId)
             .ToListAsync();
 
-        var clubNames = await _db.Clubs
-            .Where(c => clubIds.Contains(c.Id))
-            .Select(c => c.Name)
-            .ToListAsync();
-
         var events = await _db.Events
-            .Where(e => clubNames.Contains(e.ClubName))
+            .Where(e => clubIds.Contains(e.ClubId) && e.EndDate >= now)   // ✔ sadece güncel etkinlikler
+            .Include(e => e.Club)
+            .Select(e => new
+            {
+                e.Id,
+                e.Name,
+                e.Location,
+                e.Capacity,
+                ClubName = e.Club.Name,   // ✔ kulüp adı
+                e.Description,
+                e.StartDate,
+                e.EndDate
+            })
             .ToListAsync();
 
         return Ok(events);
     }
+
+
 
 
     [HttpGet("events/past")]
@@ -173,14 +185,34 @@ public class StudentPanelController : ControllerBase
         int userId = GetUserId();
         var now = DateTime.UtcNow;
 
-        var events = await _db.EventParticipants
-            .Where(ep => ep.UserId == userId && ep.Event.EndDate < now)
-            .Include(ep => ep.Event)
-            .Select(ep => ep.Event)
+        // Kullanıcının üye olduğu kulüpler
+        var clubIds = await _db.ClubMembers
+            .Where(cm => cm.UserId == userId)
+            .Select(cm => cm.ClubId)
+            .ToListAsync();
+
+        // Üye olunan kulüplerin TARİHİ GEÇMİŞ etkinlikleri
+        var events = await _db.Events
+            .Where(e => clubIds.Contains(e.ClubId) && e.EndDate < now)
+            .Include(e => e.Club)
+            .Select(e => new
+            {
+                e.Id,
+                e.Name,
+                e.Location,
+                e.Capacity,
+                ClubName = e.Club.Name,
+                e.Description,
+                e.StartDate,
+                e.EndDate
+            })
             .ToListAsync();
 
         return Ok(events);
     }
+
+
+
 
     [HttpPost("events/{eventId}/join")]
     public async Task<IActionResult> JoinEvent(int eventId)

@@ -18,7 +18,7 @@ const AnnouncementsPage: React.FC = () => {
     useEffect(() => {
         const fetchEvents = async () => {
             try {
-                const res = await fetch(`${API_URL}/api/Events/list`, {
+                const res = await fetch(`${API_URL}/api/events/list`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 const data = await res.json();
