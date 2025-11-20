@@ -13,6 +13,9 @@ namespace Uni2ClupProjectBackend.Data
         public DbSet<StudentApplication> StudentApplications { get; set; }
         public DbSet<Club> Clubs => Set<Club>();
         public DbSet<Department> Departments => Set<Department>();
+        public DbSet<ClubMember> ClubMembers => Set<ClubMember>();
+        public DbSet<EventParticipant> EventParticipants => Set<EventParticipant>();
+        public DbSet<Notification> Notifications => Set<Notification>();
 
         // ⭐ YENİ EKLEDİĞİMİZ TABLO (DUYURULAR)
         public DbSet<Announcement> Announcements => Set<Announcement>();

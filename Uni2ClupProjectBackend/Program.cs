@@ -11,8 +11,16 @@ using System.Security.Claims;
 using Uni2ClupProjectBackend.Data;
 using Uni2ClupProjectBackend.Models;
 using Uni2ClupProjectBackend.Services;
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
+{
+    options.SerializerOptions.Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);
+});
+
 
 // ✅ JSON UTF-8 Ayarları
 Console.OutputEncoding = Encoding.UTF8;

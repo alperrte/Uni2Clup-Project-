@@ -24,16 +24,17 @@ namespace Uni2ClupProjectBackend.Models
         [Required, MaxLength(20)]
         public string Role { get; set; } = "User";
 
-        // ✅ Yeni alan: sistem otomatik olarak o anki zamanı ekler
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // ✅ Aktif/Pasif durumu
         public bool IsActive { get; set; } = true;
 
-        // ✅ Kulüp Yöneticisi için kulüp ID (nullable)
         public int? ClubId { get; set; }
 
-        // ✅ Bölüm ID (nullable)
+        // Bölüm ID
         public int? DepartmentId { get; set; }
+
+        // 🔥 EKSİK OLAN — %100 EKLENMESİ GEREKEN NAVIGATION
+        [ForeignKey("DepartmentId")]
+        public Department? Department { get; set; }
     }
 }

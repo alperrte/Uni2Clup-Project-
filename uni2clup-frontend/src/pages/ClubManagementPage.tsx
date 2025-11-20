@@ -130,7 +130,7 @@ const ClubManagementPage: React.FC = () => {
                 alert("✅ Kulüp başarıyla güncellendi.");
                 setShowEditModal(false);
                 setEditingClub(null);
-                setFormData({ name: "", department: "", description: "" });
+                setFormData({ name: "", departmentId: 0, description: "" });
                 fetchClubs();
             } else {
                 const data = await res.json();
