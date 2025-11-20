@@ -63,9 +63,10 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
                 location: "",
                 startDate: now.toISOString().slice(0, 16),
                 endDate: oneHourLater.toISOString().slice(0, 16),
-                clubName: "",
+                clubName: localStorage.getItem("userName") || "",
                 description: "",
             });
+
         } else {
             clearSelected();
         }
@@ -174,6 +175,8 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
                             <input
                                 type="datetime-local"
                                 name="startDate"
+                                min={new Date().toISOString().slice(0, 16)}
+
                                 value={form.startDate}
                                 onChange={handleChange}
                                 className="flex-1 bg-transparent text-white outline-none text-lg cursor-pointer"
@@ -200,6 +203,8 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
                             <input
                                 type="datetime-local"
                                 name="endDate"
+                                min={new Date().toISOString().slice(0, 16)}
+
                                 value={form.endDate}
                                 onChange={handleChange}
                                 className="flex-1 bg-transparent text-white outline-none text-lg cursor-pointer"

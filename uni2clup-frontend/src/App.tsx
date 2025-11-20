@@ -11,6 +11,12 @@ import UserListPage from "./pages/UserListPage";
 import StudentApplicationsPage from "./pages/StudentApplicationsPage";
 import ClubManagementPage from "./pages/ClubManagementPage";
 
+// ⭐ DUYURU SAYFASI (import doğru)
+import CreateAnnouncementPage from "./pages/CreateAnnouncementPage";
+
+// ⭐ Kulüp yöneticisi için tüm rotalar
+import ClubManagerRoutes from "./pages/ClubManagerRoutes";
+
 interface UserData {
     name: string;
     role: string;
@@ -70,24 +76,17 @@ const App: React.FC = () => {
     const AdminRoutes: React.FC = () => (
         <AdminLayout handleLogout={handleLogout}>
             <Routes>
-                {/* Varsayılan admin sayfası */}
                 <Route index element={<Navigate to="add-user" replace />} />
-
-                {/* Kullanıcı ekleme */}
                 <Route path="add-user" element={<AddUserPage />} />
-
-                {/* Yeni eklenen ROUTELAR */}
                 <Route path="users" element={<UserListPage />} />
                 <Route path="applications" element={<StudentApplicationsPage />} />
                 <Route path="clubs" element={<ClubManagementPage />} />
 
-                {/* Dinamik kullanıcı listeleri */}
                 <Route path="students" element={<UserListPage targetRole="Student" />} />
                 <Route path="academics" element={<UserListPage targetRole="Academic" />} />
                 <Route path="club-managers" element={<UserListPage targetRole="ClubManager" />} />
                 <Route path="admins" element={<UserListPage targetRole="Admin" />} />
 
-                {/* Hatalı URL → add-user */}
                 <Route path="*" element={<Navigate to="add-user" replace />} />
             </Routes>
         </AdminLayout>
@@ -104,9 +103,23 @@ const App: React.FC = () => {
                     </>
                 )}
 
-                {/* Club Manager */}
+                {/* ⭐ CLUB MANAGER ROUTES ⭐ */}
                 {user.role === "ClubManager" && (
-                    <Route path="*" element={<EventPage handleLogout={handleLogout} />} />
+                    <>
+                        {/* Kulüp paneli */}
+                        <Route
+                            path="/club/*"
+                            element={<ClubManagerRoutes handleLogout={handleLogout} />}
+                        />
+
+                        {/* ⭐ DUYURU OLUŞTURMA SAYFASI */}
+                        <Route
+                            path="/club/create-announcement"
+                            element={<CreateAnnouncementPage />}
+                        />
+
+                        <Route path="*" element={<Navigate to="/club" replace />} />
+                    </>
                 )}
 
                 {/* Student & Academic */}
@@ -132,7 +145,6 @@ const App: React.FC = () => {
                     />
                 )}
 
-                {/* Hiçbir rota uymuyorsa yönlendir */}
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </Router>

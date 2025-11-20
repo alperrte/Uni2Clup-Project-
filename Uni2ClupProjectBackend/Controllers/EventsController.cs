@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Uni2ClupProjectBackend.Data;
-using Uni2ClupProjectBackend.Models;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using Uni2ClupProjectBackend.Data;
+using Uni2ClupProjectBackend.DTOs;
+using Uni2ClupProjectBackend.Models;
 
 namespace Uni2ClupProjectBackend.Controllers
 {
@@ -10,92 +12,231 @@ namespace Uni2ClupProjectBackend.Controllers
     [Route("api/[controller]")]
     public class EventsController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly AppDbContext _db;
 
-        public EventsController(AppDbContext context)
+        public EventsController(AppDbContext db)
         {
-            _context = context;
+            _db = db;
         }
 
-        // 🔹 Herkes görebilir
+        // --------------------------------------------------------------------
+        // 1) Kulüp yöneticisinin panelde göreceği etkinlik listesi
+        //    (filtre: tüm etkinlikler)
+        //    GET /api/events/list
+        // --------------------------------------------------------------------
         [HttpGet("list")]
-        [AllowAnonymous]
-        public IActionResult GetAll()
+        [Authorize(Roles = "ClubManager")]
+        public async Task<IActionResult> GetEvents()
         {
-            var events = _context.Events
-                .OrderByDescending(e => e.Id)
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (email == null)
+                return Unauthorized(new { message = "❌ Oturum bulunamadı." });
+
+            // Kullanıcıyı ve kulübünü bul
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
+            string? clubName = null;
+
+            if (user?.ClubId != null)
+            {
+                clubName = await _db.Clubs
+                    .Where(c => c.Id == user.ClubId.Value)
+                    .Select(c => c.Name)
+                    .FirstOrDefaultAsync();
+            }
+
+            // Sorgu
+            var query = _db.Events.AsQueryable();
+
+            // Eğer kulüp bulunduysa sadece o kulübün etkinlikleri
+            if (!string.IsNullOrEmpty(clubName))
+            {
+                query = query.Where(e => e.ClubName == clubName);
+            }
+            // Kulüp yoksa, sadece kendisinin oluşturdukları (emniyet için)
+            else
+            {
+                query = query.Where(e => e.CreatedBy == email);
+            }
+
+            var now = DateTime.UtcNow;
+
+            var events = await query
+                .OrderByDescending(e => e.StartDate)
                 .Select(e => new
                 {
                     e.Id,
                     e.Name,
-                    e.Capacity,
                     e.Location,
-                    e.StartDate,
-                    e.EndDate,
+                    e.Capacity,
                     e.ClubName,
                     e.Description,
-                    CreatedBy = e.CreatedBy // sadece bilgi olarak
+                    e.StartDate,
+                    e.EndDate,
+                    Status = e.EndDate < now
+                        ? "Bitti"
+                        : (e.StartDate > now ? "Yaklaşan" : "Devam Eden")
                 })
-                .ToList();
+                .ToListAsync();
 
             return Ok(events);
         }
 
-        // 🔹 ClubManager oluşturabilir
+        // --------------------------------------------------------------------
+        // 2) Sadece KENDİ OLUŞTURDUĞUM etkinlikler
+        //    GET /api/events/my-events
+        // --------------------------------------------------------------------
+        [HttpGet("my-events")]
+        [Authorize(Roles = "ClubManager")]
+        public async Task<IActionResult> GetMyEvents()
+        {
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (email == null)
+                return Unauthorized(new { message = "❌ Oturum bulunamadı." });
+
+            var now = DateTime.UtcNow;
+
+            var events = await _db.Events
+                .Where(e => e.CreatedBy == email)
+                .OrderByDescending(e => e.StartDate)
+                .Select(e => new
+                {
+                    e.Id,
+                    e.Name,
+                    e.Location,
+                    e.Capacity,
+                    e.ClubName,
+                    e.Description,
+                    e.StartDate,
+                    e.EndDate,
+                    Status = e.EndDate < now
+                        ? "Bitti"
+                        : (e.StartDate > now ? "Yaklaşan" : "Devam Eden")
+                })
+                .ToListAsync();
+
+            return Ok(events);
+        }
+
+        // --------------------------------------------------------------------
+        // 3) Etkinlik Oluştur (Yeni Etkinlik Oluştur sayfası)
+        //    POST /api/events/create
+        // --------------------------------------------------------------------
         [HttpPost("create")]
         [Authorize(Roles = "ClubManager")]
-        public IActionResult Create([FromBody] Event newEvent)
+        public async Task<IActionResult> Create([FromBody] EventCreateDto dto)
         {
-            var email = User.FindFirst(ClaimTypes.Email)?.Value;
-            newEvent.CreatedBy = email ?? "unknown@system";
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (email == null)
+                return Unauthorized(new { message = "❌ Oturum bulunamadı." });
 
-            _context.Events.Add(newEvent);
-            _context.SaveChanges();
+            if (string.IsNullOrWhiteSpace(dto.Name))
+                return BadRequest(new { message = "Etkinlik ismi zorunludur." });
+
+            if (dto.Capacity <= 0)
+                return BadRequest(new { message = "Kontenjan 0'dan büyük olmalıdır." });
+
+            var today = DateTime.UtcNow.Date;
+
+            if (dto.StartDate.Date < today)
+                return BadRequest(new { message = "Geçmiş bir tarih için etkinlik oluşturamazsınız." });
+
+            if (dto.EndDate < dto.StartDate)
+                return BadRequest(new { message = "Bitiş tarihi, başlangıç tarihinden önce olamaz." });
+
+            // Kullanıcının kulübünün adını bul
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
+            string clubName = "Bilinmiyor";
+
+            if (user?.ClubId != null)
+            {
+                var club = await _db.Clubs.FindAsync(user.ClubId.Value);
+                if (club != null)
+                    clubName = club.Name;
+            }
+
+            var entity = new Event
+            {
+                Name = dto.Name.Trim(),
+                Location = dto.Location.Trim(),
+                Capacity = dto.Capacity,
+                Description = dto.Description?.Trim() ?? "",
+                StartDate = dto.StartDate,
+                EndDate = dto.EndDate,
+                ClubName = clubName,
+                CreatedBy = email
+            };
+
+            _db.Events.Add(entity);
+            await _db.SaveChangesAsync();
 
             return Ok(new
             {
                 message = "✅ Etkinlik başarıyla oluşturuldu.",
-                eventData = newEvent
+                eventData = entity
             });
         }
 
-        // 🔹 ClubManager güncelleyebilir (her etkinlik için)
+        // --------------------------------------------------------------------
+        // 4) Etkinlik Güncelle (sağdaki kalem butonu)
+        //    PUT /api/events/update/{id}
+        // --------------------------------------------------------------------
         [HttpPut("update/{id}")]
         [Authorize(Roles = "ClubManager")]
-        public IActionResult Update(int id, [FromBody] Event updated)
+        public async Task<IActionResult> Update(int id, [FromBody] EventCreateDto dto)
         {
-            var existing = _context.Events.FirstOrDefault(e => e.Id == id);
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (email == null)
+                return Unauthorized(new { message = "❌ Oturum bulunamadı." });
 
+            var existing = await _db.Events.FindAsync(id);
             if (existing == null)
                 return NotFound(new { message = "❌ Etkinlik bulunamadı." });
 
-            // 🚫 Artık CreatedBy kontrolü yok
-            existing.Name = updated.Name;
-            existing.Location = updated.Location;
-            existing.Capacity = updated.Capacity;
-            existing.ClubName = updated.ClubName;
-            existing.Description = updated.Description;
-            existing.StartDate = updated.StartDate;
-            existing.EndDate = updated.EndDate;
+            // Sadece kendi oluşturduğu etkinliği güncelleyebilsin
+            if (!string.Equals(existing.CreatedBy, email, StringComparison.OrdinalIgnoreCase))
+                return StatusCode(403, new { message = "Bu etkinliği güncelleme yetkiniz yok." });
 
-            _context.SaveChanges();
+            var today = DateTime.UtcNow.Date;
 
-            return Ok(new { message = "✅ Etkinlik güncellendi.", updated });
+            if (dto.StartDate.Date < today)
+                return BadRequest(new { message = "Geçmiş tarihli bir etkinlik tarihi belirleyemezsiniz." });
+
+            if (dto.EndDate < dto.StartDate)
+                return BadRequest(new { message = "Bitiş tarihi, başlangıç tarihinden önce olamaz." });
+
+            existing.Name = dto.Name.Trim();
+            existing.Location = dto.Location.Trim();
+            existing.Description = dto.Description?.Trim() ?? "";
+            existing.Capacity = dto.Capacity;
+            existing.StartDate = dto.StartDate;
+            existing.EndDate = dto.EndDate;
+
+            await _db.SaveChangesAsync();
+
+            return Ok(new { message = "✏️ Etkinlik güncellendi." });
         }
 
-        // 🔹 ClubManager silebilir (her etkinlik için)
+        // --------------------------------------------------------------------
+        // 5) Etkinlik Sil (çöp kutusu)
+        //    DELETE /api/events/delete/{id}
+        // --------------------------------------------------------------------
         [HttpDelete("delete/{id}")]
         [Authorize(Roles = "ClubManager")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var existing = _context.Events.FirstOrDefault(e => e.Id == id);
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (email == null)
+                return Unauthorized(new { message = "❌ Oturum bulunamadı." });
 
+            var existing = await _db.Events.FindAsync(id);
             if (existing == null)
                 return NotFound(new { message = "❌ Etkinlik bulunamadı." });
 
-            // 🚫 Artık CreatedBy kontrolü yok
-            _context.Events.Remove(existing);
-            _context.SaveChanges();
+            if (!string.Equals(existing.CreatedBy, email, StringComparison.OrdinalIgnoreCase))
+                return StatusCode(403, new { message = "Bu etkinliği silme yetkiniz yok." });
+
+            _db.Events.Remove(existing);
+            await _db.SaveChangesAsync();
 
             return Ok(new { message = "🗑️ Etkinlik silindi." });
         }

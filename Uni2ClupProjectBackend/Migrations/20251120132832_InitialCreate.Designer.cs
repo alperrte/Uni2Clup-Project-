@@ -12,7 +12,7 @@ using Uni2ClupProjectBackend.Data;
 namespace Uni2ClupProjectBackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251118164349_InitialCreate")]
+    [Migration("20251120132832_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -60,6 +60,31 @@ namespace Uni2ClupProjectBackend.Migrations
                     b.HasIndex("DepartmentId");
 
                     b.ToTable("StudentApplications");
+                });
+
+            modelBuilder.Entity("Uni2ClupProjectBackend.Models.Announcement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EventId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventId");
+
+                    b.ToTable("Announcements");
                 });
 
             modelBuilder.Entity("Uni2ClupProjectBackend.Models.Club", b =>
@@ -227,6 +252,17 @@ namespace Uni2ClupProjectBackend.Migrations
                         .IsRequired();
 
                     b.Navigation("Department");
+                });
+
+            modelBuilder.Entity("Uni2ClupProjectBackend.Models.Announcement", b =>
+                {
+                    b.HasOne("Uni2ClupProjectBackend.Models.Event", "Event")
+                        .WithMany()
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Event");
                 });
 
             modelBuilder.Entity("Uni2ClupProjectBackend.Models.Club", b =>
