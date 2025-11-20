@@ -65,6 +65,9 @@ const LoginPage = ({ onLoginSuccess }) => {
             localStorage.setItem("token", token);
             localStorage.setItem("userRole", normalizedUser.role);
             localStorage.setItem("userName", normalizedUser.name);
+            localStorage.setItem("clubId", data.clubId);
+
+
 
             setSuccessMessage("Giriş başarılı!");
             setShowSuccessModal(true);
