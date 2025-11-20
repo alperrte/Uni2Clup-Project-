@@ -256,7 +256,10 @@ Saygılarımızla,<br>
                 email = u.Email,
                 role = u.Role,
                 registrationDate = u.CreatedAt,
-                isActive = u.IsActive
+                isActive = u.IsActive,
+                clubId = u.ClubId,
+                departmentId = u.DepartmentId,
+                departmentName = u.Department != null ? u.Department.Name : "-"
             }).ToList();
 
             return Ok(users);
@@ -318,7 +321,7 @@ Başarılar dileriz.<br>
             });
         }
 
-        // 🎯 Kulüp Yöneticisi Atama
+
         // 🎯 Kulüp Yöneticisi Atama
         [HttpPut("assign-club-manager/{userId}")]
         [Authorize(Roles = "Admin")]

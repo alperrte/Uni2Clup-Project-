@@ -125,19 +125,12 @@ using (var scope = app.Services.CreateScope())
             new Department { Name = "İşletme", Code = "BUS", IsActive = true },
             new Department { Name = "İktisat", Code = "ECO", IsActive = true },
             new Department { Name = "Psikoloji", Code = "PSY", IsActive = true },
-            new Department { Name = "Sosyoloji", Code = "SOC", IsActive = true },
-            new Department { Name = "Siyaset Bilimi", Code = "POL", IsActive = true },
             new Department { Name = "Hukuk", Code = "LAW", IsActive = true },
-            new Department { Name = "İletişim", Code = "COM", IsActive = true },
             new Department { Name = "Güzel Sanatlar", Code = "FA", IsActive = true },
-            new Department { Name = "Müzik", Code = "MUS", IsActive = true },
-            new Department { Name = "Yabancı Diller", Code = "FL", IsActive = true },
-            new Department { Name = "Fen Bilimleri", Code = "SCI", IsActive = true },
             new Department { Name = "Matematik", Code = "MATH", IsActive = true },
             new Department { Name = "Fizik", Code = "PHY", IsActive = true },
             new Department { Name = "Kimya", Code = "CHEM", IsActive = true },
             new Department { Name = "Biyoloji", Code = "BIO", IsActive = true },
-            new Department { Name = "Beden Eğitimi", Code = "PE", IsActive = true }
         };
 
         db.Departments.AddRange(departments);
@@ -150,29 +143,136 @@ using (var scope = app.Services.CreateScope())
     {
         var deptSoftware = db.Departments.FirstOrDefault(d => d.Name == "Yazılım Mühendisliği");
         var deptComputer = db.Departments.FirstOrDefault(d => d.Name == "Bilgisayar Mühendisliği");
-        var deptEE = db.Departments.FirstOrDefault(d => d.Name == "Elektrik-Elektronik Mühendisliği");
-        var deptBusiness = db.Departments.FirstOrDefault(d => d.Name == "İşletme");
-        var deptSocial = db.Departments.FirstOrDefault(d => d.Name == "Sosyoloji");
-        var deptArts = db.Departments.FirstOrDefault(d => d.Name == "Güzel Sanatlar");
-        var deptPE = db.Departments.FirstOrDefault(d => d.Name == "Beden Eğitimi");
-        var deptEnv = db.Departments.FirstOrDefault(d => d.Name == "Çevre Mühendisliği");
-        var deptFL = db.Departments.FirstOrDefault(d => d.Name == "Yabancı Diller");
-        var deptSci = db.Departments.FirstOrDefault(d => d.Name == "Fen Bilimleri");
-        var deptCom = db.Departments.FirstOrDefault(d => d.Name == "İletişim");
+        var deptEEE = db.Departments.FirstOrDefault(d => d.Name == "Elektrik-Elektronik Mühendisliği");
+        var deptIE = db.Departments.FirstOrDefault(d => d.Name == "Endüstri Mühendisliği");
+        var deptME = db.Departments.FirstOrDefault(d => d.Name == "Makine Mühendisliği");
+        var deptCE = db.Departments.FirstOrDefault(d => d.Name == "İnşaat Mühendisliği");
+        var deptENV = db.Departments.FirstOrDefault(d => d.Name == "Çevre Mühendisliği");
+        var deptBUS = db.Departments.FirstOrDefault(d => d.Name == "İşletme");
+        var deptECO = db.Departments.FirstOrDefault(d => d.Name == "İktisat");
+        var deptPSY = db.Departments.FirstOrDefault(d => d.Name == "Psikoloji");
+        var deptLAW = db.Departments.FirstOrDefault(d => d.Name == "Hukuk");
+        var deptFA = db.Departments.FirstOrDefault(d => d.Name == "Güzel Sanatlar");
+        var deptMATH = db.Departments.FirstOrDefault(d => d.Name == "Matematik");
+        var deptPHY = db.Departments.FirstOrDefault(d => d.Name == "Fizik");
+        var deptCHEM = db.Departments.FirstOrDefault(d => d.Name == "Kimya");
+        var deptBIO = db.Departments.FirstOrDefault(d => d.Name == "Biyoloji");
+
 
         var clubs = new List<Club>
         {
-            new Club { Name = "Yazılım Mühendisliği Kulübü", DepartmentId = deptSoftware!.Id, Description = "Yazılım mühendisliği öğrencilerine yönelik teknik etkinlikler, proje geliştirme ve sektör bağlantıları sağlayan kulüp.", IsActive = true, CreatedAt = DateTime.UtcNow },
-            new Club { Name = "Yazılım Geliştirme Kulübü", DepartmentId = deptComputer!.Id, Description = "Yazılım geliştirme, programlama dilleri ve teknolojileri üzerine çalışmalar yapan kulüp.", IsActive = true, CreatedAt = DateTime.UtcNow },
-            new Club { Name = "Robotik ve Otomasyon Kulübü", DepartmentId = deptEE!.Id, Description = "Robotik projeler, otomasyon sistemleri ve yapay zeka uygulamaları geliştiren kulüp.", IsActive = true, CreatedAt = DateTime.UtcNow },
-            new Club { Name = "Girişimcilik ve İnovasyon Kulübü", DepartmentId = deptBusiness!.Id, Description = "Girişimcilik ekosistemi, startup projeleri ve inovasyon çalışmaları yürüten kulüp.", IsActive = true, CreatedAt = DateTime.UtcNow },
-            new Club { Name = "Sosyal Sorumluluk Kulübü", DepartmentId = deptSocial!.Id, Description = "Toplumsal sorunlara çözüm üretmek ve sosyal projeler geliştirmek için çalışan kulüp.", IsActive = true, CreatedAt = DateTime.UtcNow },
-            new Club { Name = "Müzik ve Sanat Kulübü", DepartmentId = deptArts!.Id, Description = "Müzik, resim, tiyatro ve diğer sanat dallarında etkinlikler düzenleyen kulüp.", IsActive = true, CreatedAt = DateTime.UtcNow },
-            new Club { Name = "Spor ve Sağlık Kulübü", DepartmentId = deptPE!.Id, Description = "Spor aktiviteleri, sağlıklı yaşam ve fitness programları organize eden kulüp.", IsActive = true, CreatedAt = DateTime.UtcNow },
-            new Club { Name = "Çevre ve Sürdürülebilirlik Kulübü", DepartmentId = deptEnv!.Id, Description = "Çevre koruma, sürdürülebilirlik ve yeşil teknolojiler üzerine çalışan kulüp.", IsActive = true, CreatedAt = DateTime.UtcNow },
-            new Club { Name = "Dil ve Kültür Kulübü", DepartmentId = deptFL!.Id, Description = "Dil öğrenimi, kültürel etkinlikler ve uluslararası değişim programları düzenleyen kulüp.", IsActive = true, CreatedAt = DateTime.UtcNow },
-            new Club { Name = "Bilim ve Araştırma Kulübü", DepartmentId = deptSci!.Id, Description = "Bilimsel araştırmalar, akademik çalışmalar ve bilimsel etkinlikler organize eden kulüp.", IsActive = true, CreatedAt = DateTime.UtcNow },
-            new Club { Name = "Medya ve İletişim Kulübü", DepartmentId = deptCom!.Id, Description = "Medya, gazetecilik, dijital içerik üretimi ve iletişim projeleri yürüten kulüp.", IsActive = true, CreatedAt = DateTime.UtcNow }
+         new Club {
+    Name = "Yazılım Mühendisliği Kulübü",
+    DepartmentId = deptSoftware!.Id,
+    Description = "Yazılım geliştirme, kodlama atölyeleri, hackathonlar ve sektörel seminerler düzenleyen mühendislik odaklı kulüp.",
+    IsActive = true, CreatedAt = DateTime.UtcNow
+},
+
+new Club {
+    Name = "Bilgisayar Teknolojileri ve Yapay Zekâ Kulübü",
+    DepartmentId = deptComputer!.Id,
+    Description = "Bilgisayar mühendisliği öğrencileri için yapay zekâ, veri bilimi, algoritmalar ve donanım temelli projeler geliştiren kulüp.",
+    IsActive = true, CreatedAt = DateTime.UtcNow
+},
+
+new Club {
+    Name = "Elektrik-Elektronik ve Robotik Sistemler Kulübü",
+    DepartmentId = deptEEE!.Id,
+    Description = "Elektronik devreler, robotik sistemler, gömülü yazılım ve IoT projeleri üzerine çalışan teknik kulüp.",
+    IsActive = true, CreatedAt = DateTime.UtcNow
+},
+
+new Club {
+    Name = "Endüstri ve Yönetim Bilimleri Kulübü",
+    DepartmentId = deptIE!.Id,
+    Description = "Verimlilik, süreç yönetimi, operasyon araştırmaları ve kurumsal yönetim becerilerini geliştiren akademik kulüp.",
+    IsActive = true, CreatedAt = DateTime.UtcNow
+},
+
+new Club {
+    Name = "Makine Tasarım ve İmalat Kulübü",
+    DepartmentId = deptME!.Id,
+    Description = "Mekanik tasarım, CAD/CAM, üretim teknolojileri ve mühendislik projeleri üzerine çalışmalar yapan kulüp.",
+    IsActive = true, CreatedAt = DateTime.UtcNow
+},
+
+new Club {
+    Name = "İnşaat Teknolojileri ve Yapı Bilimleri Kulübü",
+    DepartmentId = deptCE!.Id,
+    Description = "Yapı mühendisliği, yapı malzemeleri, statik-dinamik analiz ve mimari projelerde faaliyet gösteren kulüp.",
+    IsActive = true, CreatedAt = DateTime.UtcNow
+},
+
+new Club {
+    Name = "Çevre ve Sürdürülebilir Kalkınma Kulübü",
+    DepartmentId = deptENV!.Id,
+    Description = "Çevre sorunları, sürdürülebilirlik, iklim değişikliği ve yeşil teknoloji projeleri geliştiren topluluk.",
+    IsActive = true, CreatedAt = DateTime.UtcNow
+},
+
+new Club {
+    Name = "İşletme ve Finans Kulübü",
+    DepartmentId = deptBUS!.Id,
+    Description = "İşletme yönetimi, finans, pazarlama, organizasyon ve girişimcilik alanlarında etkinlikler düzenleyen kulüp.",
+    IsActive = true, CreatedAt = DateTime.UtcNow
+},
+
+new Club {
+    Name = "Ekonomi ve Analitik Araştırmalar Kulübü",
+    DepartmentId = deptECO!.Id,
+    Description = "Ekonomik analiz, veri yorumlama, makro-mikro ekonomi çalışmaları ve akademik araştırmalar yapan kulüp.",
+    IsActive = true, CreatedAt = DateTime.UtcNow
+},
+
+new Club {
+    Name = "Psikoloji ve İnsan Davranışları Kulübü",
+    DepartmentId = deptPSY!.Id,
+    Description = "Psikoloji bilimi, insan davranışları, mental sağlık, araştırma ve seminer çalışmaları yürüten kulüp.",
+    IsActive = true, CreatedAt = DateTime.UtcNow
+},
+
+new Club {
+    Name = "Hukuk ve Adalet Çalışmaları Kulübü",
+    DepartmentId = deptLAW!.Id,
+    Description = "Hukuki farkındalık, dava analizleri, akademik çalışmalar ve sosyal hukuk projeleri düzenleyen kulüp.",
+    IsActive = true, CreatedAt = DateTime.UtcNow
+},
+
+new Club {
+    Name = "Güzel Sanatlar ve Tasarım Kulübü",
+    DepartmentId = deptFA!.Id,
+    Description = "Resim, heykel, müzik, sinema, tiyatro ve diğer sanat dallarında projeler ve atölyeler oluşturan kulüp.",
+    IsActive = true, CreatedAt = DateTime.UtcNow
+},
+
+new Club {
+    Name = "Matematik Araştırmaları ve Analiz Kulübü",
+    DepartmentId = deptMATH!.Id,
+    Description = "Teorik matematik, uygulamalı matematik, modelleme ve bilimsel araştırmalar üzerine çalışan akademik kulüp.",
+    IsActive = true, CreatedAt = DateTime.UtcNow
+},
+
+new Club {
+    Name = "Fizik ve Bilimsel Keşifler Kulübü",
+    DepartmentId = deptPHY!.Id,
+    Description = "Deneysel fizik, astronomi, teorik çalışmalar ve bilimsel keşifler konusunda etkinlikler düzenleyen kulüp.",
+    IsActive = true, CreatedAt = DateTime.UtcNow
+},
+
+new Club {
+    Name = "Kimya ve Laboratuvar Teknolojileri Kulübü",
+    DepartmentId = deptCHEM!.Id,
+    Description = "Kimyasal analizler, laboratuvar çalışmaları, araştırma projeleri ve bilimsel aktiviteler gerçekleştiren kulüp.",
+    IsActive = true, CreatedAt = DateTime.UtcNow
+},
+
+new Club {
+    Name = "Biyoloji ve Genetik Araştırmalar Kulübü",
+    DepartmentId = deptBIO!.Id,
+    Description = "Biyoloji, biyoteknoloji, genetik ve laboratuvar araştırmaları alanında etkinlikler düzenleyen bilim kulübü.",
+    IsActive = true, CreatedAt = DateTime.UtcNow
+},
+
         };
 
         db.Clubs.AddRange(clubs);

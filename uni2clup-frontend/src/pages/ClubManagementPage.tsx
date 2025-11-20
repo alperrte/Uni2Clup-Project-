@@ -32,6 +32,10 @@ const ClubManagementPage: React.FC = () => {
     });
     const [departments, setDepartments] = useState<Department[]>([]);
 
+    const [search, setSearch] = useState("");
+    const [filterDept, setFilterDept] = useState("Hepsi");
+
+
     const token = localStorage.getItem("token")?.trim() || "";
 
     const fetchClubs = async () => {
@@ -212,6 +216,17 @@ const ClubManagementPage: React.FC = () => {
         }
     };
 
+    const filteredClubs = clubs.filter((club) => {
+        const matchSearch =
+            club.name.toLowerCase().includes(search.toLowerCase()) ||
+            club.description.toLowerCase().includes(search.toLowerCase());
+
+        const matchDept =
+            filterDept === "Hepsi" || club.departmentName === filterDept;
+
+        return matchSearch && matchDept;
+    });
+
     if (loading) {
         return (
             <div className="flex items-center justify-center py-12">
@@ -236,6 +251,29 @@ const ClubManagementPage: React.FC = () => {
                 </button>
             </div>
 
+            <div className="flex items-center gap-4 mb-4">
+
+                <input
+                    type="text"
+                    placeholder="Kulüp Ara..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="px-4 py-2 rounded-lg bg-[#1f1f2f] text-white border border-gray-600 focus:border-blue-500 w-1/3"
+                />
+
+                <select
+                    value={filterDept}
+                    onChange={(e) => setFilterDept(e.target.value)}
+                    className="px-4 py-2 rounded-lg bg-[#1f1f2f] text-white border border-gray-600 focus:border-blue-500"
+                >
+                    <option value="Hepsi">Tüm Bölümler</option>
+                    {departments.map((d) => (
+                        <option key={d.id} value={d.name}>{d.name}</option>
+                    ))}
+                </select>
+
+            </div>
+
             {/* Clubs Table */}
             <div className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] border-2 border-transparent bg-clip-padding rounded-xl p-1 hover:border-[#3b82f6] transition-all duration-300">
                 <div className="bg-[#0f0f1a] rounded-lg p-6">
@@ -258,14 +296,14 @@ const ClubManagementPage: React.FC = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-700">
-                                    {clubs.map((club) => (
+                                    {filteredClubs.map((club) => (
                                         <tr
                                             key={club.id}
                                             className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] hover:from-[#2a2a3e] hover:to-[#3a3a4e] transition-all duration-300"
                                         >
                                             <td className="py-4 px-6 font-medium text-white">{club.name}</td>
                                             <td className="py-4 px-6 text-gray-300">{club.departmentName}</td>
-                                            <td className="py-4 px-6 text-gray-300 max-w-xs truncate" title={club.description}>
+                                            <td className="py-4 px-6 text-gray-300 whitespace-normal break-words">
                                                 {club.description || "-"}
                                             </td>
                                             <td className="py-4 px-6">

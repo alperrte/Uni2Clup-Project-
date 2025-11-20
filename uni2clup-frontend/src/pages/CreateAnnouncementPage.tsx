@@ -33,7 +33,7 @@ const formatAnnouncementDate = (value: string) => {
 
 const CreateAnnouncementPage: React.FC = () => {
     const [events, setEvents] = useState<EventItem[]>([]);
-    const [selectedEventName, setSelectedEventName] = useState("");
+    const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
     const [message, setMessage] = useState("");
     const [announcements, setAnnouncements] = useState<any[]>([]);
 
@@ -74,7 +74,7 @@ const CreateAnnouncementPage: React.FC = () => {
     }, []);
 
     const handleSubmit = async () => {
-        if (!selectedEventName || !message.trim()) {
+        if (!selectedEventId || !message.trim()) {
             alert("Lütfen tüm alanları doldurun.");
             return;
         }
@@ -87,7 +87,7 @@ const CreateAnnouncementPage: React.FC = () => {
                     Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
-                    eventName: selectedEventName,
+                    eventId: selectedEventId,
                     message: message
                 })
             });
@@ -96,7 +96,7 @@ const CreateAnnouncementPage: React.FC = () => {
             alert(data.message || "Duyuru oluşturuldu!");
 
             // Form temizle
-            setSelectedEventName("");
+            setSelectedEventId(null);
             setMessage("");
 
             // Listeyi yenile
@@ -124,16 +124,15 @@ const CreateAnnouncementPage: React.FC = () => {
                 <label className="block mb-2 text-lg">Mevcut Etkinliği Seç</label>
                 <select
                     className="w-full p-3 rounded bg-[#1a1a2e] border border-[#3b82f6]"
-                    value={selectedEventName}
-                    onChange={(e) => setSelectedEventName(e.target.value)}
+                    value={selectedEventId ?? ""}
+                    onChange={(e) => setSelectedEventId(Number(e.target.value))}
                 >
                     <option value="">Etkinlik seç...</option>
                     {events.map(ev => (
-                        <option key={ev.id} value={ev.name}>
-                            {ev.name}
-                        </option>
+                        <option key={ev.id} value={ev.id}>{ev.name}</option>
                     ))}
                 </select>
+
 
                 {/* Mesaj */}
                 <label className="block mt-4 mb-2 text-lg">Etkinlik Hakkında</label>
