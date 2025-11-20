@@ -1,4 +1,8 @@
 ﻿import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
+
+
 
 const LoginPage = ({ onLoginSuccess }) => {
     const [email, setEmail] = useState("");
@@ -8,7 +12,7 @@ const LoginPage = ({ onLoginSuccess }) => {
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");
     const [showRegisterModal, setShowRegisterModal] = useState(false);
-
+    const navigate = useNavigate();
     // ✅ Bölüm listesi
     const [departments, setDepartments] = useState([]);
 
@@ -68,6 +72,7 @@ const LoginPage = ({ onLoginSuccess }) => {
             setTimeout(() => {
                 setShowSuccessModal(false);
                 onLoginSuccess?.(normalizedUser);
+                navigate("/redirect");
             }, 1500);
         } catch (error) {
             alert("🚫 Sunucuya bağlanılamadı.");
