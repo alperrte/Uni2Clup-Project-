@@ -2,11 +2,34 @@
 
 const API_URL = "http://localhost:8080";
 const token = localStorage.getItem("token");
+const TURKEY_TIMEZONE = "Europe/Istanbul";
+const announcementFormatter = new Intl.DateTimeFormat("tr-TR", {
+    timeZone: TURKEY_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+});
 
 interface EventItem {
     id: number;
     name: string;
 }
+
+const parseAnnouncementDate = (value: string) => {
+    if (!value) return null;
+    const hasTimezone = /Z|[+-]\d{2}:\d{2}$/i.test(value);
+    const normalized = hasTimezone ? value : `${value}Z`;
+    const date = new Date(normalized);
+    return isNaN(date.getTime()) ? null : date;
+};
+
+const formatAnnouncementDate = (value: string) => {
+    const date = parseAnnouncementDate(value);
+    if (!date) return value;
+    return announcementFormatter.format(date);
+};
 
 const CreateAnnouncementPage: React.FC = () => {
     const [events, setEvents] = useState<EventItem[]>([]);
@@ -23,7 +46,11 @@ const CreateAnnouncementPage: React.FC = () => {
                 });
 
                 const data = await res.json();
-                setEvents(data);
+                const normalized = (data || []).map((ev: any) => ({
+                    id: ev.id ?? ev.Id,
+                    name: ev.name ?? ev.Name
+                }));
+                setEvents(normalized);
             } catch (err) {
                 console.error("Etkinlik listesi alınamadı:", err);
             }
@@ -137,7 +164,7 @@ const CreateAnnouncementPage: React.FC = () => {
                         <div key={a.id} className="bg-[#1a1a2e] p-4 rounded border border-[#3b82f6]">
                             <h3 className="text-xl font-bold">{a.EventName}</h3>
                             <p className="mt-2">{a.Message}</p>
-                            <p className="mt-1 text-sm text-gray-400">{new Date(a.CreatedAt).toLocaleString()}</p>
+                            <p className="mt-1 text-sm text-gray-400">{formatAnnouncementDate(a.CreatedAt)}</p>
                         </div>
                     ))}
                 </div>

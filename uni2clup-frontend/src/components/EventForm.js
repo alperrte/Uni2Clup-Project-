@@ -1,5 +1,42 @@
 ﻿import React, { useState, useEffect } from "react";
 
+const API_URL = "http://localhost:8080";
+const TURKEY_TIMEZONE = "Europe/Istanbul";
+const TURKEY_OFFSET = "+03:00";
+const turkeyFormatter = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: TURKEY_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+});
+
+const formatDateForInput = (value) => {
+    if (!value) return "";
+    const date = typeof value === "string" ? new Date(value) : value;
+    if (!(date instanceof Date) || isNaN(date.getTime())) return "";
+
+    const parts = turkeyFormatter.formatToParts(date).reduce((acc, part) => {
+        if (part.type !== "literal") acc[part.type] = part.value;
+        return acc;
+    }, {});
+
+    return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+};
+
+const parseTurkeyInputToDate = (value) => {
+    if (!value) return null;
+    const parsed = new Date(`${value}:00${TURKEY_OFFSET}`);
+    return isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const convertTurkeyInputToISO = (value) => {
+    const parsed = parseTurkeyInputToDate(value);
+    return parsed ? parsed.toISOString() : "";
+};
+
 function EventForm({ onSave, selectedEvent, clearSelected }) {
     const [form, setForm] = useState({
         name: "",
@@ -10,6 +47,10 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
         clubName: "",
         description: "",
     });
+    const [clubError, setClubError] = useState("");
+    const [isClubLoading, setIsClubLoading] = useState(false);
+
+    const turkeyNow = formatDateForInput(new Date());
 
     // 🔹 Sayfa yüklendiğinde veya düzenleme moduna geçildiğinde formu ayarla
     useEffect(() => {
@@ -22,33 +63,122 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
                 name: "",
                 capacity: "",
                 location: "",
-                startDate: now.toISOString().slice(0, 16),
-                endDate: oneHourLater.toISOString().slice(0, 16),
+                startDate: formatDateForInput(now),
+                endDate: formatDateForInput(oneHourLater),
                 clubName: "",
                 description: "",
             });
         }
     }, [selectedEvent]);
 
+    // 🔹 Kulüp bilgisini otomatik getir
+    useEffect(() => {
+        if (selectedEvent) return;
+
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const fetchClub = async () => {
+            try {
+                setIsClubLoading(true);
+                setClubError("");
+                const res = await fetch(`${API_URL}/api/Club/my-club`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (!res.ok) {
+                    const error = await res.json().catch(() => ({}));
+                    throw new Error(error.message || "Kulüp bilgisi alınamadı.");
+                }
+
+                const data = await res.json();
+                setForm((prev) => ({
+                    ...prev,
+                    clubName: data?.name || "",
+                }));
+            } catch (error) {
+                console.error(error);
+                setClubError(error.message);
+            } finally {
+                setIsClubLoading(false);
+            }
+        };
+
+        fetchClub();
+    }, [selectedEvent]);
+
     // 🔹 Input değişikliklerini yakala
     const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+
+        if (name === "startDate") {
+            const updated = { ...form, startDate: value };
+            const startDate = parseTurkeyInputToDate(value);
+            const endDate = parseTurkeyInputToDate(form.endDate);
+            if (startDate && endDate && endDate < startDate) {
+                updated.endDate = value;
+            }
+            setForm(updated);
+            return;
+        }
+
+        if (name === "endDate") {
+            const endDate = parseTurkeyInputToDate(value);
+            const startDate = parseTurkeyInputToDate(form.startDate);
+            if (startDate && endDate && endDate < startDate) {
+                alert("Bitiş tarihi başlangıç tarihinden önce olamaz.");
+                return;
+            }
+        }
+
+        setForm({ ...form, [name]: value });
     };
 
     // 🔹 Form gönderildiğinde çalışır
     const handleSubmit = (e) => {
         e.preventDefault();
 
+        if (!selectedEvent) {
+            const confirmed = window.confirm("Etkinliği oluşturmak istediğinize emin misiniz?");
+            if (!confirmed) return;
+        }
+
+        const startDate = parseTurkeyInputToDate(form.startDate);
+        const endDate = parseTurkeyInputToDate(form.endDate);
+        const now = parseTurkeyInputToDate(turkeyNow);
+
+        if (!startDate || !endDate || !now) {
+            alert("Lütfen geçerli bir tarih seçiniz.");
+            return;
+        }
+
+        if (startDate < now) {
+            alert("Geçmiş bir tarih için etkinlik planlayamazsınız.");
+            return;
+        }
+
+        if (endDate <= startDate) {
+            alert("Bitiş tarihi başlangıçtan sonra olmalıdır.");
+            return;
+        }
+
         const formattedForm = {
             Id: selectedEvent?.id || 0, // 👈 düzenleme varsa id ekle
             Name: form.name,
             Capacity: parseInt(form.capacity, 10),
             Location: form.location,
-            StartDate: new Date(form.startDate).toISOString(), // 👈 tarihleri ISO formatına çevir
-            EndDate: new Date(form.endDate).toISOString(),
+            StartDate: convertTurkeyInputToISO(form.startDate), // 👈 tarihleri ISO formatına çevir
+            EndDate: convertTurkeyInputToISO(form.endDate),
             ClubName: form.clubName,
             Description: form.description,
         };
+
+        if (!formattedForm.ClubName) {
+            alert("Kulüp bilgisi bulunamadı. Lütfen tekrar deneyiniz.");
+            return;
+        }
 
         console.log("📤 Gönderilen veri:", formattedForm);
         onSave(formattedForm);
@@ -61,9 +191,9 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
                 name: "",
                 capacity: "",
                 location: "",
-                startDate: now.toISOString().slice(0, 16),
-                endDate: oneHourLater.toISOString().slice(0, 16),
-                clubName: localStorage.getItem("userName") || "",
+                startDate: formatDateForInput(now),
+                endDate: formatDateForInput(oneHourLater),
+                clubName: form.clubName,
                 description: "",
             });
 
@@ -155,11 +285,14 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
                                 name="clubName"
                                 placeholder="Kulüp İsmi"
                                 value={form.clubName}
-                                onChange={handleChange}
-                                className="flex-1 bg-transparent text-white placeholder-gray-400 outline-none text-lg"
+                                readOnly={!clubError}
+                                className={`flex-1 bg-transparent text-white placeholder-gray-400 outline-none text-lg ${isClubLoading ? "opacity-70" : ""} ${clubError ? "" : "cursor-not-allowed"}`}
                                 required
                             />
                         </div>
+                        {clubError && (
+                            <p className="text-sm text-red-400 mt-2">{clubError}</p>
+                        )}
                     </div>
                 </div>
 
@@ -175,8 +308,7 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
                             <input
                                 type="datetime-local"
                                 name="startDate"
-                                min={new Date().toISOString().slice(0, 16)}
-
+                                min={turkeyNow}
                                 value={form.startDate}
                                 onChange={handleChange}
                                 className="flex-1 bg-transparent text-white outline-none text-lg cursor-pointer"
@@ -203,8 +335,7 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
                             <input
                                 type="datetime-local"
                                 name="endDate"
-                                min={new Date().toISOString().slice(0, 16)}
-
+                                min={form.startDate || turkeyNow}
                                 value={form.endDate}
                                 onChange={handleChange}
                                 className="flex-1 bg-transparent text-white outline-none text-lg cursor-pointer"

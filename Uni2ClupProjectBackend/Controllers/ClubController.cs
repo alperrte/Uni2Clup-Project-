@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using Uni2ClupProjectBackend.Data;
 using Uni2ClupProjectBackend.Models;
 
@@ -15,6 +16,69 @@ namespace Uni2ClupProjectBackend.Controllers
         public ClubController(AppDbContext db)
         {
             _db = db;
+        }
+
+        // 👤 Giriş yapan kulüp yöneticisinin kulübünü getir
+        [HttpGet("my-club")]
+        [Authorize(Roles = "ClubManager")]
+        public async Task<IActionResult> GetMyClubAsync()
+        {
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (email == null)
+                return Unauthorized(new { message = "❌ Oturum bulunamadı." });
+
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+                return Unauthorized(new { message = "❌ Kullanıcı bulunamadı." });
+
+            if (user.ClubId == null)
+                return NotFound(new { message = "Henüz bir kulübe bağlı değilsiniz." });
+
+            var club = await _db.Clubs
+                .Include(c => c.Department)
+                .FirstOrDefaultAsync(c => c.Id == user.ClubId.Value);
+            if (club == null)
+                return NotFound(new { message = "❌ Kulüp bulunamadı." });
+
+            return Ok(new
+            {
+                id = club.Id,
+                name = club.Name,
+                description = club.Description,
+                departmentId = club.DepartmentId,
+                departmentName = club.Department?.Name ?? ""
+            });
+        }
+
+        // ✏️ Kulüp yöneticisi açıklama güncelle
+        [HttpPut("update-description")]
+        [Authorize(Roles = "ClubManager")]
+        public async Task<IActionResult> UpdateMyClubDescription([FromBody] ClubDescriptionUpdateDto dto)
+        {
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (email == null)
+                return Unauthorized(new { message = "❌ Oturum bulunamadı." });
+
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+                return Unauthorized(new { message = "❌ Kullanıcı bulunamadı." });
+
+            if (user.ClubId == null)
+                return BadRequest(new { message = "Herhangi bir kulübe bağlı görünmüyorsunuz." });
+
+            var club = await _db.Clubs.FindAsync(user.ClubId.Value);
+            if (club == null)
+                return NotFound(new { message = "❌ Kulüp bulunamadı." });
+
+            club.Description = dto.Description?.Trim() ?? "";
+
+            await _db.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "✅ Kulüp açıklaması güncellendi.",
+                description = club.Description
+            });
         }
 
         // 📋 Tüm kulüpleri listele
@@ -179,6 +243,11 @@ namespace Uni2ClupProjectBackend.Controllers
     {
         public string Name { get; set; } = string.Empty;
         public int DepartmentId { get; set; }
+        public string? Description { get; set; }
+    }
+
+    public class ClubDescriptionUpdateDto
+    {
         public string? Description { get; set; }
     }
 }

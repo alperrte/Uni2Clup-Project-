@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using Uni2ClupProjectBackend.Data;
 using Uni2ClupProjectBackend.DTOs;
 using Uni2ClupProjectBackend.Models;
@@ -26,9 +27,13 @@ namespace Uni2ClupProjectBackend.Controllers
             if (dto == null || dto.EventId <= 0 || string.IsNullOrWhiteSpace(dto.Message))
                 return BadRequest(new { message = "Boş alan bırakmayınız." });
 
-            var ev = await _db.Events.FindAsync(dto.EventId);
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (email == null)
+                return Unauthorized(new { message = "❌ Oturum bulunamadı." });
+
+            var ev = await _db.Events.FirstOrDefaultAsync(e => e.Id == dto.EventId && e.CreatedBy == email);
             if (ev == null)
-                return NotFound(new { message = "Etkinlik bulunamadı." });
+                return NotFound(new { message = "Etkinlik bulunamadı veya bu etkinlik için duyuru oluşturamazsınız." });
 
             var announcement = new Announcement
             {
@@ -48,14 +53,40 @@ namespace Uni2ClupProjectBackend.Controllers
         [Authorize(Roles = "ClubManager")]
         public async Task<IActionResult> List()
         {
-            var announcements = await _db.Announcements
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (email == null)
+                return Unauthorized(new { message = "❌ Oturum bulunamadı." });
+
+            string? clubName = null;
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user?.ClubId != null)
+            {
+                clubName = await _db.Clubs
+                    .Where(c => c.Id == user.ClubId.Value)
+                    .Select(c => c.Name)
+                    .FirstOrDefaultAsync();
+            }
+
+            var query = _db.Announcements
                 .Include(a => a.Event)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(clubName))
+            {
+                query = query.Where(a => a.Event.ClubName == clubName);
+            }
+            else
+            {
+                query = query.Where(a => a.Event.CreatedBy == email);
+            }
+
+            var announcements = await query
                 .OrderByDescending(a => a.CreatedAt)
                 .Select(a => new
                 {
                     a.Id,
                     a.EventId,
-                    EventName = a.Event.Name,    // ✔ DÜZELTİLEN SATIR
+                    EventName = a.Event.Name,
                     a.Message,
                     a.CreatedAt
                 })

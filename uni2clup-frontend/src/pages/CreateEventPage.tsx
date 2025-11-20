@@ -2,6 +2,29 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import EventForm from "../components/EventForm";
 
+const TURKEY_DATE_FORMATTER = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Europe/Istanbul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+});
+
+const formatDateForTurkeyInput = (value?: string | Date | null) => {
+    if (!value) return "";
+    const date = typeof value === "string" ? new Date(value) : value;
+    if (isNaN(date?.getTime() ?? NaN)) return "";
+
+    const parts = TURKEY_DATE_FORMATTER.formatToParts(date).reduce<Record<string, string>>((acc, part) => {
+        if (part.type !== "literal") acc[part.type] = part.value;
+        return acc;
+    }, {});
+
+    return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+};
+
 const CreateEventPage: React.FC = () => {
     const API_URL = "http://localhost:8080";
     const token = localStorage.getItem("token");
@@ -33,18 +56,13 @@ const CreateEventPage: React.FC = () => {
 
                 if (event) {
 
-                    // ⬇⬇⬇ SADECE BU 2 SATIRI EKLEDİM (TARİH HATALARI İÇİN) ⬇⬇⬇
-                    const safeStart = typeof event.StartDate === "string" ? event.StartDate.slice(0, 16) : "";
-                    const safeEnd = typeof event.EndDate === "string" ? event.EndDate.slice(0, 16) : "";
-                    // ⬆⬆⬆ EKLENEN YER ⬆⬆⬆
-
                     setSelectedEvent({
                         id: event.id ?? event.Id,
                         name: event.Name,
                         capacity: event.Capacity,
                         location: event.Location,
-                        startDate: safeStart,
-                        endDate: safeEnd,
+                        startDate: formatDateForTurkeyInput(event.StartDate),
+                        endDate: formatDateForTurkeyInput(event.EndDate),
                         clubName: event.ClubName,
                         description: event.Description
                     });
