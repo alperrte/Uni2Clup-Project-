@@ -18,6 +18,73 @@ namespace Uni2ClupProjectBackend.Controllers
             _db = db;
         }
 
+        // 👥 Kulüp Üyelerini Getir
+        [HttpGet("{clubId}/members")]
+        [Authorize(Roles = "ClubManager")]
+        public async Task<IActionResult> GetClubMembers(int clubId)
+        {
+            var club = await _db.Clubs.FindAsync(clubId);
+            if (club == null)
+                return NotFound(new { message = "❌ Kulüp bulunamadı." });
+
+            var members = await _db.ClubMembers
+                .Where(cm => cm.ClubId == clubId)
+                .Include(cm => cm.User)
+                .Select(cm => new
+                {
+                    id = cm.User.Id,
+                    name = cm.User.Name,
+                    surname = cm.User.Surname,
+                    email = cm.User.Email,
+                    createdAt = cm.JoinedAt,
+                    isActive = cm.User.IsActive
+                })
+                .ToListAsync();
+
+            return Ok(members);
+        }
+
+        // 🔄 Üye Aktif/Pasif Yap
+        // 🔄 Kulüp Üyesi Aktif/Pasif Toggle
+        [HttpPut("members/toggle/{userId}")]
+        [Authorize(Roles = "ClubManager")]
+        public async Task<IActionResult> ToggleMemberActive(int userId)
+        {
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (email == null)
+                return Unauthorized(new { message = "Oturum bulunamadı." });
+
+            var manager = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (manager == null || manager.ClubId == null)
+                return Unauthorized(new { message = "Kulüp yöneticisi değilsiniz." });
+
+            // 🔍 Bu user gerçekten bu kulübün üyesi mi?
+            var member = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (member == null)
+                return NotFound(new { message = "Üye bulunamadı." });
+
+            var relation = await _db.ClubMembers
+                .FirstOrDefaultAsync(cm => cm.UserId == userId && cm.ClubId == manager.ClubId.Value);
+
+            if (relation == null)
+                return BadRequest(new { message = "Bu kullanıcı sizin kulübünüze ait değil." });
+
+            // 🔄 DURUMU DEĞİŞTİR
+            member.IsActive = !member.IsActive;
+
+            await _db.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = member.IsActive ? "Üye aktif edildi." : "Üye pasif edildi.",
+                isActive = member.IsActive
+            });
+        }
+
+
+
+
+
         // 👤 Giriş yapan kulüp yöneticisinin kulübünü getir
         [HttpGet("my-club")]
         [Authorize(Roles = "ClubManager")]

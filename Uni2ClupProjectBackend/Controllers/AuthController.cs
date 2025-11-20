@@ -53,7 +53,10 @@ namespace Uni2ClupProjectBackend.Controllers
                     surname = user.Surname,
                     role = user.Role,
                     email = user.Email,
-                    token = token
+                    token = token,
+
+                    // ⭐⭐ EKLENEN KRİTİK YER ⭐⭐
+                    clubId = user.ClubId   // (ClubManager ise dolu gelir)
                 });
             }
             catch (Exception ex)
@@ -61,6 +64,7 @@ namespace Uni2ClupProjectBackend.Controllers
                 return StatusCode(500, new { message = "Sunucu hatası.", error = ex.Message });
             }
         }
+
 
         // 🧾 Öğrenci Başvurusu
         [HttpPost("student-apply")]
