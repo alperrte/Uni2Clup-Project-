@@ -73,7 +73,7 @@ namespace Uni2ClupProjectBackend.Controllers
 
             if (!string.IsNullOrEmpty(clubName))
             {
-                query = query.Where(a => a.Event.ClubName == clubName);
+                query = query.Where(a => a.Event.ClubId == user.ClubId);
             }
             else
             {

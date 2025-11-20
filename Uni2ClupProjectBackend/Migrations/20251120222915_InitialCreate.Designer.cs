@@ -12,7 +12,7 @@ using Uni2ClupProjectBackend.Data;
 namespace Uni2ClupProjectBackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251120220308_InitialCreate")]
+    [Migration("20251120222915_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -242,9 +242,8 @@ namespace Uni2ClupProjectBackend.Migrations
                     b.Property<int>("Capacity")
                         .HasColumnType("int");
 
-                    b.Property<string>("ClubName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("ClubId")
+                        .HasColumnType("int");
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
@@ -269,6 +268,8 @@ namespace Uni2ClupProjectBackend.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ClubId");
 
                     b.ToTable("Events");
                 });
@@ -396,6 +397,17 @@ namespace Uni2ClupProjectBackend.Migrations
                         .IsRequired();
 
                     b.Navigation("Department");
+                });
+
+            modelBuilder.Entity("Uni2ClupProjectBackend.Models.Event", b =>
+                {
+                    b.HasOne("Uni2ClupProjectBackend.Models.Club", "Club")
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Club");
                 });
 
             modelBuilder.Entity("Uni2ClupProjectBackend.Models.User", b =>

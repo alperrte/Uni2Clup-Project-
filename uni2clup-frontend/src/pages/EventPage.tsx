@@ -83,7 +83,7 @@ const EventPage: React.FC = () => {
     const fetchEvents = useCallback(async () => {
         setIsLoading(true);
         try {
-            const res = await fetch(`${API_URL}/api/Events/list`, {
+            const res = await fetch(`${API_URL}/api/events/list`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 

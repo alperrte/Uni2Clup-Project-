@@ -50,7 +50,7 @@ namespace Uni2ClupProjectBackend.Controllers
             // Eğer kulüp bulunduysa sadece o kulübün etkinlikleri
             if (!string.IsNullOrEmpty(clubName))
             {
-                query = query.Where(e => e.ClubName == clubName);
+                query = query.Where(e => e.ClubId == user.ClubId);
             }
             // Kulüp yoksa, sadece kendisinin oluşturdukları (emniyet için)
             else
@@ -68,7 +68,7 @@ namespace Uni2ClupProjectBackend.Controllers
                     e.Name,
                     e.Location,
                     e.Capacity,
-                    e.ClubName,
+                    ClubName = e.Club.Name,
                     e.Description,
                     e.StartDate,
                     e.EndDate,
@@ -104,7 +104,7 @@ namespace Uni2ClupProjectBackend.Controllers
                     e.Name,
                     e.Location,
                     e.Capacity,
-                    e.ClubName,
+                    ClubName = e.Club.Name,
                     e.Description,
                     e.StartDate,
                     e.EndDate,
@@ -162,7 +162,7 @@ namespace Uni2ClupProjectBackend.Controllers
                 Description = dto.Description?.Trim() ?? "",
                 StartDate = dto.StartDate,
                 EndDate = dto.EndDate,
-                ClubName = clubName,
+                ClubId = user.ClubId.Value,
                 CreatedBy = email
             };
 
