@@ -74,59 +74,67 @@ const ClubSettingsPage: React.FC = () => {
         }
     };
 
+    const renderStateCard = (content: React.ReactNode, action?: React.ReactNode) => (
+        <div className="bg-[#0f0f1a]/80 border border-[#3b82f6]/30 rounded-3xl p-10 text-white space-y-4 text-center">
+            {content}
+            {action}
+        </div>
+    );
+
     if (loading) {
-        return <p className="text-white mt-10">Kulüp bilgileri yükleniyor...</p>;
+        return renderStateCard(<p className="text-gray-300">Kulüp bilgileri yükleniyor...</p>);
     }
 
     if (error) {
-        return (
-            <div className="text-white mt-10">
-                <p className="text-red-400 mb-4">{error}</p>
-                <button
-                    onClick={fetchClub}
-                    className="px-4 py-2 bg-blue-600 rounded-lg"
-                >
-                    Tekrar Dene
-                </button>
-            </div>
+        return renderStateCard(
+            <p className="text-red-300">{error}</p>,
+            <button
+                onClick={fetchClub}
+                className="px-6 py-3 rounded-2xl bg-gradient-to-r from-[#ef4444] to-[#b91c1c] font-semibold"
+            >
+                Tekrar Dene
+            </button>
         );
     }
 
     if (!club) {
-        return <p className="text-white mt-10">Kulüp bilgisi bulunamadı.</p>;
+        return renderStateCard(<p className="text-gray-300">Kulüp bilgisi bulunamadı.</p>);
     }
 
     return (
-        <div className="max-w-3xl mx-auto mt-10 text-white space-y-6">
-            <div className="bg-[#0f0f1a] border border-[#3b82f6] rounded-2xl p-6">
-                <h1 className="text-3xl font-bold mb-4">{club.name}</h1>
-                {club.departmentName && (
-                    <p className="text-gray-300 mb-2">
-                        Bölüm: {club.departmentName}
-                    </p>
-                )}
-                <p className="text-gray-400">
-                    Kulübünüzün açıklamasını aşağıdan güncelleyebilirsiniz.
-                </p>
-            </div>
+        <div className="relative text-white">
+            <div className="absolute inset-0 -z-10 opacity-40 blur-3xl bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900"></div>
+            <div className="max-w-5xl mx-auto py-10 space-y-8">
+                <div className="bg-gradient-to-br from-[#1c1f44] to-[#111326] border border-[#3b82f6]/30 rounded-3xl p-8 shadow-2xl">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                        <div>
+                            <p className="text-sm uppercase tracking-[0.4em] text-[#93c5fd] mb-2">Kulüp Ayarları</p>
+                            <h1 className="text-4xl font-extrabold">{club.name}</h1>
+                            <p className="text-gray-300 mt-3 max-w-2xl">
+                                Kulüp açıklaması üyelerin kulüp sayfasında görüntülenecektir, buradan kulüp açıklamanızı düzenleyebilirsiniz. Kulüp ismi ve bölüm değişikliği için lütfen üniversite yönetimi ile iletişime geçin.
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
-            <div className="bg-[#0f0f1a] border border-[#3b82f6] rounded-2xl p-6">
-                <label className="block mb-2 text-lg font-semibold">
-                    Kulüp Açıklaması
-                </label>
-                <textarea
-                    className="w-full bg-[#1a1a2e] border border-[#3b82f6] rounded-xl p-4 text-white min-h-[160px] resize-none"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Kulübünüzü anlatan açıklamayı yazın..."
-                />
-                <button
-                    onClick={handleSave}
-                    disabled={saving}
-                    className="mt-4 w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 py-3 rounded-lg font-semibold"
-                >
-                    {saving ? "Kaydediliyor..." : "Açıklamayı Güncelle"}
-                </button>
+                <div className="bg-[#0f0f1a]/90 border border-[#3b82f6]/40 rounded-3xl p-8 shadow-2xl">
+                    <label className="block mb-2 text-lg font-semibold">
+                        Kulüp Açıklaması
+                    </label>
+                    <textarea
+                        className="w-full bg-[#161a3a] border border-[#3b82f6]/40 rounded-2xl p-5 text-white min-h-[180px] resize-none focus:outline-none focus:ring-2 focus:ring-[#3b82f6]"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="Kulübünüzün misyonunu, vizyonunu ve faaliyet alanlarını anlatan açıklamayı yazın..."
+                    />
+                    <button
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="mt-5 w-full bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] hover:scale-[1.01] transition-all font-semibold py-4 rounded-2xl shadow-lg disabled:opacity-60"
+                    >
+                        {saving ? "Kaydediliyor..." : "Açıklamayı Güncelle"}
+                    </button>
+                </div>
             </div>
         </div>
     );

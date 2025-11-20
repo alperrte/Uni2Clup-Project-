@@ -6,19 +6,19 @@ interface LayoutProps {
     handleLogout?: () => void;
 }
 
+const menuItems = [
+    { name: "Yeni Etkinlik Oluştur", path: "/club/create-event", icon: "➕" },
+    { name: "Duyuru Oluştur", path: "/club/announcements", icon: "📢" },
+    { name: "Etkinlikler", path: "/club/events", icon: "📅" },
+    { name: "Duyurular", path: "/club/announcements-list", icon: "📰" },
+    { name: "Kulüp Üyeleri", path: "/club/members", icon: "👥" },
+    { name: "Ayarlar", path: "/club/settings", icon: "⚙️" },
+];
+
 const ClubManagerLayout: React.FC<LayoutProps> = ({ children, handleLogout }) => {
     const location = useLocation();
     const [clubName, setClubName] = useState<string>("");
     const [clubError, setClubError] = useState<string>("");
-
-    const menuItems = [
-        { name: "Yeni Etkinlik Oluştur", path: "/club/create-event", icon: "➕" },
-        { name: "Duyuru Oluştur", path: "/club/announcements", icon: "📢" },
-        { name: "Etkinlikler", path: "/club/events", icon: "📅" },
-        { name: "Duyurular", path: "/club/announcements-list", icon: "📰" },
-        { name: "Kulüp Üyeleri", path: "/club/members", icon: "👥" },
-        { name: "Ayarlar", path: "/club/settings", icon: "⚙️" },
-    ];
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -48,51 +48,74 @@ const ClubManagerLayout: React.FC<LayoutProps> = ({ children, handleLogout }) =>
     }, []);
 
     return (
-        <div className="min-h-screen flex bg-[#0a0f2d] text-white">
+        <div className="min-h-screen text-white flex relative overflow-hidden bg-gradient-to-br from-[#0a0a1a] via-[#0f0f2a] to-[#1a1a3a]">
+            {/* Animated background */}
+            <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-[#2d1b69] to-[#1e3a8a] rounded-full opacity-20 blur-3xl"></div>
+                <div className="absolute -bottom-40 -left-32 w-96 h-96 bg-gradient-to-tr from-[#1e3a8a] to-[#2d1b69] rounded-full opacity-10 blur-3xl"></div>
+                {[...Array(20)].map((_, i) => (
+                    <div
+                        key={i}
+                        className="absolute w-1 h-1 bg-[#3b82f6] rounded-full animate-pulse"
+                        style={{
+                            left: `${Math.random() * 100}%`,
+                            top: `${Math.random() * 100}%`,
+                            animationDelay: `${Math.random() * 3}s`,
+                            animationDuration: `${2 + Math.random() * 3}s`,
+                        }}
+                    />
+                ))}
+            </div>
 
-            {/* SOL MENÜ */}
-            <div className="w-72 bg-[#0d102e] border-r border-white/10 flex flex-col p-6">
-
-                {/* LOGO */}
-                <div className="flex flex-col items-center mb-10">
-                    <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-4xl shadow-lg">
-                        ✔️
+            {/* Sidebar */}
+            <aside className="relative z-10 w-80 bg-[#0d102e]/90 backdrop-blur border-r border-[#3b82f6]/30 flex flex-col p-6 shadow-2xl">
+                <div className="mb-10 text-center">
+                    <div className="relative inline-block mb-4">
+                        <div className="w-20 h-20 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6] rounded-full flex items-center justify-center text-4xl shadow-xl">
+                            ✔️
+                        </div>
+                        <div className="absolute -top-1 -right-1 w-20 h-20 border-2 border-[#3b82f6] rounded-full animate-spin" style={{ animationDuration: "8s" }}></div>
                     </div>
-                    <h1 className="text-2xl font-bold mt-4 text-center leading-tight">
-                        Uni2Clup <br /> Kulüp Yönetim Paneli
+                    <h1 className="text-2xl font-bold leading-tight bg-gradient-to-r from-[#93c5fd] to-white bg-clip-text text-transparent">
+                        Uni2Clup Kulüp Yönetim Paneli
                     </h1>
-                    <p className="mt-3 text-center text-lg text-white font-semibold px-2">
+                    <p className="mt-4 text-lg font-semibold text-white">
                         {clubName
                             ? `Aktif Kulüp - ${clubName}`
-                            : (clubError ? clubError : "Kulüp bilgisi yükleniyor...")}
+                            : (clubError || "Kulüp bilgisi yükleniyor...")}
                     </p>
                 </div>
 
-                {/* MENÜ */}
-                <nav className="flex flex-col gap-3 flex-1">
-                    {menuItems.map((item) => (
-                        <Link
-                            key={item.path}
-                            to={item.path}
-                            className={`
-                                flex items-center gap-3 px-4 py-3 rounded-xl text-lg transition-all
-                                ${location.pathname === item.path
-                                    ? "bg-blue-600 text-white shadow-lg"
-                                    : "bg-white/5 hover:bg-white/10 text-gray-300"
-                                }
-                            `}
-                        >
-                            <span className="text-xl">{item.icon}</span>
-                            {item.name}
-                        </Link>
-                    ))}
+                <nav className="flex-1 space-y-2">
+                    {menuItems.map(item => {
+                        const isActive = location.pathname === item.path;
+                        return (
+                            <Link
+                                key={item.path}
+                                to={item.path}
+                                className={`group relative block px-4 py-4 rounded-2xl transition-all duration-300 ${isActive
+                                        ? "bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] shadow-lg shadow-[#3b82f6]/40"
+                                        : "bg-gradient-to-r from-[#111133] to-[#1a1a3e] hover:shadow-lg hover:shadow-[#1e40af]/30 border border-transparent hover:border-[#3b82f6]/40"
+                                    }`}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <span className="text-2xl">{item.icon}</span>
+                                    <span className={`font-semibold text-lg ${isActive ? "text-white" : "text-gray-300 group-hover:text-white"}`}>
+                                        {item.name}
+                                    </span>
+                                </div>
+                                {isActive && (
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-10 rounded-2xl"></div>
+                                )}
+                            </Link>
+                        );
+                    })}
                 </nav>
 
-                {/* ÇIKIŞ */}
-                <div className="pt-6 border-t border-white/10">
+                <div className="pt-6 border-t border-[#3b82f6]/30">
                     <button
                         onClick={handleLogout}
-                        className="w-full bg-indigo-700 hover:bg-indigo-900 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl flex items-center justify-center gap-2"
+                        className="w-full bg-indigo-700 hover:bg-indigo-900 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl flex items-center justify-center gap-2"
                     >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.59L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
@@ -100,12 +123,13 @@ const ClubManagerLayout: React.FC<LayoutProps> = ({ children, handleLogout }) =>
                         <span>Çıkış Yap</span>
                     </button>
                 </div>
-            </div>
+            </aside>
 
-            {/* SAĞ İÇERİK */}
-            <div className="flex-1 p-10 overflow-y-auto bg-gradient-to-br from-[#0a0a1a] via-[#0f0f2a] to-[#1a1a3a]">
-                {children}
-            </div>
+            <main className="relative z-10 flex-1 overflow-y-auto">
+                <div className="p-8">
+                    {children}
+                </div>
+            </main>
         </div>
     );
 };

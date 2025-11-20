@@ -113,24 +113,41 @@ const CreateEventPage: React.FC = () => {
     };
 
     return (
-        <div className="max-w-5xl mx-auto mt-10 text-white">
+        <div className="relative text-white">
+            <div className="absolute inset-0 -z-10 opacity-40 blur-3xl bg-gradient-to-r from-indigo-900 via-purple-900 to-blue-900"></div>
 
-            <h1 className="text-4xl font-bold mb-8">
-                {editId ? "✏️ Etkinliği Düzenle" : "🆕 Yeni Etkinlik Oluştur"}
-            </h1>
+            <div className="max-w-6xl mx-auto py-10 space-y-10">
+                <div className="bg-gradient-to-br from-[#1c1f44] to-[#111326] border border-[#3b82f6]/40 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+                    <div className="absolute inset-y-0 right-0 w-1/3 opacity-30 pointer-events-none bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.35),_transparent_70%)]" />
+                    <p className="uppercase tracking-[0.35em] text-sm text-[#93c5fd] mb-3">
+                        {editId ? "ETKİNLİK GÜNCELLEME" : "ETKİNLİK PLANLAMA"}
+                    </p>
+                    <div className="flex flex-wrap items-center justify-between gap-6">
+                        <div>
+                            <h1 className="text-4xl font-extrabold">
+                                {editId ? "Etkinliği Düzenle" : "Yeni Etkinlik Oluştur"}
+                            </h1>
+                            <p className="text-gray-300 mt-3 max-w-2xl">
+                                Kulüp üyeleriniz için yeni bir etkinlik oluşturun.
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
-            <div className="bg-[#0f0f1a] p-6 rounded-xl border border-[#3b82f6]">
                 {loading ? (
-                    <p>Yükleniyor...</p>
+                    <div className="bg-[#0f0f1a]/80 border border-[#3b82f6]/30 rounded-3xl p-10 shadow-2xl text-center">
+                        <p className="text-lg text-gray-300">Etkinlik bilgileri yükleniyor...</p>
+                    </div>
                 ) : (
-                    <EventForm
-                        onSave={handleSave}
-                        selectedEvent={selectedEvent}
-                        clearSelected={() => setSelectedEvent(null)}
-                    />
+                    <div className="bg-[#0f0f1a]/90 border border-[#3b82f6]/40 rounded-3xl p-8 shadow-2xl">
+                        <EventForm
+                            onSave={handleSave}
+                            selectedEvent={selectedEvent}
+                            clearSelected={() => setSelectedEvent(null)}
+                        />
+                    </div>
                 )}
             </div>
-
         </div>
     );
 };

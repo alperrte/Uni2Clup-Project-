@@ -69,43 +69,53 @@ const AnnouncementsPage: React.FC = () => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto mt-10 text-white">
+        <div className="relative text-white">
+            <div className="absolute inset-0 -z-10 opacity-40 blur-3xl bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900"></div>
 
-            <h1 className="text-4xl font-bold mb-8 text-center">📢 Duyuru Oluştur</h1>
+            <div className="max-w-5xl mx-auto py-10 space-y-10">
+                <div className="bg-gradient-to-br from-[#1c1f44] to-[#111326] border border-[#3b82f6]/30 rounded-3xl p-8 shadow-2xl">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                        <div>
+                            <p className="text-sm uppercase tracking-[0.4em] text-[#93c5fd] mb-2">Kulüp Duyuruları</p>
+                            <h1 className="text-4xl font-extrabold">Duyuru Oluştur</h1>
+                            <p className="text-gray-300 mt-3 max-w-2xl">
+                                Etkinlikleriniz hakkında kulüp üyelerinize hızlıca bilgi verin bir duyuru oluşturun.
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
-            {/* Form */}
-            <div className="bg-[#0f0f1a] p-6 rounded-xl border border-[#3b82f6]">
+                <div className="bg-[#0f0f1a]/90 border border-[#3b82f6]/40 rounded-3xl p-8 shadow-2xl space-y-6">
+                    <label className="block text-lg font-semibold">Mevcut Etkinliği Seç</label>
+                    <select
+                        className="w-full p-4 rounded-2xl bg-[#161a3a] border border-[#3b82f6]/40 focus:outline-none focus:ring-2 focus:ring-[#3b82f6]"
+                        value={selectedEventId}
+                        onChange={(e) => setSelectedEventId(e.target.value)}
+                    >
+                        <option value="">Etkinlik seç...</option>
+                        {events.map(ev => (
+                            <option key={ev.id} value={ev.id}>
+                                {ev.name}
+                            </option>
+                        ))}
+                    </select>
 
-                <label className="block mb-2 text-lg">Mevcut Etkinliği Seç</label>
-                <select
-                    className="w-full p-3 rounded bg-[#1a1a2e] border border-[#3b82f6]"
-                    value={selectedEventId}
-                    onChange={(e) => setSelectedEventId(e.target.value)}
-                >
-                    <option value="">Etkinlik seç...</option>
-                    {events.map(ev => (
-                        <option key={ev.id} value={ev.id}>
-                            {ev.name}
-                        </option>
-                    ))}
-                </select>
+                    <label className="block text-lg font-semibold">Duyuru Mesajı</label>
+                    <textarea
+                        className="w-full h-36 p-4 rounded-2xl bg-[#161a3a] border border-[#3b82f6]/40 focus:outline-none focus:ring-2 focus:ring-[#3b82f6] resize-none"
+                        placeholder="Duyuru metnini yaz..."
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                    />
 
-                <label className="block mt-4 mb-2 text-lg">Etkinlik Hakkında</label>
-                <textarea
-                    className="w-full h-32 p-3 rounded bg-[#1a1a2e] border border-[#3b82f6]"
-                    placeholder="Duyuru metnini yaz..."
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                />
-
-                <button
-                    onClick={handleSubmit}
-                    className="mt-5 w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg text-white text-lg"
-                >
-                    Duyuru Oluştur
-                </button>
+                    <button
+                        onClick={handleSubmit}
+                        className="w-full mt-4 bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] hover:scale-[1.01] transition-all font-semibold py-4 rounded-2xl shadow-lg"
+                    >
+                        Duyuru Oluştur
+                    </button>
+                </div>
             </div>
-
         </div>
     );
 };
