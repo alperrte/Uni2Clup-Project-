@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import EventForm from "../components/EventForm";
 
 interface Event {
     id: number;
@@ -12,16 +12,62 @@ interface Event {
     Description: string;
 }
 
+const TURKEY_TIME_ZONE = "Europe/Istanbul";
+const displayFormatter = new Intl.DateTimeFormat("tr-TR", {
+    timeZone: TURKEY_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+});
+
+const inputFormatter = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: TURKEY_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+});
+
+const parseEventDate = (value: string) => {
+    if (!value) return null;
+    const hasTimezone = /Z|[+-]\d{2}:\d{2}$/i.test(value);
+    const normalized = hasTimezone ? value : `${value}Z`;
+    const date = new Date(normalized);
+    return isNaN(date.getTime()) ? null : date;
+};
+
+const formatForDisplay = (value: string) => {
+    const date = parseEventDate(value);
+    if (!date) return value;
+    return displayFormatter.format(date);
+};
+
+const formatForInput = (value: string) => {
+    if (!value) return "";
+    const date = parseEventDate(value);
+    if (!date) return "";
+    const parts = inputFormatter.formatToParts(date).reduce<Record<string, string>>((acc, part) => {
+        if (part.type !== "literal") acc[part.type] = part.value;
+        return acc;
+    }, {});
+    return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+};
+
 const EventPage: React.FC = () => {
     const [events, setEvents] = useState<Event[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
     const [filter, setFilter] = useState("Tümü");
     const [open, setOpen] = useState(false);
+    const [editingEvent, setEditingEvent] = useState<any>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const API_URL = "http://localhost:8080";
     const token = localStorage.getItem("token");
-    const navigate = useNavigate();
 
     const getStatus = (start: string, end: string) => {
         const now = new Date();
@@ -29,7 +75,7 @@ const EventPage: React.FC = () => {
         const e = new Date(end);
 
         if (isNaN(s.getTime()) || isNaN(e.getTime())) return "Tarih Hatalı";
-        if (now < s) return "Başlamadı";
+        if (now < s) return "Yaklaşıyor";
         if (now > e) return "Bitti";
         return "Devam Ediyor";
     };
@@ -82,7 +128,43 @@ const EventPage: React.FC = () => {
     };
 
     const onEdit = (ev: Event) => {
-        navigate("/club/create-event", { state: { event: ev } });
+        setEditingEvent({
+            id: ev.id,
+            name: ev.Name,
+            capacity: ev.Capacity.toString(),
+            location: ev.Location,
+            startDate: formatForInput(ev.StartDate),
+            endDate: formatForInput(ev.EndDate),
+            clubName: ev.ClubName,
+            description: ev.Description,
+        });
+        setIsModalOpen(true);
+    };
+
+    const handleUpdate = async (formData: any) => {
+        const targetId = formData.Id || editingEvent?.id;
+        if (!targetId) return;
+
+        try {
+            const res = await fetch(`${API_URL}/api/Events/update/${targetId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(formData),
+            });
+
+            const data = await res.json();
+            alert(data.message || "Etkinlik güncellendi.");
+
+            setIsModalOpen(false);
+            setEditingEvent(null);
+            fetchEvents();
+        } catch (error) {
+            console.error("Etkinlik güncelleme hatası:", error);
+            alert("Etkinlik güncellenemedi.");
+        }
     };
 
     const filtered = events.filter(ev => {
@@ -92,6 +174,7 @@ const EventPage: React.FC = () => {
     });
 
     return (
+        <>
         <div className="max-w-6xl mx-auto mt-10">
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-3xl text-white font-bold">📅 Etkinlik Listesi</h1>
@@ -106,7 +189,7 @@ const EventPage: React.FC = () => {
 
                     {open && (
                         <div className="absolute right-0 bg-[#0f0f1a] border border-[#3b82f6] rounded-lg mt-2 w-40">
-                            {["Tümü", "Devam Ediyor", "Başlamadı", "Bitti"].map(item => (
+                            {["Tümü", "Devam Ediyor", "Yaklaşıyor", "Bitti"].map(item => (
                                 <button
                                     key={item}
                                     onClick={() => {
@@ -134,7 +217,7 @@ const EventPage: React.FC = () => {
 
                         const color =
                             status === "Devam Ediyor" ? "bg-green-600"
-                                : status === "Başlamadı" ? "bg-yellow-600"
+                                : status === "Yaklaşıyor" ? "bg-yellow-600"
                                     : "bg-red-600";
 
                         return (
@@ -151,7 +234,7 @@ const EventPage: React.FC = () => {
                                 <p className="text-gray-300">👥 Kontenjan: {ev.Capacity}</p>
                                 <p className="text-gray-300">🏛 {ev.ClubName}</p>
                                 <p className="text-gray-300 mt-2">
-                                    📅 {ev.StartDate} — {ev.EndDate}
+                                    📅 {formatForDisplay(ev.StartDate)} — {formatForDisplay(ev.EndDate)}
                                 </p>
                                 <p className="text-gray-400 italic mt-2">“{ev.Description}”</p>
 
@@ -176,6 +259,26 @@ const EventPage: React.FC = () => {
                 </div>
             )}
         </div>
+
+        {isModalOpen && editingEvent && (
+            <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                <div className="bg-[#0f0f1a] border border-[#3b82f6] rounded-2xl w-full max-w-3xl p-6 relative">
+                    <button
+                        onClick={() => { setIsModalOpen(false); setEditingEvent(null); }}
+                        className="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl"
+                    >
+                        ×
+                    </button>
+                    <h2 className="text-2xl font-bold text-white mb-4">Etkinliği Düzenle</h2>
+                    <EventForm
+                        onSave={handleUpdate}
+                        selectedEvent={editingEvent}
+                        clearSelected={() => { setEditingEvent(null); setIsModalOpen(false); }}
+                    />
+                </div>
+            </div>
+        )}
+        </>
     );
 };
 

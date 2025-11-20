@@ -8,18 +8,10 @@ interface EventItem {
     name: string;
 }
 
-interface Announcement {
-    id: number;
-    message: string;
-    createdAt: string;
-    eventName: string;
-}
-
 const AnnouncementsPage: React.FC = () => {
     const [events, setEvents] = useState<EventItem[]>([]);
     const [selectedEventId, setSelectedEventId] = useState("");
     const [message, setMessage] = useState("");
-    const [announcements, setAnnouncements] = useState<Announcement[]>([]);
 
     // 1️⃣ Etkinlikleri Yükle
     useEffect(() => {
@@ -42,24 +34,6 @@ const AnnouncementsPage: React.FC = () => {
         };
 
         fetchEvents();
-    }, []);
-
-    // 2️⃣ Duyuruları Yükle
-    const fetchAnnouncements = async () => {
-        try {
-            const res = await fetch(`${API_URL}/api/announcements/list`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-
-            const data = await res.json();
-            setAnnouncements(data);
-        } catch (err) {
-            console.error("Duyuru listesi alınamadı:", err);
-        }
-    };
-
-    useEffect(() => {
-        fetchAnnouncements();
     }, []);
 
     // 3️⃣ Duyuru Oluşturma
@@ -87,9 +61,6 @@ const AnnouncementsPage: React.FC = () => {
 
             setSelectedEventId("");
             setMessage("");
-
-            // ✔ Yeni duyuruyu yükle
-            fetchAnnouncements();
 
         } catch (err) {
             console.error("Duyuru oluşturma hatası:", err);
@@ -134,25 +105,6 @@ const AnnouncementsPage: React.FC = () => {
                     Duyuru Oluştur
                 </button>
             </div>
-
-            {/* Duyuru Listesi */}
-            <h2 className="text-3xl font-semibold mt-12 mb-4">📰 Mevcut Duyurular</h2>
-
-            {announcements.length === 0 ? (
-                <p className="text-gray-400">Henüz duyuru oluşturulmadı.</p>
-            ) : (
-                <div className="space-y-4">
-                    {announcements.map(a => (
-                        <div key={a.id} className="p-4 bg-[#1a1a2e] border border-[#3b82f6] rounded-lg">
-                            <h3 className="text-xl text-[#3b82f6] font-bold">{a.eventName}</h3>
-                            <p className="mt-2">{a.message}</p>
-                            <p className="mt-1 text-gray-400 text-sm">
-                                📅 {new Date(a.createdAt).toLocaleString()}
-                            </p>
-                        </div>
-                    ))}
-                </div>
-            )}
 
         </div>
     );

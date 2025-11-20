@@ -7,13 +7,11 @@ import ClubManagerLayout from "../components/ClubManagerLayout";
 import EventPage from "./EventPage";
 import CreateEventPage from "./CreateEventPage";
 import AnnouncementsPage from "./AnnouncementsPage";   // ⭐ Buraya import ediyoruz
+import AnnouncementsListPage from "./AnnouncementsListPage";
+import ClubSettingsPage from "./ClubSettingsPage";
 
 const MembersPage = () => (
     <div className="text-white text-3xl">Kulüp Üyeleri Sayfası</div>
-);
-
-const SettingsPage = () => (
-    <div className="text-white text-3xl">Ayarlar Sayfası</div>
 );
 
 interface Props {
@@ -34,14 +32,17 @@ const ClubManagerRoutes: React.FC<Props> = ({ handleLogout }) => {
                 {/* Etkinlik listesi */}
                 <Route path="events" element={<EventPage />} />
 
-                {/* ⭐ Duyurular Sayfası */}
+                {/* ⭐ Duyuru Oluştur */}
                 <Route path="announcements" element={<AnnouncementsPage />} />
+
+                {/* ⭐ Duyuru Listesi */}
+                <Route path="announcements-list" element={<AnnouncementsListPage />} />
 
                 {/* Kulüp üyeleri */}
                 <Route path="members" element={<MembersPage />} />
 
                 {/* Ayarlar */}
-                <Route path="settings" element={<SettingsPage />} />
+                <Route path="settings" element={<ClubSettingsPage />} />
 
                 {/* Yanlış URL → create-event */}
                 <Route path="*" element={<Navigate to="/club/create-event" replace />} />
