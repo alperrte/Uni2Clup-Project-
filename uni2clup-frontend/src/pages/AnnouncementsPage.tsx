@@ -1,7 +1,6 @@
 ﻿import React, { useEffect, useState } from "react";
 
 const API_URL = "http://localhost:8080";
-const token = localStorage.getItem("token");
 
 interface EventItem {
     id: number;
@@ -12,17 +11,27 @@ const AnnouncementsPage: React.FC = () => {
     const [events, setEvents] = useState<EventItem[]>([]);
     const [selectedEventId, setSelectedEventId] = useState("");
     const [message, setMessage] = useState("");
-    const clubId = localStorage.getItem("clubId");
+    const [token, setToken] = useState<string | null>(null);
 
-    // 1️⃣ Etkinlikleri Yükle
     useEffect(() => {
+        setToken(localStorage.getItem("token"));
+    }, []);
+
+    useEffect(() => {
+        if (!token) return;  // TOKEN YOKSA ÇAĞRI YAPMA
+
         const fetchEvents = async () => {
             try {
                 const res = await fetch(`${API_URL}/api/events/list`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                const data = await res.json();
 
+                if (!res.ok) {
+                    console.log("Etkinlik listesi alınamadı:", res.status);
+                    return;
+                }
+
+                const data = await res.json();
                 const normalized = data.map((e: any) => ({
                     id: e.id ?? e.Id,
                     name: e.name ?? e.Name
@@ -35,9 +44,8 @@ const AnnouncementsPage: React.FC = () => {
         };
 
         fetchEvents();
-    }, []);
+    }, [token]);
 
-    // 3️⃣ Duyuru Oluşturma
     const handleSubmit = async () => {
         if (!selectedEventId || !message.trim()) {
             alert("Lütfen tüm alanları doldurun.");
@@ -65,7 +73,6 @@ const AnnouncementsPage: React.FC = () => {
 
         } catch (err) {
             console.error("Duyuru oluşturma hatası:", err);
-            alert("Bir hata oluştu.");
         }
     };
 
