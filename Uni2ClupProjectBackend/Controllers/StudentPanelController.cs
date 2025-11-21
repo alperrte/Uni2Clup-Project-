@@ -158,7 +158,11 @@ public class StudentPanelController : ControllerBase
             .ToListAsync();
 
         var events = await _db.Events
-            .Where(e => clubIds.Contains(e.ClubId) && e.EndDate >= now)   // ✔ sadece güncel etkinlikler
+            .Where(e =>
+    clubIds.Contains(e.ClubId) &&
+    e.EndDate >= now &&
+    !_db.EventParticipants.Any(ep => ep.EventId == e.Id && ep.UserId == userId)
+)
             .Include(e => e.Club)
             .Select(e => new
             {
@@ -211,22 +215,40 @@ public class StudentPanelController : ControllerBase
         return Ok(events);
     }
 
-
-
-
-    [HttpPost("events/{eventId}/join")]
+    [HttpPost("events/join/{eventId}")]
     public async Task<IActionResult> JoinEvent(int eventId)
     {
         int userId = GetUserId();
 
-        if (await _db.EventParticipants.AnyAsync(e => e.EventId == eventId && e.UserId == userId))
-            return BadRequest(new { message = "Zaten katıldınız." });
+        // Etkinlik var mı?
+        var ev = await _db.Events.FindAsync(eventId);
+        if (ev == null)
+            return NotFound(new { message = "Etkinlik bulunamadı." });
 
-        _db.EventParticipants.Add(new EventParticipant { EventId = eventId, UserId = userId });
+        // Zaten katıldı mı?
+        bool joined = await _db.EventParticipants
+            .AnyAsync(ep => ep.EventId == eventId && ep.UserId == userId);
+
+        if (joined)
+            return BadRequest(new { message = "Bu etkinliğe zaten katıldınız." });
+
+        // Katılım oluştur
+        var participant = new EventParticipant
+        {
+            EventId = eventId,
+            UserId = userId,
+            JoinedAt = DateTime.UtcNow
+        };
+
+        _db.EventParticipants.Add(participant);
         await _db.SaveChangesAsync();
 
-        return Ok(new { message = "Etkinliğe katıldınız." });
+        return Ok(new { message = "Etkinliğe başarıyla katıldınız." });
     }
+
+
+
+
 
     [HttpGet("notifications/all")]
     public async Task<IActionResult> GetAllNotifications()

@@ -159,6 +159,33 @@ const StudentLayout: React.FC = () => {
         fetchNotifications();
     };
 
+    const handleJoinEvent = async (eventId: number) => {
+        if (!checkToken()) return;
+
+        try {
+            const res = await fetch(
+                `${API_URL}/api/studentpanel/events/join/${eventId}`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    }
+                }
+            );
+
+            const data = await res.json();
+            alert(data.message);
+
+            // Sayfayı güncelle
+            fetchClubEvents();
+            fetchMyEvents();
+
+        } catch (err) {
+            console.error("Etkinliğe katılırken hata:", err);
+        }
+    };
+
+
     const handleMarkAsRead = async (notifId: number) => {
         try {
             await fetch(`${API_URL}/api/studentpanel/notifications/${notifId}/read`, {
@@ -362,7 +389,7 @@ const StudentLayout: React.FC = () => {
                     {activeMenu === "club-events" && (
                         <ClubEventsPage
                             clubEvents={clubEvents}
-                            handleJoinEvent={() => { }}
+                            handleJoinEvent={handleJoinEvent}   // ✔ ARTIK GERÇEK FONKSİYON
                             formatDate={formatDate}
                         />
                     )}

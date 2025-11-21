@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect, useCallback } from "react";
 import EventForm from "../components/EventForm";
 
+
 interface Event {
     id: number;
     Name: string;
@@ -11,6 +12,8 @@ interface Event {
     ClubName: string;
     Description: string;
 }
+
+
 
 const TURKEY_TIME_ZONE = "Europe/Istanbul";
 const displayFormatter = new Intl.DateTimeFormat("tr-TR", {
@@ -57,6 +60,12 @@ const formatForInput = (value: string) => {
     return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
 };
 
+const toTurkeyTime = (dateString: string) => {
+    const utc = new Date(dateString);
+    const turkey = new Date(utc.getTime() + (3 * 60 * 60 * 1000)); // UTC+3
+    return turkey.toLocaleString("tr-TR");
+};
+
 const EventPage: React.FC = () => {
     const [events, setEvents] = useState<Event[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -65,6 +74,10 @@ const EventPage: React.FC = () => {
     const [open, setOpen] = useState(false);
     const [editingEvent, setEditingEvent] = useState<any>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const [participants, setParticipants] = useState<any[]>([]);
+    const [participantsModalOpen, setParticipantsModalOpen] = useState(false);
+
 
     const API_URL = "http://localhost:8080";
     const token = localStorage.getItem("token");
@@ -79,6 +92,20 @@ const EventPage: React.FC = () => {
         if (now > e) return "Bitti";
         return "Devam Ediyor";
     };
+
+    const fetchParticipants = async (eventId: number) => {
+        try {
+            const res = await fetch(`${API_URL}/api/events/participants/${eventId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const data = await res.json();
+            setParticipants(data);
+            setParticipantsModalOpen(true);
+        } catch (err) {
+            console.error("Katılımcılar alınamadı:", err);
+        }
+    };
+
 
     const fetchEvents = useCallback(async () => {
         setIsLoading(true);
@@ -276,6 +303,15 @@ const EventPage: React.FC = () => {
                                             >
                                                 🗑 Sil
                                             </button>
+
+                                            <button
+                                                onClick={() => fetchParticipants(ev.id)}
+                                                className="px-5 py-3 rounded-2xl bg-gradient-to-r from-blue-500 to-blue-700
+               text-white font-semibold shadow-lg hover:scale-[1.02] transition"
+                                            >
+                                                👥 Katılanlar
+                                            </button>
+
                                         </div>
                                     </div>
                                 </div>
@@ -286,26 +322,74 @@ const EventPage: React.FC = () => {
             </div>
         </div>
 
-        {isModalOpen && editingEvent && (
-            <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                <div className="bg-[#0f0f1a] border border-[#3b82f6] rounded-2xl w-full max-w-3xl p-6 relative">
-                    <button
-                        onClick={() => { setIsModalOpen(false); setEditingEvent(null); }}
-                        className="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl"
-                    >
-                        ×
-                    </button>
-                    <h2 className="text-2xl font-bold text-white mb-4">Etkinliği Düzenle</h2>
-                    <EventForm
-                        onSave={handleUpdate}
-                        selectedEvent={editingEvent}
-                        clearSelected={() => { setEditingEvent(null); setIsModalOpen(false); }}
-                    />
+            {isModalOpen && editingEvent && (
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                    <div className="bg-[#0f0f1a] border border-[#3b82f6] rounded-2xl w-full max-w-3xl p-6 relative">
+                        <button
+                            onClick={() => { setIsModalOpen(false); setEditingEvent(null); }}
+                            className="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl"
+                        >
+                            ×
+                        </button>
+                        <h2 className="text-2xl font-bold text-white mb-4">Etkinliği Düzenle</h2>
+                        <EventForm
+                            onSave={handleUpdate}
+                            selectedEvent={editingEvent}
+                            clearSelected={() => { setEditingEvent(null); setIsModalOpen(false); }}
+                        />
+                    </div>
                 </div>
-            </div>
-        )}
+            )}
+
+            {/* ▼▼▼ Katılımcı Modalı ▼▼▼ */}
+            {participantsModalOpen && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+                    <div className="bg-[#0f0f1a] border border-[#3b82f6]/40 rounded-2xl p-6 w-full max-w-2xl relative">
+                        <button
+                            onClick={() => setParticipantsModalOpen(false)}
+                            className="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl"
+                        >
+                            ×
+                        </button>
+
+                        <h2 className="text-2xl font-bold text-white mb-4">Katılan Öğrenciler</h2>
+
+                        {participants.length === 0 ? (
+                            <p className="text-gray-400">Bu etkinliğe henüz katılan yok.</p>
+                        ) : (
+                            <div className="space-y-3">
+                                {participants.map((p) => (
+                                    <div className="space-y-1">
+                                        <p className="text-gray-300 text-sm">
+                                            <span className="font-bold text-[#3b82f6]">Ad - Soyad:</span> {p.name} {p.surname}
+                                        </p>
+
+                                        <p className="text-gray-300 text-sm">
+                                            <span className="font-bold text-[#3b82f6]">E-Mail:</span> {p.email}
+                                        </p>
+
+                                        <p className="text-gray-300 text-sm">
+                                            <span className="font-bold text-[#3b82f6]">Bölüm:</span>{" "}
+                                            {p.departmentName || "-"}
+                                        </p>
+
+                                        <p className="text-gray-300 text-sm">
+                                            <span className="font-bold text-[#3b82f6]">Katılım Tarihi:</span>{" "}
+                                            {toTurkeyTime(p.joinedAt)}
+                                        </p>
+
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+            {/* ▲▲▲ Katılımcı Modalı ▲▲▲ */}
+
         </>
     );
 };
 
 export default EventPage;
+
