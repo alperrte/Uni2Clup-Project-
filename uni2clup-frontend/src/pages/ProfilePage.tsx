@@ -5,6 +5,7 @@ interface ClubItem {
     id: number;
     name: string;
     departmentName?: string;
+    isMember?: boolean; // Opsiyonel ama filtrede kullanılmıyor
 }
 
 interface ProfileData {
@@ -23,21 +24,26 @@ interface ClubIconData {
 interface ProfilePageProps {
     profile: ProfileData | null;
     getClubIcon: (clubName: string) => ClubIconData;
+    handleLeaveClub: (clubId: number) => void;   // 🔥 EKLENECEK SATIR
 }
 
-const ProfilePage: React.FC<ProfilePageProps> = ({ profile, getClubIcon }) => {
+    
+const ProfilePage: React.FC<ProfilePageProps> = ({ profile, getClubIcon, handleLeaveClub }) => {
     return (
         <div className="text-white">
             <h1 className="text-4xl font-bold mb-2">Profil</h1>
             <p className="text-gray-400 mb-8">Kişisel bilgileriniz</p>
 
             {profile ? (
-                <div className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e]
-                                border border-[#3b82f6]/40 rounded-xl p-8 shadow-xl">
-
+                <div
+                    className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e]
+                                border border-[#3b82f6]/40 rounded-xl p-8 shadow-xl"
+                >
                     {/* Avatar */}
-                    <div className="w-24 h-24 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6]
-                                    rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div
+                        className="w-24 h-24 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6]
+                                    rounded-full flex items-center justify-center mx-auto mb-4"
+                    >
                         <span className="text-white font-bold text-3xl">
                             {profile.name.charAt(0).toUpperCase()}
                         </span>
@@ -68,7 +74,10 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ profile, getClubIcon }) => {
 
                         {profile.clubs && profile.clubs.length > 0 ? (
                             <div className="space-y-2">
-                                {profile.clubs.map((club) => {
+                                {profile.clubs
+                                    .sort((a, b) => a.name.localeCompare(b.name, "tr"))  // 🔥 ekledik
+                                    .map((club) => {
+
                                     const iconData = getClubIcon(club.name);
 
                                     return (
@@ -92,6 +101,19 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ profile, getClubIcon }) => {
                                                     {club.departmentName}
                                                 </p>
                                             </div>
+
+                                            {/* Kulüpten Ayrıl Butonu */}
+                                            <div>
+                                                <button
+                                                    onClick={() =>
+                                                        handleLeaveClub(club.id)
+                                                    }
+                                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 
+                                                               text-white rounded-lg transition"
+                                                >
+                                                    Kulüpten Ayrıl
+                                                </button>
+                                            </div>
                                         </div>
                                     );
                                 })}
@@ -102,7 +124,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ profile, getClubIcon }) => {
                             </p>
                         )}
                     </div>
-
                 </div>
             ) : (
                 <div className="text-center py-12">

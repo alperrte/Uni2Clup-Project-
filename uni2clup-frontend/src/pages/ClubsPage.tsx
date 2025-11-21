@@ -66,8 +66,10 @@ const ClubsPage: React.FC<ClubsPageProps> = ({
                 <div className="flex flex-col gap-6">
 
                         {clubs
-                            .filter(club => !club.isMember)    // Üye olunan kulüpler görünmesin
+                            .filter(club => !club.isMember)
+                            .sort((a, b) => a.name.localeCompare(b.name, "tr"))   // 🔥 alfabetik sırala (Türkçe)
                             .map((club) => {
+
 
                         const iconData = getClubIcon(club.name);
 
