@@ -65,7 +65,10 @@ const ClubsPage: React.FC<ClubsPageProps> = ({
             ) : (
                 <div className="flex flex-col gap-6">
 
-                    {clubs.map((club) => {
+                        {clubs
+                            .filter(club => !club.isMember)    // Üye olunan kulüpler görünmesin
+                            .map((club) => {
+
                         const iconData = getClubIcon(club.name);
 
                         return (
