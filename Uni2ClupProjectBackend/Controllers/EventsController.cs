@@ -176,6 +176,30 @@ namespace Uni2ClupProjectBackend.Controllers
             });
         }
 
+        [HttpGet("participants/{eventId}")]
+        public async Task<IActionResult> GetParticipants(int eventId)
+        {
+            var list = await _db.EventParticipants
+                .Where(ep => ep.EventId == eventId)
+                .Include(ep => ep.User)
+                .ThenInclude(u => u.Department)  // ⭐ Bölümü dahil ettik
+                .Select(ep => new
+                {
+                    ep.User.Id,
+                    ep.User.Name,
+                    ep.User.Surname,
+                    ep.User.Email,
+                    DepartmentName = ep.User.Department != null ? ep.User.Department.Name : "-",
+                    ep.JoinedAt
+                })
+                .ToListAsync();
+
+            return Ok(list);
+        }
+
+
+
+
         // --------------------------------------------------------------------
         // 4) Etkinlik Güncelle (sağdaki kalem butonu)
         //    PUT /api/events/update/{id}
