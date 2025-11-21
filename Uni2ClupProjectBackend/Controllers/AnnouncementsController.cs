@@ -5,6 +5,8 @@ using System.Security.Claims;
 using Uni2ClupProjectBackend.Data;
 using Uni2ClupProjectBackend.DTOs;
 using Uni2ClupProjectBackend.Models;
+using Uni2ClupProjectBackend.Services;
+
 
 namespace Uni2ClupProjectBackend.Controllers
 {
@@ -31,9 +33,12 @@ namespace Uni2ClupProjectBackend.Controllers
             if (email == null)
                 return Unauthorized(new { message = "❌ Oturum bulunamadı." });
 
-            var ev = await _db.Events.FirstOrDefaultAsync(e => e.Id == dto.EventId && e.CreatedBy == email);
+            var ev = await _db.Events
+                .Include(e => e.Club)
+                .FirstOrDefaultAsync(e => e.Id == dto.EventId && e.CreatedBy == email);
+
             if (ev == null)
-                return NotFound(new { message = "Etkinlik bulunamadı veya bu etkinlik için duyuru oluşturamazsınız." });
+                return NotFound(new { message = "Etkinlik bulunamadı veya yetkiniz yok." });
 
             var announcement = new Announcement
             {
@@ -43,7 +48,42 @@ namespace Uni2ClupProjectBackend.Controllers
             };
 
             _db.Announcements.Add(announcement);
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(); // ✔ İlk kayıt
+
+            // ------------------------------------------------------------
+            // ⭐⭐ YENİ EKLENDİ: Üyelere bildirim + mail gönderme
+            // ------------------------------------------------------------
+            var members = await _db.ClubMembers
+                .Where(cm => cm.ClubId == ev.ClubId)
+                .Include(cm => cm.User)
+                .ToListAsync();
+
+            var emailService = HttpContext.RequestServices.GetRequiredService<EmailService>();
+
+            foreach (var m in members)
+            {
+                // 1) Bildirim
+                _db.Notifications.Add(new Notification
+                {
+                    UserId = m.UserId,
+                    Title = "Yeni Duyuru",
+                    Message = $"{ev.Club.Name}: {dto.Message}",   // ✔ Kulüp adı + açıklama
+                    CreatedAt = DateTime.UtcNow
+                });
+
+                // 2) Mail gönderimi
+                await emailService.SendEmailAsync(
+                    m.User.Email,
+                    $"Yeni Duyuru: {ev.Club.Name}",
+                    $@"
+                <h2>{ev.Club.Name} Kulübünden Yeni Duyuru</h2>
+                <p><b>Duyuru:</b> {dto.Message}</p>
+                <p><b>Etkinlik:</b> {ev.Name}</p>
+            "
+                );
+            }
+
+            await _db.SaveChangesAsync(); // ✔ Bildirimleri kaydediyoruz
 
             return Ok(new { message = "Duyuru başarıyla oluşturuldu." });
         }

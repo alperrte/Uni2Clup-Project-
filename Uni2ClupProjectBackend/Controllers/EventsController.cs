@@ -5,6 +5,8 @@ using System.Security.Claims;
 using Uni2ClupProjectBackend.Data;
 using Uni2ClupProjectBackend.DTOs;
 using Uni2ClupProjectBackend.Models;
+using Uni2ClupProjectBackend.Services;
+
 
 namespace Uni2ClupProjectBackend.Controllers
 {
@@ -143,16 +145,9 @@ namespace Uni2ClupProjectBackend.Controllers
             if (dto.EndDate < dto.StartDate)
                 return BadRequest(new { message = "Bitiş tarihi, başlangıç tarihinden önce olamaz." });
 
-            // Kullanıcının kulübünün adını bul
+            // Kullanıcının kulübünü bul
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
-            string clubName = "Bilinmiyor";
-
-            if (user?.ClubId != null)
-            {
-                var club = await _db.Clubs.FindAsync(user.ClubId.Value);
-                if (club != null)
-                    clubName = club.Name;
-            }
+            var club = await _db.Clubs.FindAsync(user.ClubId.Value);
 
             var entity = new Event
             {
@@ -167,7 +162,44 @@ namespace Uni2ClupProjectBackend.Controllers
             };
 
             _db.Events.Add(entity);
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(); // ✔ İlk kayıt
+
+            // ------------------------------------------------------------
+            // ⭐⭐ YENİ EKLENDİ: Üyelere bildirim + mail gönderme
+            // ------------------------------------------------------------
+            var members = await _db.ClubMembers
+                .Where(cm => cm.ClubId == user.ClubId.Value)
+                .Include(cm => cm.User)
+                .ToListAsync();
+
+            var emailService = HttpContext.RequestServices.GetRequiredService<EmailService>();
+
+            foreach (var m in members)
+            {
+                // 1) Bildirim
+                _db.Notifications.Add(new Notification
+                {
+                    UserId = m.UserId,
+                    Title = "Yeni Etkinlik",
+                    Message = $"{club.Name} kulübü yeni bir etkinlik oluşturdu: {entity.Name}",
+                    CreatedAt = DateTime.UtcNow
+                });
+
+                // 2) Mail gönderimi
+                await emailService.SendEmailAsync(
+                    m.User.Email,
+                    $"Yeni Etkinlik: {entity.Name}",
+                    $@"
+                <h2>{club.Name} Yeni Etkinlik Duyurusu</h2>
+                <p><b>Etkinlik:</b> {entity.Name}</p>
+                <p><b>Açıklama:</b> {entity.Description}</p>
+                <p><b>Yer:</b> {entity.Location}</p>
+                <p><b>Tarih:</b> {entity.StartDate:dd.MM.yyyy HH:mm} - {entity.EndDate:dd.MM.yyyy HH:mm}</p>
+            "
+                );
+            }
+
+            await _db.SaveChangesAsync(); // ✔ Bildirimleri kaydediyoruz
 
             return Ok(new
             {
