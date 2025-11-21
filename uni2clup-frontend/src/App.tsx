@@ -19,6 +19,11 @@ import CreateAnnouncementPage from "./pages/CreateAnnouncementPage";
 // 🟦 Student Paneli
 import StudentLayout from "./components/StudentLayout";
 
+//Password 
+import ForgotPassword from "./password/ForgotPassword";
+import ResetPassword from "./password/ResetPassword";
+import ChangePassword from "./password/ChangePassword";
+
 interface UserData {
     name: string;
     role: string;
@@ -80,6 +85,9 @@ const App: React.FC = () => {
                 <Route path="clubs" element={<ClubManagementPage />} />
 
                 <Route path="*" element={<Navigate to="add-user" replace />} />
+
+
+
             </Routes>
         </AdminLayout>
     );
@@ -97,6 +105,11 @@ const App: React.FC = () => {
                             : <LoginPage onLoginSuccess={handleLoginSuccess} />
                     }
                 />
+
+                {/* Şifremi unuttum → herkese açık */}
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password/:token" element={<ResetPassword />} />
+                <Route path="/change-password" element={<ChangePassword />} />
 
                 {/* 🟥 ADMIN */}
                 {user?.role === "Admin" && (

@@ -56,7 +56,8 @@ namespace Uni2ClupProjectBackend.Services
                 PasswordHash = passwordHash,
                 Role = string.IsNullOrWhiteSpace(dto.Role) ? "User" : dto.Role,
                 ClubId = dto.ClubId,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                MustChangePassword = true
             };
 
             _db.Users.Add(user);
