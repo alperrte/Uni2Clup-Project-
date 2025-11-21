@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 
 const API_URL = "http://localhost:8080";
-const token = localStorage.getItem("token");
 const TURKEY_TIMEZONE = "Europe/Istanbul";
 
 const formatter = new Intl.DateTimeFormat("tr-TR", {
@@ -35,14 +34,21 @@ interface Announcement {
 }
 
 const AnnouncementsListPage: React.FC = () => {
+    const [token, setToken] = useState<string | null>(null);
     const [announcements, setAnnouncements] = useState<Announcement[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+
+    useEffect(() => {
+        // token'ı component mount olduğunda çekiyoruz
+        setToken(localStorage.getItem("token"));
+    }, []);
 
     const fetchAnnouncements = async () => {
         try {
             setLoading(true);
             setError("");
+
             const res = await fetch(`${API_URL}/api/announcements/list`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -63,8 +69,9 @@ const AnnouncementsListPage: React.FC = () => {
     };
 
     useEffect(() => {
+        if (!token) return; // Token gelmeden fetch atma → 401 engellenir
         fetchAnnouncements();
-    }, []);
+    }, [token]);
 
     return (
         <div className="relative text-white">
