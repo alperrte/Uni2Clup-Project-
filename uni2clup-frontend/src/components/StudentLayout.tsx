@@ -17,6 +17,8 @@ const StudentLayout: React.FC = () => {
     const [clubEvents, setClubEvents] = useState([]);
     const [pastEvents, setPastEvents] = useState([]);
     const [notifications, setNotifications] = useState([]);
+    const unreadNotifications = notifications.filter(n => !n.isRead);
+    const historyNotifications = notifications.filter(n => n.isRead);
     const [notificationsFilter, setNotificationsFilter] = useState<"unread" | "all">("all");
     const [showNotifications, setShowNotifications] = useState(false);
     const [profile, setProfile] = useState(null);
@@ -25,6 +27,8 @@ const StudentLayout: React.FC = () => {
     const [departments, setDepartments] = useState([]);
     const [selectedDept, setSelectedDept] = useState("");
     const [showEventDropdown, setShowEventDropdown] = useState(false);
+
+    const [notifTab, setNotifTab] = useState<"unread" | "history">("unread");
 
     const formatDate = (date: string | undefined | null) => {
         if (!date) return "Tarih yok";
@@ -368,8 +372,13 @@ const StudentLayout: React.FC = () => {
                     )}
 
                     {activeMenu === "profile" && (
-                        <ProfilePage profile={profile} getClubIcon={getClubIcon} />
+                        <ProfilePage
+                            profile={profile}
+                            getClubIcon={getClubIcon}
+                            handleLeaveClub={handleLeaveClub}
+                        />
                     )}
+
 
                 </div>
             </main>
@@ -390,42 +399,59 @@ const StudentLayout: React.FC = () => {
                 </button>
 
                 {showNotifications && (
-                    <div className="absolute right-0 mt-3 w-80 bg-[#1a1a2e] border border-[#3b82f6] rounded-xl p-4 shadow-2xl">
+                    <div className="absolute right-0 mt-3 w-96 bg-[#1a1a2e] border border-[#3b82f6] rounded-xl p-4 shadow-2xl z-50">
 
-                        <h3 className="text-[#3b82f6] mb-2 font-semibold">Bildirimler</h3>
+                        {/* 🔵 SEKME BAŞLIKLARI */}
+                        <div className="flex mb-4 border-b border-[#3b82f6]/40">
+                            <button
+                                onClick={() => setNotifTab("unread")}
+                                className={`flex-1 py-2 text-center ${notifTab === "unread"
+                                        ? "text-[#3b82f6] border-b-2 border-[#3b82f6]"
+                                        : "text-gray-400"
+                                    }`}
+                            >
+                                Okunmamış
+                            </button>
 
-                        {filteredNotifications.length === 0 && (
-                            <p className="text-gray-400 text-sm">Henüz bildirim yok.</p>
-                        )}
+                            <button
+                                onClick={() => setNotifTab("history")}
+                                className={`flex-1 py-2 text-center ${notifTab === "history"
+                                        ? "text-[#3b82f6] border-b-2 border-[#3b82f6]"
+                                        : "text-gray-400"
+                                    }`}
+                            >
+                                Geçmiş
+                            </button>
+                        </div>
 
-                        <ul className="space-y-2 max-h-72 overflow-y-auto">
-                            {filteredNotifications.map((n: any) => (
-                                <li
-                                    key={n.id}
-                                    className="p-3 rounded-lg bg-[#2a2a3e] flex justify-between items-center"
-                                >
-                                    <span className="text-gray-200 text-sm">
-                                        {n.message}
-                                    </span>
+                        {/* 🔵 BİLDİRİMLERİN LİSTESİ */}
+                        <ul className="space-y-3 max-h-80 overflow-y-auto pr-1">
+                            {(notifTab === "unread" ? unreadNotifications : historyNotifications)
+                                .map((n: any) => (
+                                    <li
+                                        key={n.id}
+                                        className="p-3 rounded-lg bg-[#2a2a3e] flex justify-between items-center"
+                                    >
+                                        <span className="text-gray-200 text-sm">{n.message}</span>
 
-                                    {!n.isRead && (
-                                        <button
-                                            onClick={() => handleMarkAsRead(n.id)}
-                                            className="text-xs bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-md text-white"
-                                        >
-                                            Okundu
-                                        </button>
-                                    )}
-                                </li>
-                            ))}
+                                        {!n.isRead && (
+                                            <button
+                                                onClick={() => handleMarkAsRead(n.id)}
+                                                className="text-xs bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-md text-white"
+                                            >
+                                                Okundu
+                                            </button>
+                                        )}
+                                    </li>
+                                ))}
                         </ul>
 
                     </div>
                 )}
             </div>
-
         </div>
     );
 };
 
 export default StudentLayout;
+
