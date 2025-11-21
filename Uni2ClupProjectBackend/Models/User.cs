@@ -36,5 +36,9 @@ namespace Uni2ClupProjectBackend.Models
         // 🔥 EKSİK OLAN — %100 EKLENMESİ GEREKEN NAVIGATION
         [ForeignKey("DepartmentId")]
         public Department? Department { get; set; }
+
+        public bool MustChangePassword { get; set; } = false;
+        public bool ForcePasswordChange { get; set; } = false;
+
     }
 }

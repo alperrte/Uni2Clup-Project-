@@ -29,6 +29,7 @@ namespace Uni2ClupProjectBackend.Controllers
             _emailService = emailService;
         }
 
+
         // 🔐 Login
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginRequest request)
@@ -43,6 +44,16 @@ namespace Uni2ClupProjectBackend.Controllers
                 if (!isPasswordValid)
                     return Unauthorized(new { message = "❌ Hatalı e-posta veya şifre." });
 
+                // ⭐⭐ GEÇİCİ ŞİFRE KULLANANLAR BURADA YAKALANIR ⭐⭐
+                if (user.MustChangePassword)
+                {
+                    return Ok(new
+                    {
+                        forcePasswordChange = true,
+                        email = user.Email
+                    });
+                }
+
                 var token = GenerateJwtToken(user);
 
                 return Ok(new
@@ -54,9 +65,7 @@ namespace Uni2ClupProjectBackend.Controllers
                     role = user.Role,
                     email = user.Email,
                     token = token,
-
-                    // ⭐⭐ EKLENEN KRİTİK YER ⭐⭐
-                    clubId = user.ClubId   // (ClubManager ise dolu gelir)
+                    clubId = user.ClubId  // (ClubManager ise dolu gelir)
                 });
             }
             catch (Exception ex)
@@ -64,6 +73,33 @@ namespace Uni2ClupProjectBackend.Controllers
                 return StatusCode(500, new { message = "Sunucu hatası.", error = ex.Message });
             }
         }
+
+        [HttpPost("first-login-change-password")]
+        public async Task<IActionResult> FirstLoginChangePassword([FromBody] FirstLoginPasswordDto dto)
+        {
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
+            if (user == null)
+                return NotFound(new { message = "Kullanıcı bulunamadı." });
+
+            // ✔✔ DOĞRU KONTROL
+            bool isTemporaryCorrect = BCrypt.Net.BCrypt.EnhancedVerify(dto.TemporaryPassword, user.PasswordHash);
+
+            if (!isTemporaryCorrect)
+                return BadRequest(new { message = "Geçici şifre hatalı." });
+
+            // ✔ Yeni şifreyi kaydet
+            user.PasswordHash = BCrypt.Net.BCrypt.EnhancedHashPassword(dto.NewPassword);
+
+            // 🔥 Şifre zorunluluğunu kapat
+            user.MustChangePassword = false;
+
+            await _db.SaveChangesAsync();
+
+            return Ok(new { message = "Şifre başarıyla güncellendi." });
+        }
+
+
+
 
 
         // 🧾 Öğrenci Başvurusu
@@ -119,7 +155,8 @@ namespace Uni2ClupProjectBackend.Controllers
                 PasswordHash = passwordHash,
                 Role = "Student",
                 DepartmentId = application.DepartmentId,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                MustChangePassword = true
             };
 
             _db.Users.Add(user);
@@ -210,12 +247,16 @@ Saygılarımızla,<br>
             if (!result.Success)
                 return BadRequest(new { message = result.Message });
 
+            // ⭐ Kullanıcıya geçici şifre verildi → şifre değiştirme zorunlu
+            result.Created!.MustChangePassword = true;
+            await _db.SaveChangesAsync();
+
             try
             {
                 await _emailService.SendEmailAsync(
                     result.Created!.Email,
                     "Uni2Clup - Hesabınız Oluşturuldu",
-$@"
+        $@"
 Sayın {result.Created!.Name} {result.Created!.Surname},<br><br>
 
 Tarafınıza Uni2Clup sisteminde kullanılmak üzere bir kullanıcı hesabı oluşturulmuştur.<br><br>
@@ -246,6 +287,7 @@ Saygılarımızla,<br>
                 password = result.PlainPassword
             });
         }
+
 
         // 📋 Kullanıcıları Listele
         [HttpGet("users")]
@@ -377,6 +419,118 @@ Saygılarımızla,<br>
                 clubName = club.Name
             });
         }
+
+
+        // 🔐 Şifre Sıfırlama Talebi
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
+        {
+            try
+            {
+                // 1) Email boş mu?
+                if (dto == null || string.IsNullOrWhiteSpace(dto.Email))
+                    return BadRequest(new { message = "E-posta adresi gerekli." });
+
+                string email = dto.Email.Trim();
+
+                // 2) Kullanıcı var mı?
+                var user = await _db.Users.FirstOrDefaultAsync(x => x.Email == email);
+                if (user == null)
+                    return BadRequest(new { message = "Bu e-posta adresi sistemde bulunamadı." });
+
+                // 3) Token oluştur
+                string token = Guid.NewGuid().ToString("N");
+
+                var reset = new PasswordResetToken
+                {
+                    Email = email,
+                    Token = token,
+                    ExpireAt = DateTime.UtcNow.AddMinutes(15)
+                };
+
+                _db.PasswordResetTokens.Add(reset);
+                await _db.SaveChangesAsync();
+
+                // Reset link
+                string link = $"http://localhost:3000/reset-password/{token}";
+
+                // 4) E-posta gönder
+                string html = $@"
+<div style='font-family: Arial; font-size: 15px;'>
+    Sayın <strong>{user.Name} {user.Surname}</strong>,<br><br>
+
+    Şifrenizi sıfırlamak için aşağıdaki bağlantıya tıklayınız:<br><br>
+
+    <a href='{link}' 
+       style='font-size:18px; font-weight:bold; color:#1e3a8a;'>
+       🔐 Şifremi Sıfırla
+    </a><br><br>
+
+    Bu bağlantı <strong>15 dakika</strong> boyunca geçerlidir.<br><br>
+
+    Saygılarımızla,<br>
+    <strong>Uni2Clup Sistem Yönetimi</strong>
+</div>
+";
+
+                await _emailService.SendEmailAsync(
+                    email,
+                    "Uni2Clup - Şifre Sıfırlama Talebi",
+                    html
+                );
+
+                return Ok(new { message = "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi." });
+            }
+            catch (Exception ex)
+            {
+                // Eğer MailKit veya başka bir hata olursa yine 500 YEMEZ
+                return StatusCode(500, new { message = "Sunucu hatası oluştu.", error = ex.Message });
+            }
+        }
+
+
+
+        // 🔐 Şifre Sıfırlama
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+        {
+            try
+            {
+                if (dto == null || string.IsNullOrWhiteSpace(dto.Token) || string.IsNullOrWhiteSpace(dto.NewPassword))
+                    return BadRequest(new { message = "Eksik bilgi gönderildi." });
+
+                var record = await _db.PasswordResetTokens
+                    .FirstOrDefaultAsync(x => x.Token == dto.Token);
+
+                if (record == null)
+                    return BadRequest(new { message = "Token bulunamadı." });
+
+                if (record.ExpireAt < DateTime.UtcNow)
+                    return BadRequest(new { message = "Token süresi dolmuş." });
+
+                var user = await _db.Users.FirstOrDefaultAsync(x => x.Email == record.Email);
+                if (user == null)
+                    return BadRequest(new { message = "Kullanıcı bulunamadı." });
+
+                // Şifreyi güncelle
+                user.PasswordHash = BCrypt.Net.BCrypt.EnhancedHashPassword(dto.NewPassword);
+                user.MustChangePassword = false;
+
+                // Token'i sil
+                _db.PasswordResetTokens.Remove(record);
+
+                await _db.SaveChangesAsync();
+
+                return Ok(new { message = "Şifre başarıyla güncellendi." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Sunucu hatası.", error = ex.Message });
+            }
+        }
+
+
+
 
 
         // 🔑 Token Üretimi

@@ -49,6 +49,15 @@ const LoginPage = ({ onLoginSuccess }) => {
 
             const data = await res.json();
             const token = data.token;
+
+            if (data.forcePasswordChange === true) {
+                localStorage.setItem("tempEmail", data.email);
+                navigate("/change-password");  
+                return;
+            }
+
+
+
             const normalizedUser = {
                 name: data.name || data.Name || "",
                 email: data.email || data.Email || email,
@@ -279,6 +288,16 @@ const LoginPage = ({ onLoginSuccess }) => {
                             Kayıt Ol
                         </button>
                     </p>
+                    <p className="text-gray-400 text-sm mt-2">
+                        Şifreni mi unuttun?{" "}
+                        <button
+                            onClick={() => navigate("/forgot-password")}
+                            className="text-[#3b82f6] hover:underline"
+                        >
+                            Şifremi Sıfırla
+                        </button>
+                    </p>
+
                 </div>
             </div>
 
