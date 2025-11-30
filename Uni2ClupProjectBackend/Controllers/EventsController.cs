@@ -137,7 +137,11 @@ namespace Uni2ClupProjectBackend.Controllers
             if (dto.Capacity <= 0)
                 return BadRequest(new { message = "Kontenjan 0'dan büyük olmalıdır." });
 
-            var today = DateTime.UtcNow.Date;
+            var turkeyNow = TimeZoneInfo.ConvertTime(DateTime.UtcNow,
+                TimeZoneInfo.FindSystemTimeZoneById("Turkey Standard Time"));
+
+            var today = turkeyNow.Date;
+
 
             if (dto.StartDate.Date < today)
                 return BadRequest(new { message = "Geçmiş bir tarih için etkinlik oluşturamazsınız." });
@@ -252,10 +256,16 @@ namespace Uni2ClupProjectBackend.Controllers
             if (!string.Equals(existing.CreatedBy, email, StringComparison.OrdinalIgnoreCase))
                 return StatusCode(403, new { message = "Bu etkinliği güncelleme yetkiniz yok." });
 
-            var today = DateTime.UtcNow.Date;
+            var turkeyZone = TimeZoneInfo.FindSystemTimeZoneById("Turkey Standard Time");
+            var turkeyNow = TimeZoneInfo.ConvertTime(DateTime.UtcNow, turkeyZone);
+            var today = turkeyNow.Date;
 
-            if (dto.StartDate.Date < today)
-                return BadRequest(new { message = "Geçmiş tarihli bir etkinlik tarihi belirleyemezsiniz." });
+
+            var startDateTurkey = TimeZoneInfo.ConvertTime(dto.StartDate, turkeyZone);
+            if (startDateTurkey.Date < today)
+                return BadRequest(new { message = "Geçmiş bir tarih için etkinlik oluşturamazsınız." });
+
+            return BadRequest(new { message = "Geçmiş tarihli bir etkinlik tarihi belirleyemezsiniz." });
 
             if (dto.EndDate < dto.StartDate)
                 return BadRequest(new { message = "Bitiş tarihi, başlangıç tarihinden önce olamaz." });

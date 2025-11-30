@@ -3,6 +3,7 @@
 const API_URL = "http://localhost:8080";
 const TURKEY_TIMEZONE = "Europe/Istanbul";
 const TURKEY_OFFSET = "+03:00";
+
 const turkeyFormatter = new Intl.DateTimeFormat("sv-SE", {
     timeZone: TURKEY_TIMEZONE,
     year: "numeric",
@@ -47,12 +48,18 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
         clubName: "",
         description: "",
     });
+
     const [clubError, setClubError] = useState("");
     const [isClubLoading, setIsClubLoading] = useState(false);
 
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [confirmData, setConfirmData] = useState(null);
+
+    const [showSuccess, setShowSuccess] = useState(false);
+
     const turkeyNow = formatDateForInput(new Date());
 
-    // 🔹 Sayfa yüklendiğinde veya düzenleme moduna geçildiğinde formu ayarla
+    // Sayfa açılınca veya selectedEvent değişince formu doldur
     useEffect(() => {
         if (selectedEvent) {
             setForm(selectedEvent);
@@ -71,7 +78,7 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
         }
     }, [selectedEvent]);
 
-    // 🔹 Kulüp bilgisini otomatik getir
+    // Kulüp bilgisini otomatik çek
     useEffect(() => {
         if (selectedEvent) return;
 
@@ -109,7 +116,7 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
         fetchClub();
     }, [selectedEvent]);
 
-    // 🔹 Input değişikliklerini yakala
+    // Input değişimleri
     const handleChange = (e) => {
         const { name, value } = e.target;
 
@@ -133,20 +140,30 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
             }
         }
 
+        if (name === "capacity") {
+            const num = Number(value);
+
+            // kullanıcı siliyorsa boş bırakabilsin
+            if (value === "" || isNaN(num)) {
+                setForm({ ...form, capacity: "" });
+                return;
+            }
+
+            // negatif ve 0 engeli
+            if (num < 1) {
+                return;
+            }
+        }
+
         setForm({ ...form, [name]: value });
     };
 
-    // 🔹 Form gönderildiğinde çalışır
-    const handleSubmit = (e) => {
-        e.preventDefault();
+    // Asıl kaydetme işlemini yapan fonksiyon
+    const handleConfirmedSave = () => {
+        const data = confirmData || form;
 
-        if (!selectedEvent) {
-            const confirmed = window.confirm("Etkinliği oluşturmak istediğinize emin misiniz?");
-            if (!confirmed) return;
-        }
-
-        const startDate = parseTurkeyInputToDate(form.startDate);
-        const endDate = parseTurkeyInputToDate(form.endDate);
+        const startDate = parseTurkeyInputToDate(data.startDate);
+        const endDate = parseTurkeyInputToDate(data.endDate);
         const now = parseTurkeyInputToDate(turkeyNow);
 
         if (!startDate || !endDate || !now) {
@@ -165,14 +182,14 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
         }
 
         const formattedForm = {
-            Id: selectedEvent?.id || 0, // 👈 düzenleme varsa id ekle
-            Name: form.name,
-            Capacity: parseInt(form.capacity, 10),
-            Location: form.location,
-            StartDate: convertTurkeyInputToISO(form.startDate), // 👈 tarihleri ISO formatına çevir
-            EndDate: convertTurkeyInputToISO(form.endDate),
-            ClubName: form.clubName,
-            Description: form.description,
+            Id: selectedEvent?.id || 0,
+            Name: data.name,
+            Capacity: parseInt(data.capacity, 10),
+            Location: data.location,
+            StartDate: convertTurkeyInputToISO(data.startDate),
+            EndDate: convertTurkeyInputToISO(data.endDate),
+            ClubName: data.clubName,
+            Description: data.description,
         };
 
         if (!formattedForm.ClubName) {
@@ -183,7 +200,10 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
         console.log("📤 Gönderilen veri:", formattedForm);
         onSave(formattedForm);
 
-        // 🔹 Yeni kayıt sonrası formu sıfırla
+        // Başarı modalını aç
+        setShowSuccess(true);
+
+        // Yeni kayıt sonrası formu sıfırla
         if (!selectedEvent) {
             const now = new Date();
             const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
@@ -193,13 +213,28 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
                 location: "",
                 startDate: formatDateForInput(now),
                 endDate: formatDateForInput(oneHourLater),
-                clubName: form.clubName,
+                clubName: data.clubName,
                 description: "",
             });
-
         } else {
             clearSelected();
         }
+    };
+
+    // Form submit
+    const handleSubmit = (e) => {
+        e.preventDefault();
+
+        // Yeni etkinlik -> önce onay modalı
+        if (!selectedEvent) {
+            setConfirmData(form);
+            setShowConfirm(true);
+            return;
+        }
+
+        // Düzenleme modunda direkt kaydet
+        setConfirmData(form);
+        handleConfirmedSave();
     };
 
     return (
@@ -312,11 +347,6 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
                                 value={form.startDate}
                                 onChange={handleChange}
                                 className="flex-1 bg-transparent text-white outline-none text-lg cursor-pointer"
-                                style={{
-                                    colorScheme: 'dark',
-                                    WebkitAppearance: 'none',
-                                    MozAppearance: 'textfield'
-                                }}
                                 required
                             />
                         </div>
@@ -339,11 +369,6 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
                                 value={form.endDate}
                                 onChange={handleChange}
                                 className="flex-1 bg-transparent text-white outline-none text-lg cursor-pointer"
-                                style={{
-                                    colorScheme: 'dark',
-                                    WebkitAppearance: 'none',
-                                    MozAppearance: 'textfield'
-                                }}
                                 required
                             />
                         </div>
@@ -396,6 +421,57 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
                     )}
                 </div>
             </button>
+
+            {/* ONAY MODALI */}
+            {showConfirm && (
+                <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-gradient-to-br from-[#1a1a2e] to-[#2a2a3e] border border-[#3b82f6]/40 rounded-2xl p-8 shadow-2xl w-[90%] max-w-md text-center">
+                        <h2 className="text-2xl font-bold text-white mb-4">
+                            Etkinliği oluşturmak istiyor musunuz?
+                        </h2>
+                        <p className="text-gray-300 mb-6">
+                            Bu işlemi onayladığınızda etkinlik oluşturulacaktır.
+                        </p>
+                        <div className="flex justify-center gap-4">
+                            <button
+                                onClick={() => {
+                                    setShowConfirm(false);
+                                    handleConfirmedSave();
+                                }}
+                                className="px-6 py-3 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded-xl font-semibold shadow-lg transition-all"
+                            >
+                                Onayla
+                            </button>
+                            <button
+                                onClick={() => setShowConfirm(false)}
+                                className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-semibold transition-all"
+                            >
+                                İptal
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* BAŞARI MODALI */}
+            {showSuccess && (
+                <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-gradient-to-br from-[#1a1a2e] to-[#2a2a3e] border border-[#3b82f6]/40 rounded-2xl p-8 shadow-2xl w-[90%] max-w-md text-center animate-fadeIn">
+                        <h2 className="text-2xl font-bold text-white mb-4">
+                            ✔ Etkinlik başarıyla oluşturuldu
+                        </h2>
+                        <p className="text-gray-300 mb-6">
+                            Yeni etkinliğiniz sisteme kaydedildi.
+                        </p>
+                        <button
+                            onClick={() => setShowSuccess(false)}
+                            className="px-6 py-3 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded-xl font-semibold shadow-lg transition-all"
+                        >
+                            Tamam
+                        </button>
+                    </div>
+                </div>
+            )}
         </form>
     );
 }

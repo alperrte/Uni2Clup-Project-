@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 
 const API_URL = "http://localhost:8080";
 const TURKEY_TIMEZONE = "Europe/Istanbul";
@@ -36,21 +36,21 @@ interface Announcement {
 const AnnouncementsListPage: React.FC = () => {
     const [token, setToken] = useState<string | null>(null);
     const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+    const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
     useEffect(() => {
-        // token'ı component mount olduğunda çekiyoruz
         setToken(localStorage.getItem("token"));
     }, []);
 
-    const fetchAnnouncements = async () => {
+    const fetchAnnouncements = useCallback(async () => {
         try {
             setLoading(true);
             setError("");
 
             const res = await fetch(`${API_URL}/api/announcements/list`, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: { Authorization: `Bearer ${token}` },
             });
 
             if (!res.ok) {
@@ -66,32 +66,51 @@ const AnnouncementsListPage: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [token]);
 
     useEffect(() => {
-        if (!token) return; // Token gelmeden fetch atma → 401 engellenir
+        if (!token) return;
         fetchAnnouncements();
-    }, [token]);
+    }, [token, fetchAnnouncements]);
+
+    // 🔍 Arama Filtresi
+    const filteredAnnouncements = announcements.filter((a) =>
+        a.eventName.toLowerCase().includes(search.toLowerCase())
+    );
 
     return (
         <div className="relative text-white">
             <div className="absolute inset-0 -z-10 opacity-40 blur-3xl bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900"></div>
 
             <div className="max-w-5xl mx-auto py-10 space-y-8">
+
+                {/* ÜST BÖLÜM */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 bg-gradient-to-br from-[#1c1f44] to-[#111326] border border-[#3b82f6]/30 rounded-3xl p-8 shadow-2xl">
                     <div>
                         <p className="text-sm uppercase tracking-[0.4em] text-[#93c5fd] mb-2">Kulüp Duyuruları</p>
                         <h1 className="text-4xl font-extrabold">Mevcut Duyurular</h1>
                         <p className="text-gray-300 mt-3 max-w-2xl">
-                            Kulübünüz için yayımlanmış tüm duyuruları burada görüntüleyebilir ve hızlıca güncel durumu takip edebilirsiniz.
+                            Kulübünüz için yayımlanmış tüm duyuruları görüntüleyebilir ve hızlıca güncel durumu takip edebilirsiniz.
                         </p>
                     </div>
-                    <button
-                        onClick={fetchAnnouncements}
-                        className="px-6 py-3 rounded-2xl bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] shadow-lg font-semibold"
-                    >
-                        Yenile
-                    </button>
+
+                    {/* 🔍 ARAMA + YENİLE */}
+                    <div className="flex items-center gap-3">
+                        <input
+                            type="text"
+                            placeholder="Etkinlik adına göre ara..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="px-4 py-3 rounded-2xl bg-[#0f0f1a] border border-[#3b82f6]/40 text-white focus:outline-none focus:ring-2 focus:ring-[#3b82f6]"
+                        />
+
+                        <button
+                            onClick={fetchAnnouncements}
+                            className="px-6 py-3 rounded-2xl bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] shadow-lg font-semibold"
+                        >
+                            Yenile
+                        </button>
+                    </div>
                 </div>
 
                 {loading ? (
@@ -108,13 +127,13 @@ const AnnouncementsListPage: React.FC = () => {
                             Tekrar Dene
                         </button>
                     </div>
-                ) : announcements.length === 0 ? (
+                ) : filteredAnnouncements.length === 0 ? (
                     <div className="bg-[#0f0f1a]/80 border border-[#3b82f6]/20 rounded-3xl p-12 text-center text-gray-300">
-                        Henüz duyuru bulunmuyor.
+                        Aramanıza uygun duyuru bulunamadı.
                     </div>
                 ) : (
                     <div className="space-y-5">
-                        {announcements.map((a) => (
+                        {filteredAnnouncements.map((a) => (
                             <div
                                 key={a.id}
                                 className="p-6 bg-[#0f0f1a]/80 border border-[#3b82f6]/20 rounded-3xl shadow-xl relative overflow-hidden"
@@ -129,19 +148,19 @@ const AnnouncementsListPage: React.FC = () => {
                                             <h3 className="text-2xl text-white font-bold">{a.eventName}</h3>
                                         </div>
                                     </div>
+
                                     <span className="text-sm text-gray-400 flex items-center gap-2">
                                         <span className="text-lg">📅</span>
-                                        {formatDate(a.createdAt)}
+                                        <span className="font-semibold">Duyuru Tarihi:</span> {formatDate(a.createdAt)}
                                     </span>
                                 </div>
+
                                 <div className="mt-4 bg-white/5 border border-white/10 rounded-2xl p-4">
                                     <div className="flex items-center gap-2 text-[#93c5fd] uppercase tracking-[0.3em] text-xs">
                                         <span className="text-lg">📢</span>
                                         Duyuru Açıklaması
                                     </div>
-                                    <p className="mt-3 text-gray-200 leading-relaxed">
-                                        {a.message}
-                                    </p>
+                                    <p className="mt-3 text-gray-200 leading-relaxed">{a.message}</p>
                                 </div>
                             </div>
                         ))}
@@ -153,4 +172,3 @@ const AnnouncementsListPage: React.FC = () => {
 };
 
 export default AnnouncementsListPage;
-

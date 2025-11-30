@@ -3,6 +3,7 @@
 const API_URL = "http://localhost:8080";
 const token = localStorage.getItem("token");
 const TURKEY_TIMEZONE = "Europe/Istanbul";
+
 const announcementFormatter = new Intl.DateTimeFormat("tr-TR", {
     timeZone: TURKEY_TIMEZONE,
     year: "numeric",
@@ -37,18 +38,22 @@ const CreateAnnouncementPage: React.FC = () => {
     const [message, setMessage] = useState("");
     const [announcements, setAnnouncements] = useState<any[]>([]);
 
-    // Etkinlikleri çek
+    // ✅ Yeni eklenen state’ler
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
+
+    // 📌 Etkinlikleri ve duyuruları çeken useEffect
     useEffect(() => {
         const fetchEvents = async () => {
             try {
                 const res = await fetch(`${API_URL}/api/Events/list`, {
-                    headers: { Authorization: `Bearer ${token}` }
+                    headers: { Authorization: `Bearer ${token}` },
                 });
 
                 const data = await res.json();
                 const normalized = (data || []).map((ev: any) => ({
                     id: ev.id ?? ev.Id,
-                    name: ev.name ?? ev.Name
+                    name: ev.name ?? ev.Name,
                 }));
                 setEvents(normalized);
             } catch (err) {
@@ -59,7 +64,7 @@ const CreateAnnouncementPage: React.FC = () => {
         const fetchAnnouncements = async () => {
             try {
                 const res = await fetch(`${API_URL}/api/announcements/list`, {
-                    headers: { Authorization: `Bearer ${token}` }
+                    headers: { Authorization: `Bearer ${token}` },
                 });
 
                 const data = await res.json();
@@ -73,12 +78,19 @@ const CreateAnnouncementPage: React.FC = () => {
         fetchAnnouncements();
     }, []);
 
-    const handleSubmit = async () => {
+    // ✅ Sadece doğrulama + onay modalını açan fonksiyon
+    const handleSubmit = () => {
         if (!selectedEventId || !message.trim()) {
             alert("Lütfen tüm alanları doldurun.");
             return;
         }
 
+        // Sadece “Emin misiniz?” modalı açılır
+        setShowConfirm(true);
+    };
+
+    // ✅ Asıl API isteğini atan fonksiyon
+    const createAnnouncement = async () => {
         try {
             const res = await fetch(`${API_URL}/api/announcements/create`, {
                 method: "POST",
@@ -88,12 +100,14 @@ const CreateAnnouncementPage: React.FC = () => {
                 },
                 body: JSON.stringify({
                     eventId: selectedEventId,
-                    message: message
-                })
+                    message: message,
+                }),
             });
 
-            const data = await res.json();
-            alert(data.message || "Duyuru oluşturuldu!");
+            await res.json();
+
+            // Başarı modalını aç
+            setShowSuccess(true);
 
             // Form temizle
             setSelectedEventId(null);
@@ -101,12 +115,11 @@ const CreateAnnouncementPage: React.FC = () => {
 
             // Listeyi yenile
             const listRes = await fetch(`${API_URL}/api/announcements/list`, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: { Authorization: `Bearer ${token}` },
             });
 
             const listData = await listRes.json();
             setAnnouncements(listData);
-
         } catch (err) {
             console.error("Duyuru oluşturma hatası:", err);
             alert("Bir hata oluştu.");
@@ -115,24 +128,27 @@ const CreateAnnouncementPage: React.FC = () => {
 
     return (
         <div className="max-w-3xl mx-auto mt-10 text-white">
-
             <h1 className="text-4xl font-bold mb-8 text-center">📢 Duyuru Oluştur</h1>
 
             <div className="bg-[#0f0f1a] p-6 rounded-xl border border-[#3b82f6]">
-
                 {/* Etkinlik seçimi */}
                 <label className="block mb-2 text-lg">Mevcut Etkinliği Seç</label>
                 <select
                     className="w-full p-3 rounded bg-[#1a1a2e] border border-[#3b82f6]"
                     value={selectedEventId ?? ""}
-                    onChange={(e) => setSelectedEventId(Number(e.target.value))}
+                    onChange={(e) =>
+                        setSelectedEventId(
+                            e.target.value ? Number(e.target.value) : null
+                        )
+                    }
                 >
                     <option value="">Etkinlik seç...</option>
-                    {events.map(ev => (
-                        <option key={ev.id} value={ev.id}>{ev.name}</option>
+                    {events.map((ev) => (
+                        <option key={ev.id} value={ev.id}>
+                            {ev.name}
+                        </option>
                     ))}
                 </select>
-
 
                 {/* Mesaj */}
                 <label className="block mt-4 mb-2 text-lg">Etkinlik Hakkında</label>
@@ -143,7 +159,7 @@ const CreateAnnouncementPage: React.FC = () => {
                     onChange={(e) => setMessage(e.target.value)}
                 />
 
-                {/* Buton */}
+                {/* Buton → sadece handleSubmit çağırır */}
                 <button
                     onClick={handleSubmit}
                     className="mt-5 w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg text-white text-lg"
@@ -159,13 +175,72 @@ const CreateAnnouncementPage: React.FC = () => {
                 <p className="text-gray-400">Henüz duyuru oluşturulmadı.</p>
             ) : (
                 <div className="space-y-4">
-                    {announcements.map(a => (
-                        <div key={a.id} className="bg-[#1a1a2e] p-4 rounded border border-[#3b82f6]">
+                    {announcements.map((a) => (
+                        <div
+                            key={a.id}
+                            className="bg-[#1a1a2e] p-4 rounded border border-[#3b82f6]"
+                        >
                             <h3 className="text-xl font-bold">{a.EventName}</h3>
                             <p className="mt-2">{a.Message}</p>
-                            <p className="mt-1 text-sm text-gray-400">{formatAnnouncementDate(a.CreatedAt)}</p>
+                            <p className="mt-1 text-sm text-gray-400">
+                                {formatAnnouncementDate(a.CreatedAt)}
+                            </p>
                         </div>
                     ))}
+                </div>
+            )}
+
+            {/* 🔵 EMİN MİSİN MODALI */}
+            {showConfirm && (
+                <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-[#1a1a2e] p-8 rounded-2xl w-[90%] max-w-md border border-blue-400/30 text-center shadow-2xl">
+                        <h2 className="text-2xl font-bold text-white mb-4">
+                            Duyuru oluşturmak istiyor musunuz?
+                        </h2>
+                        <p className="text-gray-300 mb-6">
+                            Bu işlemi onayladığınızda duyuru oluşturulacaktır.
+                        </p>
+
+                        <div className="flex items-center justify-center gap-4">
+                            <button
+                                onClick={() => setShowConfirm(false)}
+                                className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-xl font-semibold"
+                            >
+                                İptal
+                            </button>
+
+                            <button
+                                onClick={() => {
+                                    setShowConfirm(false);
+                                    createAnnouncement();
+                                }}
+                                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold"
+                            >
+                                Onayla
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 🟢 BAŞARI MODALI */}
+            {showSuccess && (
+                <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-[#1a1a2e] p-8 rounded-2xl w-[90%] max-w-md border border-blue-400/30 text-center shadow-2xl">
+                        <h2 className="text-2xl font-bold text-white mb-4">
+                            ✔ Duyuru başarıyla oluşturuldu
+                        </h2>
+                        <p className="text-gray-300 mb-6">
+                            Yeni duyurunuz sisteme kaydedildi.
+                        </p>
+
+                        <button
+                            onClick={() => setShowSuccess(false)}
+                            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold"
+                        >
+                            Tamam
+                        </button>
+                    </div>
                 </div>
             )}
         </div>
