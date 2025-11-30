@@ -52,7 +52,7 @@ const LoginPage = ({ onLoginSuccess }) => {
 
             if (data.forcePasswordChange === true) {
                 localStorage.setItem("tempEmail", data.email);
-                navigate("/change-password");  
+                navigate("/change-password");
                 return;
             }
 
@@ -85,7 +85,7 @@ const LoginPage = ({ onLoginSuccess }) => {
                 setShowSuccessModal(false);
                 onLoginSuccess?.(normalizedUser);
                 navigate("/redirect");
-            }, 1500);
+            }, 3000);
         } catch (error) {
             alert("🚫 Sunucuya bağlanılamadı.");
         } finally {
@@ -123,13 +123,15 @@ const LoginPage = ({ onLoginSuccess }) => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#0a0a1a] via-[#0f0f2a] to-[#1a1a3a] text-white flex items-center justify-center relative overflow-hidden">
+        <div className="min-h-screen bg-gradient-to-br from-[#0a0a1a] via-[#0f0f2a] to-[#1a1a3a] text-white 
+flex flex-col items-center justify-center relative overflow-hidden">
+
 
             {/* ANIMATED BACKGROUND (SENİN KODUN) */}
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-[#2d1b69] to-[#1e3a8a] rounded-full opacity-15 animate-pulse"></div>
                 <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-[#1e3a8a] to-[#2d1b69] rounded-full opacity-10 animate-pulse delay-1000"></div>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-[#2d1b69] to-[#1e3a8a] rounded-full opacity-8 animate-pulse delay-500"></div>
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-[#2d1b69] to-[#1e3a8a] rounded-full opacity-8 animate-pulse delay-500 z-0"></div>
             </div>
 
             {/* FLOATING PARTICLES */}
@@ -148,61 +150,40 @@ const LoginPage = ({ onLoginSuccess }) => {
                 ))}
             </div>
 
+            {/* WELCOME SECTION */}
+            <div className="text-center mb-12 w-full max-w-4xl mx-auto px-4 z-20">
+                <img
+                    src="/Copilot_20251129_235210.png"
+                    alt="U2C Logo"
+                    className="w-40 mx-auto mb-6 drop-shadow-[0_0_15px_rgba(59,130,246,0.7)]"
+                />
+
+                <h1
+                    className="
+      text-center font-bold mb-4
+      text-3xl sm:text-4xl md:text-5xl
+      whitespace-nowrap
+      bg-gradient-to-r from-[#2d1b69] to-[#3b82f6]
+      bg-clip-text text-transparent
+      leading-[1.2]
+      z-30 relative
+  "
+                >
+                    Uni2Clup'a Hoş Geldin!
+                </h1>
+
+
+                <p className="text-[20px] text-center mt-3 text-[#8FB7F8] font-medium">
+                    "Kulüplere katıl, etkinliklere dahil ol, iz bırak."
+                </p>
+            </div>
+
             {/* CONTENT */}
-            <div className="relative z-10 w-full max-w-md mx-4">
-
-                {/* WELCOME SECTION */}
-                <div className="text-center mb-12">
-                    <img
-                        src="/Copilot_20251129_235210.png"
-                        alt="U2C Logo"
-                        className="w-40 mx-auto mb-6 drop-shadow-[0_0_15px_rgba(59,130,246,0.7)]"
-                    />
-
-
-
-                        
-                    
-
-                    <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] bg-clip-text text-transparent ">
-                        Uni2Clup'a Hoş Geldin!
-                    </h1>
-
-                    <p className="text-[20px] text-center mt-3 text-[#8FB7F8] font-medium">
-                        "Kulüplere katıl, etkinliklere dahil ol, iz bırak."
-                    </p>
+            <div className="relative z-10 w-full max-w-md mx-auto px-4">
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                
-                </div>
 
                 {/* LOGIN */}
                 <form onSubmit={handleLogin} className="space-y-6">
@@ -371,11 +352,15 @@ const LoginPage = ({ onLoginSuccess }) => {
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
                     <div className="bg-gradient-to-br from-[#1a1a2e] to-[#2a2a3e] border border-[#3b82f6] rounded-2xl p-8 mx-4 max-w-md w-full transform animate-bounceIn shadow-2xl">
                         <div className="text-center">
-                            <div className="w-20 h-20 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6] rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
-                                <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                            {/* ÜST ROL LOGOSU */}
+                            <div className="w-28 h-28 rounded-full mx-auto mb-6 flex items-center justify-center overflow-hidden shadow-lg">
+                                <img
+                                    src="/Copilot_20251129_235210.png"
+                                    alt="Uni2Clup Logo"
+                                    className="w-full h-full object-contain"
+                                />
                             </div>
+ 
 
                             <h3 className="text-2xl font-bold text-white mb-4">
                                 Giriş Başarılı!
@@ -383,25 +368,58 @@ const LoginPage = ({ onLoginSuccess }) => {
 
                             <p className="text-gray-300 mb-6">{successMessage}</p>
 
-                            <div className="bg-gradient-to-r from-[#0f0f1a] to-[#1a1a2e] border border-[#3b82f6] rounded-lg p-4 mb-6">
-                                <div className="flex items-center justify-center space-x-2 mb-2">
-                                    <svg className="w-5 h-5 text-[#3b82f6]" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <span className="text-sm font-semibold text-[#3b82f6]">
-                                        Uni2Club Etkinlik Sistemi
-                                    </span>
-                                </div>
-                                <p className="text-xs text-gray-400">
-                                    Artık etkinliklere katılabilir, kulüp başvurusu yapabilir ve topluluk oylamalarına dahil olabilirsiniz!
-                                </p>
-                            </div>
+                            {/* ROL BAZLI METİNLER */}
+                            {(() => {
+                                const role = localStorage.getItem("userRole") || "Student";
 
-                            <div className="w-full bg-[#0f0f1a] rounded-full h-2 mb-4">
-                                <div className="bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] h-2 rounded-full animate-pulse"></div>
-                            </div>
+                                const roleTexts = {
+                                    Admin: {
+                                        icon: "🛡️",
+                                        panelName: "Uni2Clup Admin Paneli",
+                                        desc: "Kulüpleri, etkinlikleri ve öğrenci başvurularını yönetebilirsiniz.",
+                                        redirect: "Admin olarak yönlendiriliyorsunuz..."
+                                    },
+                                    Student: {
+                                        icon: "🎓",
+                                        panelName: "Uni2Clup Öğrenci Paneli",
+                                        desc: "Etkinliklere katılabilir, kulüplere başvurabilir ve duyuruları takip edebilirsiniz.",
+                                        redirect: "Öğrenci olarak yönlendiriliyorsunuz..."
+                                    },
+                                    ClubManager: {
+                                        icon: "📢",
+                                        panelName: "Uni2Clup Kulüp Yöneticisi Paneli",
+                                        desc: "Kulübünüzü yönetebilir, etkinlik oluşturabilir ve duyurular yayınlayabilirsiniz.",
+                                        redirect: "Kulüp yöneticisi olarak yönlendiriliyorsunuz..."
+                                    }
+                                };
 
-                            <p className="text-xs text-gray-500">Yönlendiriliyorsunuz...</p>
+                                const t = roleTexts[role];
+
+                                return (
+                                    <>
+                                        {/* SİMGE + PANEL ADI */}
+                                        <div className="flex items-center justify-center space-x-2 mb-2">
+                                            <span className="text-2xl">{t.icon}</span>
+                                            <span className="text-sm font-semibold text-[#3b82f6]">
+                                                {t.panelName}
+                                            </span>
+                                        </div>
+
+                                        {/* MINI AÇIKLAMA */}
+                                        <p className="text-xs text-gray-400 mb-4 text-center">
+                                            {t.desc}
+                                        </p>
+
+                                        {/* ALT YAZI */}
+                                        <p className="text-xs text-gray-500 mt-2">
+                                            🔄 {t.redirect}
+                                        </p>
+                                    </>
+                                );
+                            })()}
+
+
+                            
                         </div>
                     </div>
                 </div>
