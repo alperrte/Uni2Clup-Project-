@@ -32,14 +32,16 @@ const CreateEventPage: React.FC = () => {
     const location = useLocation();
     const navigate = useNavigate();
 
-    // URL'den id oku → ?id=5
     const searchParams = new URLSearchParams(location.search);
     const editId = searchParams.get("id");
 
     const [selectedEvent, setSelectedEvent] = useState<any>(null);
     const [loading, setLoading] = useState<boolean>(false);
 
-    // ⭐ Düzenleme modundaysa → etkinlik bilgilerini backend'den çek
+    // ⭐ BAŞARI POPUP STATE
+    const [showSuccess, setShowSuccess] = useState(false);
+
+    // ⭐ Düzenleme modunda etkinlik bilgisi çek
     useEffect(() => {
         if (!editId) return;
 
@@ -52,10 +54,15 @@ const CreateEventPage: React.FC = () => {
 
                 const data = await res.json();
 
-                const event = data.find((e: any) => e.id == editId || e.Id == editId);
+                // ✔ ESLINT DÜZELTİLMİŞ HALİ
+                const numericId = Number(editId);
+                const event = data.find(
+                    (e: any) =>
+                        Number(e.id) === numericId ||
+                        Number(e.Id) === numericId
+                );
 
                 if (event) {
-
                     setSelectedEvent({
                         id: event.id ?? event.Id,
                         name: event.Name,
@@ -101,10 +108,9 @@ const CreateEventPage: React.FC = () => {
                 body: JSON.stringify(formData),
             });
 
-            const data = await res.json();
-            alert(data.message || "İşlem başarılı.");
+            await res.json();
 
-            navigate("/club/events");
+            setShowSuccess(true);
 
         } catch (error) {
             console.error("Etkinlik kaydetme hatası:", error);
@@ -148,6 +154,34 @@ const CreateEventPage: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {/* ⭐ BAŞARI POPUP */}
+            {showSuccess && (
+                <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-gradient-to-br from-[#1a1a2e] to-[#2a2a3e] border border-[#3b82f6]/40 rounded-2xl p-8 shadow-2xl w-[90%] max-w-md text-center animate-fadeIn">
+
+                        <h2 className="text-2xl font-bold text-white mb-4">
+                            ✔ Etkinlik başarıyla oluşturuldu
+                        </h2>
+
+                        <p className="text-gray-300 mb-6">
+                            Yeni etkinliğiniz sisteme kaydedildi.
+                        </p>
+
+                        <button
+                            onClick={() => {
+                                setShowSuccess(false);
+                                navigate("/club/events");
+                            }}
+                            className="px-6 py-3 bg-[#3b82f6] hover:bg-[#2563eb] text-white rounded-xl font-semibold shadow-lg transition-all"
+                        >
+                            Tamam
+                        </button>
+
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 };

@@ -68,39 +68,45 @@ const ClubManagerLayout: React.FC<LayoutProps> = ({ children, handleLogout }) =>
             </div>
 
             {/* Sidebar */}
-            <aside className="relative z-10 w-80 bg-[#0d102e]/90 backdrop-blur border-r border-[#3b82f6]/30 flex flex-col p-6 shadow-2xl">
-                <div className="mb-10 text-center">
+            <aside className="fixed left-0 top-0 h-screen 
+w-48 sm:w-56 md:w-64 lg:w-72 xl:w-80
+bg-gradient-to-br from-[#0a0a1a] via-[#0f0f2a] to-[#1a1a3a] border-r-2 border-[#3b82f6] flex flex-col justify-between p-6 shadow-2xl">
+
+
+
+                <div className="mb-6 text-center mt-4">
                     <div className="relative inline-block mb-4">
                         <div className="w-20 h-20 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6] rounded-full flex items-center justify-center text-4xl shadow-xl">
                             ✔️
                         </div>
                         <div className="absolute -top-1 -right-1 w-20 h-20 border-2 border-[#3b82f6] rounded-full animate-spin" style={{ animationDuration: "8s" }}></div>
                     </div>
-                    <h1 className="text-2xl font-bold leading-tight bg-gradient-to-r from-[#93c5fd] to-white bg-clip-text text-transparent">
+                    <h1 className="text-2xl font-bold text-center bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] bg-clip-text text-transparent">
+
                         Uni2Clup Kulüp Yönetim Paneli
                     </h1>
                     <p className="mt-4 text-lg font-semibold text-white">
                         {clubName
-                            ? `Aktif Kulüp - ${clubName}`
+                            ? `Yönetim  - ${clubName}`
                             : (clubError || "Kulüp bilgisi yükleniyor...")}
                     </p>
                 </div>
 
-                <nav className="flex-1 space-y-2">
+                <nav className="space-y-4 flex-1 min-h-0 overflow-y-auto pr-1">
                     {menuItems.map(item => {
                         const isActive = location.pathname === item.path;
                         return (
                             <Link
                                 key={item.path}
                                 to={item.path}
-                                className={`group relative block px-4 py-4 rounded-2xl transition-all duration-300 ${isActive
-                                        ? "bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] shadow-lg shadow-[#3b82f6]/40"
-                                        : "bg-gradient-to-r from-[#111133] to-[#1a1a3e] hover:shadow-lg hover:shadow-[#1e40af]/30 border border-transparent hover:border-[#3b82f6]/40"
+                                className={`group relative block h-12 sm:h-14 md:h-16 flex items-center px-4 rounded-2xl transition-all duration-300 ${isActive
+                                    ? "bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] shadow-lg shadow-[#3b82f6]/40"
+                                    : "bg-gradient-to-r from-[#111133] to-[#1a1a3e] hover:shadow-lg hover:shadow-[#1e40af]/30 border border-transparent hover:border-[#3b82f6]/40"
                                     }`}
                             >
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-4 w-full">
                                     <span className="text-2xl">{item.icon}</span>
-                                    <span className={`font-semibold text-lg ${isActive ? "text-white" : "text-gray-300 group-hover:text-white"}`}>
+                                    <span className={`font-semibold text-sm sm:text-base md:text-lg ${isActive ? "text-white" : "text-gray-300 group-hover:text-white"}`}>
                                         {item.name}
                                     </span>
                                 </div>
@@ -110,22 +116,27 @@ const ClubManagerLayout: React.FC<LayoutProps> = ({ children, handleLogout }) =>
                             </Link>
                         );
                     })}
-                </nav>
 
-                <div className="pt-6 border-t border-[#3b82f6]/30">
-                    <button
-                        onClick={handleLogout}
-                        className="w-full bg-indigo-700 hover:bg-indigo-900 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl flex items-center justify-center gap-2"
-                    >
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.59L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
-                        </svg>
-                        <span>Çıkış Yap</span>
-                    </button>
-                </div>
+                    <div className="pt-6 border-t border-[#3b82f6]/30">
+                        <button
+                            onClick={handleLogout}
+                            className="w-full bg-indigo-700 hover:bg-indigo-900 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl flex items-center justify-center gap-2"
+                        >
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M17 7l-1.41 1.41L18.17 11H8v2H18.17l-2.58 2.59L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
+                            </svg>
+                            <span>Çıkış Yap</span>
+                        </button>
+                    </div>
+
+
+                </nav>
             </aside>
 
-            <main className="relative z-10 flex-1 overflow-y-auto">
+            <main className="relative z-10 flex-1 overflow-y-auto 
+ml-64 md:ml-72 lg:ml-80
+h-screen">
+
                 <div className="p-8">
                     {children}
                 </div>
