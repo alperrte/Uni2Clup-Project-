@@ -262,7 +262,8 @@ const StudentLayout: React.FC = () => {
             </div>
 
             {/* 🔵 SOL SİDEBAR (AdminLayout ile aynı tasarım + daha büyük yazılar) */}
-            <div className="relative z-10 w-72 border-r-2 border-[#3b82f6] flex flex-col p-6 shadow-2xl">
+            <div className="fixed top-0 left-0 h-screen w-72 border-r-2 border-[#3b82f6] flex flex-col p-6 shadow-2xl bg-[#0d102e]/90 backdrop-blur z-20">
+
 
                 {/* Logo */}
                 <div className="mb-10">
@@ -272,7 +273,7 @@ const StudentLayout: React.FC = () => {
                 </div>
 
                 {/* Menü */}
-                <nav className="flex-grow space-y-2">
+                <nav className="flex-grow space-y-2 overflow-y-auto pr-2">
 
                     {/* Kulüpler */}
                     <button
@@ -365,7 +366,10 @@ const StudentLayout: React.FC = () => {
 
 
             {/* 🔵 SAĞ ANA ALAN */}
-            <main className="relative z-10 flex-1 overflow-y-auto">
+            <main className="relative z-10 flex-1 overflow-y-auto ml-72 h-screen">
+
+
+
                 <div className="p-8">
 
                     {activeMenu === "clubs" && (

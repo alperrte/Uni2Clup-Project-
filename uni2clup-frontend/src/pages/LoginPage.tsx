@@ -168,7 +168,38 @@ const LoginPage = ({ onLoginSuccess }) => {
                         Uni2Clup'a Hoş Geldin!
                     </h1>
 
-                
+                    <p className="text-[20px] text-center mt-3 text-[#8FB7F8] font-medium">
+                        "Kulüplere katıl, etkinliklere dahil ol, iz bırak."
+                    </p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
                 
                 </div>
