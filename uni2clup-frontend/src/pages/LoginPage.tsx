@@ -153,36 +153,55 @@ const LoginPage = ({ onLoginSuccess }) => {
 
                 {/* WELCOME SECTION */}
                 <div className="text-center mb-12">
-                    <div className="relative inline-block mb-8">
-                        <div className="w-24 h-24 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6] rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl animate-bounce">
-                            <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <div className="absolute -top-2 -right-2 w-28 h-28 border-2 border-[#3b82f6] rounded-full animate-spin" style={{ animationDuration: '8s' }}></div>
-                    </div>
+                    <img
+                        src="/Copilot_20251129_235210.png"
+                        alt="U2C Logo"
+                        className="w-40 mx-auto mb-6 drop-shadow-[0_0_15px_rgba(59,130,246,0.7)]"
+                    />
 
-                    <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] bg-clip-text text-transparent animate-pulse">
-                        Hoş Geldin!
+
+
+                        
+                    
+
+                    <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] bg-clip-text text-transparent ">
+                        Uni2Clup'a Hoş Geldin!
                     </h1>
 
-                    <div className="flex items-center justify-center mb-6">
-                        <div className="flex items-center space-x-2">
-                            <div className="w-8 h-8 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6] rounded-full flex items-center justify-center transform rotate-12">
-                                <span className="text-white font-bold text-sm">2</span>
-                            </div>
-                            <span className="text-3xl font-bold bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] bg-clip-text text-transparent">
-                                Uni2Clup
-                            </span>
-                        </div>
-                    </div>
+                    <p className="text-[20px] text-center mt-3 text-[#8FB7F8] font-medium">
+                        "Kulüplere katıl, etkinliklere dahil ol, iz bırak."
+                    </p>
 
-                    <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-[#1a1a3a] to-[#2a2a4a] border border-[#3b82f6] rounded-full px-4 py-2 mb-4">
-                        <svg className="w-5 h-5 text-[#3b82f6]" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span className="text-sm text-gray-300">Etkinlik Sistemi</span>
-                    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
                 </div>
 
                 {/* LOGIN */}
