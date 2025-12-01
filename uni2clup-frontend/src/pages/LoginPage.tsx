@@ -375,8 +375,8 @@ flex flex-col items-center justify-center relative overflow-hidden">
                                 const roleTexts = {
                                     Admin: {
                                         icon: "🛡️",
-                                        panelName: "Uni2Clup Admin Paneli",
-                                        desc: "Kulüpleri, etkinlikleri ve öğrenci başvurularını yönetebilirsiniz.",
+                                        panelName: "Uni2Clup Yönetim Paneli",
+                                        desc: "Kulüpleri, öğrenci başvurularını ve yetkilendirmeleri yönetebilirsiniz.",
                                         redirect: "Admin olarak yönlendiriliyorsunuz..."
                                     },
                                     Student: {

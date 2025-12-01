@@ -33,13 +33,15 @@ const ClubEventsPage: React.FC<ClubEventsPageProps> = ({
 }) => {
     return (
         <div className="text-white">
-            <h1 className="text-4xl font-bold mb-2">
-                Üyesi Olduğum Kulüplerin Etkinlikleri
+            <h1
+                className="text-4xl font-bold mb-12 antialiased
+  bg-gradient-to-r from-[#2d1b69] to-[#3b82f6]
+  bg-clip-text text-transparent inline-block"
+            >
+                Katıldığım Kulüplerin Etkinlikleri
             </h1>
-            <p className="text-gray-400 mb-8">
-                Üye olduğunuz kulüplerin düzenlediği etkinlikler
-            </p>
 
+          
             {clubEvents.length === 0 ? (
                 <div className="text-center py-12">
                     <p className="text-gray-400 text-lg">

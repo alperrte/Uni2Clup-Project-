@@ -27,6 +27,22 @@ const StudentLayout: React.FC = () => {
     const [departments, setDepartments] = useState([]);
     const [selectedDept, setSelectedDept] = useState("");
     const [showEventDropdown, setShowEventDropdown] = useState(false);
+    const [confirmModal, setConfirmModal] = useState({
+        show: false,
+        title: "",
+        message: "",
+        description: "",
+        onConfirm: () => { },
+    });
+    const [toast, setToast] = useState({ show: false, message: "", subtitle: "" });
+
+    const showToast = (msg: string, subtitle: string) => {
+        setToast({ show: true, message: msg, subtitle });
+    };
+    const [currentPage, setCurrentPage] = useState(1);
+    const clubsPerPage = 4; 
+
+
 
     const [notifTab, setNotifTab] = useState<"unread" | "history">("unread");
 
@@ -41,10 +57,13 @@ const StudentLayout: React.FC = () => {
         });
     };
 
-    const getClubIcon = () => ({
-        icon: "★",
-        color: "from-[#2d1b69] to-[#3b82f6]"
-    });
+    const getClubIcon = (name: string) => {
+        return {
+            icon: "★",
+            color: "from-[#2d1b69] to-[#3b82f6]"
+        };
+    };
+
 
     const checkToken = useCallback(() => {
         if (!token) {
@@ -133,30 +152,49 @@ const StudentLayout: React.FC = () => {
 
     const handleJoinClub = async (clubId: number) => {
         if (!checkToken()) return;
-        if (!window.confirm("Bu kulübe katılmak istediğinize emin misiniz?")) return;
 
-        await fetch(`${API_URL}/api/studentpanel/clubs/${clubId}/join`, {
-            method: "POST",
-            headers: { Authorization: `Bearer ${token}` }
+        setConfirmModal({
+            show: true,
+            title: "Kulübe katılmak istediğinize emin misiniz?",
+            message: "Bu işlemi onayladığınızda kulübe katılacaksınız.",
+            description: "Kulübe katıldığınızda kulüp profilinize eklenecektir.",
+            onConfirm: async () => {
+                await fetch(`${API_URL}/api/studentpanel/clubs/${clubId}/join`, {
+                    method: "POST",
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                fetchClubs();
+                fetchProfile();
+                fetchNotifications();
+                showToast("Kulübe başarıyla katıldınız!", "Kulübünüz profilinize eklendi.");
+
+            }
         });
-
-        fetchClubs();
-        fetchProfile();
-        fetchNotifications();
     };
+      
 
     const handleLeaveClub = async (clubId: number) => {
         if (!checkToken()) return;
-        if (!window.confirm("Bu kulüpten ayrılmak istediğinize emin misiniz?")) return;
+        setConfirmModal({
+            show: true,
+            title: "Kulüpten ayrılmak istediğinize emin misiniz?",
+            message: "Bu işlemi onayladığınızda kulüpten ayrılacaksınız.",
+            description: "Ayrıldığınızda kulüp profilinizden kaldırılacaktır.",
+            onConfirm: async () => {
+                await fetch(`${API_URL}/api/studentpanel/clubs/${clubId}/leave`, {
+                    method: "POST",
+                    headers: { Authorization: `Bearer ${token}` }
+                });
 
-        await fetch(`${API_URL}/api/studentpanel/clubs/${clubId}/leave`, {
-            method: "POST",
-            headers: { Authorization: `Bearer ${token}` }
+                fetchClubs();
+                fetchProfile();
+                fetchNotifications();
+                showToast("Kulüpten başarıyla ayrıldınız!", "Kulüp profilinizden kaldırıldı.");
+
+
+            }
         });
-
-        fetchClubs();
-        fetchProfile();
-        fetchNotifications();
     };
 
     const handleJoinEvent = async (eventId: number) => {
@@ -174,7 +212,8 @@ const StudentLayout: React.FC = () => {
             );
 
             const data = await res.json();
-            alert(data.message);
+
+            showToast(data.message, "Yeni deneyimlere hak kazandınız.");  // ✔ Artık alert yok, toast var
 
             // Sayfayı güncelle
             fetchClubEvents();
@@ -182,6 +221,44 @@ const StudentLayout: React.FC = () => {
 
         } catch (err) {
             console.error("Etkinliğe katılırken hata:", err);
+        }
+    };
+
+    const handleLeaveEventStarter = (eventId: number, eventName: string) => {
+        setConfirmModal({
+            show: true,
+            title: "Etkinlikten ayrılmak istediğinize emin misiniz?",
+            message: `"${eventName}" etkinliğinden ayrılmak üzeresiniz.`,
+            description: "Ayrıldığınızda etkinlik listenizden kaldırılacaktır.",
+            onConfirm: () => handleLeaveEvent(eventId)
+        });
+    };
+
+    const handleLeaveEvent = async (eventId: number) => {
+        if (!checkToken()) return;
+
+        try {
+            const res = await fetch(
+                `${API_URL}/api/studentpanel/events/leave/${eventId}`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    }
+                }
+            );
+
+            const data = await res.json();
+
+            // Başarılı mesaj
+            showToast("Etkinlikten ayrıldınız!", "Etkinlik listenizden kaldırıldı.");
+
+            // Listeleri güncelle
+            fetchClubEvents();
+            fetchMyEvents();
+
+        } catch (err) {
+            console.error("Etkinlikten ayrılırken hata:", err);
         }
     };
 
@@ -215,15 +292,27 @@ const StudentLayout: React.FC = () => {
         fetchNotifications();
     }, [notificationsFilter]);
 
-    const filteredClubs = clubs.filter((club: any) => {
-        const matchesSearch =
-            (club.name || "").toLowerCase().includes(searchTerm.toLowerCase());
+    const filteredClubs = clubs
+        .filter((club: any) => !club.isMember) // 1) Üye olunmayan kulüpler
+        .filter((club: any) => {
+            const matchesSearch =
+                (club.name || "").toLowerCase().includes(searchTerm.toLowerCase());
 
-        const matchesDept =
-            selectedDept === "" || club.departmentId === Number(selectedDept);
+            const matchesDept =
+                selectedDept === "" || club.departmentId === Number(selectedDept);
 
-        return matchesSearch && matchesDept;
-    });
+            return matchesSearch && matchesDept;
+        })
+        .sort((a, b) => a.name.localeCompare(b.name, "tr"));  // 2) Alfabetik sırala
+
+
+    // Sayfalama için
+    const indexOfLastClub = currentPage * clubsPerPage;
+    const indexOfFirstClub = indexOfLastClub - clubsPerPage;
+    const paginatedClubs = filteredClubs.slice(indexOfFirstClub, indexOfLastClub);
+
+    const totalPages = Math.ceil(filteredClubs.length / clubsPerPage);
+
 
     const filteredNotifications =
         notificationsFilter === "unread"
@@ -262,15 +351,25 @@ const StudentLayout: React.FC = () => {
             </div>
 
             {/* 🔵 SOL SİDEBAR (AdminLayout ile aynı tasarım + daha büyük yazılar) */}
-            <div className="fixed top-0 left-0 h-screen w-72 border-r-2 border-[#3b82f6] flex flex-col p-6 shadow-2xl bg-[#0d102e]/90 backdrop-blur z-20">
+            <div className="fixed top-0 left-0 h-screen w-[420px] border-r-2 border-[#3b82f6] flex flex-col p-6 shadow-2xl bg-[#0d102e]/90 backdrop-blur z-20">
+
 
 
                 {/* Logo */}
-                <div className="mb-10">
-                    <h1 className="text-3xl font-bold text-center bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] bg-clip-text text-transparent">
-                        Öğrenci Paneli
+                <div className="mb-10 flex flex-col items-center">
+                    <img
+                        src="/BCO.ad4f0f99-09ed-44fd-91a4-f12d13d596e8.png"
+                        alt="U2C Logo"
+                        className="w-32 h-32 object-contain drop-shadow-lg"
+                    />
+
+                    <h1 className="mt-4 text-3xl font-bold text-center 
+                   bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] 
+                   bg-clip-text text-transparent">
+                        Uni2Clup Öğrenci Paneli
                     </h1>
                 </div>
+
 
                 {/* Menü */}
                 <nav className="flex-grow space-y-2 overflow-y-auto pr-2">
@@ -284,7 +383,7 @@ const StudentLayout: React.FC = () => {
                                 : "bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] hover:border-[#3b82f6] border-2 border-transparent"
                             }`}
                     >
-                        Kulüpler
+                       🎯 Kulüpler
                     </button>
 
                     {/* Etkinlik Dropdown */}
@@ -295,7 +394,7 @@ const StudentLayout: React.FC = () => {
                           border-2 border-transparent hover:border-[#3b82f6] transition-all duration-300 
                           flex justify-between items-center"
                         >
-                            <span>Etkinlikler</span>
+                            <span>📅 Etkinlikler</span>
                             <span>{showEventDropdown ? "▲" : "▶"}</span>
                         </button>
 
@@ -308,16 +407,16 @@ const StudentLayout: React.FC = () => {
                                     className={`block w-full text-left p-3 rounded-lg text-md transition-all duration-300 
                             ${activeMenu === "joined-events" ? "bg-[#3b82f6]" : "hover:bg-[#2a2a3e]"}`}
                                 >
-                                    Katıldığım Etkinlikler
+                                   ✔ Katıldığım Etkinlikler
                                 </button>
 
-                                {/* Üyesi Olduğum Kulüp Etkinlikleri */}
+                                {/* Katıldığım Kulüplerin Etkinlikleri */}
                                 <button
                                     onClick={() => setActiveMenu("club-events")}
                                     className={`block w-full text-left p-3 rounded-lg text-md transition-all duration-300 
                             ${activeMenu === "club-events" ? "bg-[#3b82f6]" : "hover:bg-[#2a2a3e]"}`}
                                 >
-                                    Üyesi Olduğum Kulüp Etkinlikleri
+                                    ⭐ Katıldığım Kulüplerin Etkinlikleri
                                 </button>
 
                             </div>
@@ -333,7 +432,7 @@ const StudentLayout: React.FC = () => {
                                 : "bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] hover:border-[#3b82f6] border-2 border-transparent"
                             }`}
                     >
-                        Geçmiş Etkinlikler
+                      🕒 Geçmiş Etkinlikler
                     </button>
 
                     {/* Profil */}
@@ -345,7 +444,7 @@ const StudentLayout: React.FC = () => {
                                 : "bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] hover:border-[#3b82f6] border-2 border-transparent"
                             }`}
                     >
-                        Profil
+                       👤 Profil
                     </button>
 
                 </nav>
@@ -359,22 +458,27 @@ const StudentLayout: React.FC = () => {
                     className="mt-6 w-full bg-indigo-700 hover:bg-indigo-900 text-white font-bold py-4 px-6 rounded-xl 
                    transition-all duration-300 hover:scale-105"
                 >
-                    Çıkış Yap
+                 [→ Çıkış Yap
                 </button>
 
             </div>
 
 
             {/* 🔵 SAĞ ANA ALAN */}
-            <main className="relative z-10 flex-1 overflow-y-auto ml-72 h-screen">
+            <main className="relative flex-1 overflow-y-auto ml-[420px] h-screen">
 
 
 
-                <div className="p-8">
+
+
+                <div className="p-8 max-w-[90%]">
 
                     {activeMenu === "clubs" && (
                         <ClubsPage
-                            clubs={filteredClubs}
+                            clubs={paginatedClubs}
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            setCurrentPage={setCurrentPage}
                             searchTerm={searchTerm}
                             setSearchTerm={setSearchTerm}
                             departments={departments}
@@ -384,11 +488,17 @@ const StudentLayout: React.FC = () => {
                             handleLeaveClub={handleLeaveClub}
                             getClubIcon={getClubIcon}
                         />
+
                     )}
 
                     {activeMenu === "joined-events" && (
-                        <JoinedEventsPage myEvents={myEvents} formatDate={formatDate} />
+                        <JoinedEventsPage
+                            myEvents={myEvents}
+                            formatDate={formatDate}
+                            handleLeaveEventStarter={handleLeaveEventStarter}
+                        />
                     )}
+
 
                     {activeMenu === "club-events" && (
                         <ClubEventsPage
@@ -414,6 +524,53 @@ const StudentLayout: React.FC = () => {
                 </div>
             </main>
 
+            {confirmModal.show && (
+                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm animate-fadeIn">
+                    <div className="bg-gradient-to-br from-[#1a1a2e] to-[#2a2a3e]
+                        border border-[#3b82f6]/40 rounded-2xl p-8 w-[420px]
+                        text-center shadow-2xl animate-scaleIn">
+
+                        <h2 className="text-2xl font-bold text-white mb-3">
+                            {confirmModal.title}
+                        </h2>
+
+                        <p className="text-gray-300 mb-8">
+                            {confirmModal.message}
+                        </p>
+                        {confirmModal.description && (
+                            <p className="text-gray-400 mb-8 text-sm">
+                                {confirmModal.description}
+                            </p>
+                        )}
+
+
+                        <div className="flex justify-center gap-4">
+                            <button
+                                onClick={() => {
+                                    confirmModal.onConfirm();
+                                    setConfirmModal({ ...confirmModal, show: false });
+                                }}
+                                className="px-6 py-2 rounded-xl font-semibold text-white
+                               bg-gradient-to-r from-[#2d1b69] to-[#3b82f6]
+                               hover:scale-105 transition-all"
+                            >
+                                Onayla
+                            </button>
+
+                            <button
+                                onClick={() => setConfirmModal({ ...confirmModal, show: false })}
+                                className="px-6 py-2 rounded-xl font-semibold text-gray-300
+                               bg-[#2a2a3e] hover:bg-[#3a3a4a] hover:scale-105 
+                               transition-all"
+                            >
+                                İptal
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+
             {/* 🔔 BİLDİRİM SİMGESİ */}
             <div className="absolute right-8 top-6 z-50">
                 <button
@@ -432,6 +589,7 @@ const StudentLayout: React.FC = () => {
                 {showNotifications && (
                     <div className="absolute right-0 mt-3 w-96 bg-[#1a1a2e] border border-[#3b82f6] rounded-xl p-4 shadow-2xl z-50">
 
+                            
                         {/* 🔵 SEKME BAŞLIKLARI */}
                         <div className="flex mb-4 border-b border-[#3b82f6]/40">
                             <button
@@ -454,6 +612,7 @@ const StudentLayout: React.FC = () => {
                                 Geçmiş
                             </button>
                         </div>
+
 
                         {/* 🔵 BİLDİRİMLERİN LİSTESİ */}
                         <ul className="space-y-3 max-h-80 overflow-y-auto pr-1">
@@ -479,6 +638,47 @@ const StudentLayout: React.FC = () => {
 
                     </div>
                 )}
+
+                {toast.show && (
+                    <div className="fixed inset-0 flex items-center justify-center z-[9999]">
+
+                        {/* Arka plan blur */}
+                        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+
+                        {/* Modal kutusu */}
+                        <div className="relative bg-gradient-to-br from-[#1a1a2e] to-[#2a2a3e]
+            px-10 py-8 rounded-3xl text-center shadow-2xl border border-[#3b82f6]/40 
+            animate-fadeIn min-w-[420px] max-w-[480px]">
+
+                            {/* Başlık */}
+                            <p className="text-2xl font-bold text-white mb-2">
+                                ✔ {toast.message}
+                            </p>
+
+                            {/* Alt açıklama */}
+                            <p className="text-gray-300 mb-6">
+                                {toast.subtitle}
+                            </p>
+
+
+                            {/* Tamam Butonu */}
+                            <button
+                                onClick={() => setToast({ show: false, message: "", subtitle: "" })}
+
+                                className="px-6 py-2 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8]
+                text-white font-semibold shadow-md transition-all"
+                            >
+                                Tamam
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+
+
+
+
+
             </div>
         </div>
     );

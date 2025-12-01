@@ -247,6 +247,24 @@ public class StudentPanelController : ControllerBase
     }
 
 
+    [HttpPost("events/leave/{eventId}")]
+    public async Task<IActionResult> LeaveEvent(int eventId)
+    {
+        int userId = GetUserId();
+
+        // Etkinliğe katılım var mı?
+        var participation = await _db.EventParticipants
+            .FirstOrDefaultAsync(ep => ep.EventId == eventId && ep.UserId == userId);
+
+        if (participation == null)
+            return BadRequest(new { message = "Bu etkinliğe zaten katılmamışsınız." });
+
+        // Katılımı sil
+        _db.EventParticipants.Remove(participation);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Etkinlikten başarıyla ayrıldınız." });
+    }
 
 
 
