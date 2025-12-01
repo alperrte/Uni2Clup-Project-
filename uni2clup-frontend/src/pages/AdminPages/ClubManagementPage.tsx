@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useCallback } from "react";
 
 const API_URL = "http://localhost:8080";
 
@@ -34,11 +34,13 @@ const ClubManagementPage: React.FC = () => {
 
     const [search, setSearch] = useState("");
     const [filterDept, setFilterDept] = useState("Hepsi");
-
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [confirmMessage, setConfirmMessage] = useState("");
+    const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
 
     const token = localStorage.getItem("token")?.trim() || "";
 
-    const fetchClubs = async () => {
+    const fetchClubs = useCallback(async () => {
         if (!token) return;
         setLoading(true);
         try {
@@ -64,7 +66,8 @@ const ClubManagementPage: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [token]);
+
 
     const fetchDepartments = async () => {
         try {
@@ -86,10 +89,12 @@ const ClubManagementPage: React.FC = () => {
     useEffect(() => {
         fetchClubs();
         fetchDepartments();
-    }, []);
+    }, [fetchClubs]);
 
-    const handleCreate = async (e: React.FormEvent) => {
-        e.preventDefault();
+
+    const handleCreate = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+
         if (!token) return;
 
         try {
@@ -116,8 +121,9 @@ const ClubManagementPage: React.FC = () => {
         }
     };
 
-    const handleEdit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleEdit = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+
         if (!token || !editingClub) return;
 
         try {
@@ -147,7 +153,6 @@ const ClubManagementPage: React.FC = () => {
 
     const handleToggleActive = async (id: number) => {
         if (!token) return;
-        if (!window.confirm("Kulübün aktif/pasif durumunu değiştirmek istediğinizden emin misiniz?")) return;
 
         try {
             const res = await fetch(`${API_URL}/api/Club/toggle-active/${id}`, {
@@ -170,7 +175,6 @@ const ClubManagementPage: React.FC = () => {
 
     const handleDelete = async (id: number) => {
         if (!token) return;
-        if (!window.confirm("Bu kulübü silmek istediğinizden emin misiniz?")) return;
 
         try {
             const res = await fetch(`${API_URL}/api/Club/${id}`, {
@@ -238,7 +242,7 @@ const ClubManagementPage: React.FC = () => {
 
     return (
         <div className="relative">
-            {/* Header */}
+            {/* Başlık */}
             <div className="mb-8 flex items-center justify-between">
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] bg-clip-text text-transparent">
                     Kulüp Yönetimi
@@ -274,7 +278,7 @@ const ClubManagementPage: React.FC = () => {
 
             </div>
 
-            {/* Clubs Table */}
+            {/* Kulüpler */}
             <div className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] border-2 border-transparent bg-clip-padding rounded-xl p-1 hover:border-[#3b82f6] transition-all duration-300">
                 <div className="bg-[#0f0f1a] rounded-lg p-6">
                     {clubs.length === 0 ? (
@@ -308,15 +312,22 @@ const ClubManagementPage: React.FC = () => {
                                             </td>
                                             <td className="py-4 px-6">
                                                 <button
-                                                    onClick={() => handleToggleActive(club.id)}
-                                                    className={`px-4 py-2 rounded-lg font-semibold text-white transition-all ${
-                                                        club.isActive
-                                                            ? "bg-green-600 hover:bg-green-700"
-                                                            : "bg-red-600 hover:bg-red-700"
-                                                    }`}
+                                                    onClick={() => {
+                                                        setConfirmMessage(
+                                                            club.isActive
+                                                                ? `"${club.name}" kulübünü kapatmak istediğinize emin misiniz?`
+                                                                : `"${club.name}" kulübünü tekrar açmak istediğinize emin misiniz?`
+                                                        );
+
+                                                        setConfirmAction(() => () => handleToggleActive(club.id));
+                                                        setShowConfirmModal(true);
+                                                    }}
+                                                    className={`px-4 py-2 rounded-lg font-semibold text-white transition-all ${club.isActive ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
+                                                        }`}
                                                 >
                                                     {club.isActive ? "✅ Aktif" : "⏸️ Pasif"}
                                                 </button>
+
                                             </td>
                                             <td className="py-4 px-6 text-gray-300 text-sm">{formatDate(club.createdAt)}</td>
                                             <td className="py-4 px-6 text-gray-300 text-sm">
@@ -331,11 +342,16 @@ const ClubManagementPage: React.FC = () => {
                                                         ✏️ Düzenle
                                                     </button>
                                                     <button
-                                                        onClick={() => handleDelete(club.id)}
+                                                        onClick={() => {
+                                                            setConfirmMessage(`"${club.name}" kulübünü silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`);
+                                                            setConfirmAction(() => () => handleDelete(club.id));
+                                                            setShowConfirmModal(true);
+                                                        }}
                                                         className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-semibold text-white transition-all"
                                                     >
                                                         🗑️ Sil
                                                     </button>
+
                                                 </div>
                                             </td>
                                         </tr>
@@ -347,7 +363,7 @@ const ClubManagementPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Create Modal */}
+            {/* Oluştur Modal */}
             {showCreateModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-[#1a1a2e] p-8 rounded-xl border border-[#3b82f6] max-w-md w-full mx-4">
@@ -383,11 +399,18 @@ const ClubManagementPage: React.FC = () => {
                             />
                             <div className="flex gap-3">
                                 <button
-                                    type="submit"
+                                    type="button"
+                                    onClick={() => {
+                                        setConfirmMessage("Bu kulübü oluşturmak istediğinize emin misiniz?");
+                                        setConfirmAction(() => () => handleCreate());
+                                        setShowConfirmModal(true);
+                                    }}
                                     className="flex-1 bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] py-3 rounded-xl font-bold text-white"
                                 >
                                     Oluştur
                                 </button>
+
+
                                 <button
                                     type="button"
                                     onClick={() => {
@@ -403,6 +426,41 @@ const ClubManagementPage: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {/* Confirm Modal */}
+            {showConfirmModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[999]">
+                    <div className="bg-[#1a1a2e] p-8 rounded-xl border border-[#3b82f6] max-w-md w-full mx-4">
+
+                        <h2 className="text-2xl font-bold mb-4 text-center text-white">Onay Gerekli</h2>
+
+                        <p className="text-gray-300 mb-8 text-center text-lg">
+                            {confirmMessage}
+                        </p>
+
+                        <div className="flex gap-4">
+                            <button
+                                className="flex-1 bg-green-600 hover:bg-green-700 py-3 rounded-xl font-bold text-white"
+                                onClick={() => {
+                                    if (confirmAction) confirmAction();
+                                    setShowConfirmModal(false);
+                                }}
+                            >
+                                Evet
+                            </button>
+                            <button
+                                className="flex-1 bg-red-600 hover:bg-red-700 py-3 rounded-xl font-bold text-white"
+                                onClick={() => setShowConfirmModal(false)}
+                            >
+                                Hayır
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            )}
+
+
 
             {/* Edit Modal */}
             {showEditModal && editingClub && (
@@ -440,11 +498,17 @@ const ClubManagementPage: React.FC = () => {
                             />
                             <div className="flex gap-3">
                                 <button
-                                    type="submit"
+                                    type="button"
+                                    onClick={() => {
+                                        setConfirmMessage("Bu kulübün bilgilerini güncellemek istediğinize emin misiniz?");
+                                        setConfirmAction(() => () => handleEdit());
+                                        setShowConfirmModal(true);
+                                    }}
                                     className="flex-1 bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] py-3 rounded-xl font-bold text-white"
                                 >
                                     Güncelle
                                 </button>
+
                                 <button
                                     type="button"
                                     onClick={() => {

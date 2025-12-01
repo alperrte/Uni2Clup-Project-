@@ -7,10 +7,10 @@ import LoginPage from "./pages/LoginPage";
 
 // Admin
 import AdminLayout from "./components/AdminLayout";
-import AddUserPage from "./pages/AddUserPage";
-import UserListPage from "./pages/UserListPage";
-import StudentApplicationsPage from "./pages/StudentApplicationsPage";
-import ClubManagementPage from "./pages/ClubManagementPage";
+import AddUserPage from "./pages/AdminPages/AddUserPage";
+import UserListPage from "./pages/AdminPages/UserListPage";
+import StudentApplicationsPage from "./pages/AdminPages/StudentApplicationsPage";
+import ClubManagementPage from "./pages/AdminPages/ClubManagementPage";
 
 // Club Manager
 import ClubManagerRoutes from "./pages/ClubManagerRoutes";
