@@ -14,6 +14,8 @@ interface ProfileData {
     email: string;
     departmentName?: string;
     clubs?: ClubItem[];
+    joinedEventsCount?: number;
+    unreadNotifications?: number;
 }
 
 interface ClubIconData {
@@ -31,40 +33,140 @@ interface ProfilePageProps {
 const ProfilePage: React.FC<ProfilePageProps> = ({ profile, getClubIcon, handleLeaveClub }) => {
     return (
         <div className="text-white">
-            <h1 className="text-4xl font-bold mb-2">Profil</h1>
-            <p className="text-gray-400 mb-8">Kişisel bilgileriniz</p>
+            <h1
+                className="text-4xl font-bold mb-12 antialiased
+  bg-gradient-to-r from-[#2d1b69] to-[#3b82f6]
+  bg-clip-text text-transparent inline-block"
+            >
+                Profil
+            </h1>
+
+            
 
             {profile ? (
                 <div
-                    className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e]
-                                border border-[#3b82f6]/40 rounded-xl p-8 shadow-xl"
+                    className="
+relative
+bg-[#0d0f21]/80 
+rounded-3xl
+p-10 
+border border-[#3b82f6]/20 
+shadow-[0_0_25px_rgba(59,130,246,0.15)] 
+backdrop-blur-md
+transition-all duration-300
+hover:shadow-[0_0_40px_rgba(59,130,246,0.25)]
+"
+
                 >
+                    
+
                     {/* Avatar */}
                     <div
-                        className="w-24 h-24 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6]
-                                    rounded-full flex items-center justify-center mx-auto mb-4"
+                        className="
+        w-32 h-32 mx-auto mb-6 rounded-full
+        bg-gradient-to-br from-[#2d1b69] to-[#3b82f6]
+        flex items-center justify-center
+        shadow-[0_0_25px_rgba(59,130,246,0.45)]
+        border-4 border-[#3b82f6]/60
+        transition-all duration-300 hover:scale-105
+    "
                     >
-                        <span className="text-white font-bold text-3xl">
+                        <span className="text-4xl font-bold text-white drop-shadow-lg">
                             {profile.name.charAt(0).toUpperCase()}
                         </span>
                     </div>
 
+                    {/* İstatistik Kutuları */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8 mt-6">
+
+                        {/* Toplam Kulüp Sayısı */}
+                        <div className="p-6 rounded-xl bg-gradient-to-br from-[#2d1b69]/80 to-[#3b82f6]/40
+                    border border-[#3b82f6]/40 shadow-lg hover:shadow-[#3b82f6]/30 
+                    transition-all duration-300">
+                            <div className="text-3xl font-bold text-white">
+                                {profile?.clubs?.length ?? 0}
+                            </div>
+                            <div className="text-gray-300 text-sm">Üye Olduğu Kulüp Sayısı</div>
+                        </div>
+
+                        {/* Katıldığı Etkinlik Sayısı */}
+                        <div className="p-6 rounded-xl bg-gradient-to-br from-[#3b82f6]/40 to-[#2d1b69]/80
+                    border border-[#3b82f6]/40 shadow-lg hover:shadow-[#2d1b69]/30 
+                    transition-all duration-300">
+                            <div className="text-3xl font-bold text-white">
+                                {profile?.joinedEventsCount ?? 0}
+                            </div>
+                            <div className="text-gray-300 text-sm">Katıldığı Etkinlik Sayısı</div>
+                        </div>
+
+                        {/* Bildirim Sayısı */}
+                        <div className="p-6 rounded-xl bg-gradient-to-br from-[#2d1b69]/70 to-[#3b82f6]/30
+                    border border-[#3b82f6]/40 shadow-lg hover:shadow-[#3b82f6]/20 
+                    transition-all duration-300">
+                            <div className="text-3xl font-bold text-white">
+                                {profile?.unreadNotifications ?? 0}
+                            </div>
+                            <div className="text-gray-300 text-sm">Kaçırdığı Etkinlik Sayısı</div>
+                        </div>
+
+                    </div>
+
+
+
                     {/* Name */}
-                    <h2 className="text-2xl font-bold text-white text-center mb-2">
-                        {profile.name} {profile.surname}
-                    </h2>
+                    <div
+                        className="
+        bg-[#0f0f1a]/60 p-6 rounded-xl border border-[#3b82f6]/20 
+        shadow-lg backdrop-blur-sm mb-8 text-center
+    "
+                    >
+                        <h2
+                            className="
+            text-3xl font-bold 
+            bg-gradient-to-r from-[#2d1b69] to-[#3b82f6]
+            bg-clip-text text-transparent
+            drop-shadow-md
+        "
+                        >
+                            {profile.name} {profile.surname}
+                        </h2>
 
-                    <p className="text-gray-300 text-center">{profile.email}</p>
-
-                    {/* Department */}
-                    <div className="bg-[#0f0f1a] border border-[#3b82f6]/30 rounded-lg p-4 my-6">
-                        <h3 className="text-lg font-semibold text-[#3b82f6] mb-2">
-                            Bölüm
-                        </h3>
-                        <p className="text-white">
-                            {profile.departmentName ?? "Bilinmiyor"}
+                        <p className="text-gray-300 mt-2 text-lg">
+                            {profile.email}
                         </p>
                     </div>
+
+
+                    <div
+                        className="
+        bg-gradient-to-br from-[#101020] to-[#1b1b2e]
+        border border-[#3b82f6]/30 
+        rounded-xl p-6 mb-8
+        shadow-lg hover:shadow-xl transition-all duration-300
+    "
+                    >
+                        <div className="flex items-center gap-4">
+                            <div
+                                className="
+                w-12 h-12 flex items-center justify-center rounded-lg
+                bg-gradient-to-br from-[#2d1b69] to-[#3b82f6]
+                text-white text-2xl shadow-lg
+            "
+                            >
+                                🎓
+                            </div>
+
+                            <div>
+                                <h3 className="text-xl font-semibold text-[#3b82f6]">
+                                    Bölüm
+                                </h3>
+                                <p className="text-gray-200 text-lg mt-1">
+                                    {profile.departmentName ?? "Bilinmiyor"}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
 
                     {/* Clubs */}
                     <div className="bg-[#0f0f1a] border border-[#3b82f6]/30 rounded-lg p-4">
@@ -73,56 +175,69 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ profile, getClubIcon, handleL
                         </h3>
 
                         {profile.clubs && profile.clubs.length > 0 ? (
-                            <div className="space-y-2">
+                            <div className="space-y-4">
                                 {profile.clubs
-                                    .sort((a, b) => a.name.localeCompare(b.name, "tr"))  // 🔥 ekledik
+                                    .sort((a, b) => a.name.localeCompare(b.name, "tr"))
                                     .map((club) => {
+                                        const iconData = getClubIcon(club.name);
 
-                                    const iconData = getClubIcon(club.name);
-
-                                    return (
-                                        <div
-                                            key={club.id}
-                                            className="flex items-center space-x-3
-                                                       p-3 bg-[#1a1a2e] rounded-lg border border-[#3b82f6]/20"
-                                        >
+                                        return (
                                             <div
-                                                className={`w-10 h-10 bg-gradient-to-br ${iconData.color}
-                                                            rounded-full flex items-center justify-center text-lg`}
+                                                key={club.id}
+                                                className="
+                            flex items-center justify-between
+                            p-5 rounded-xl
+                            bg-gradient-to-r from-[#151525] to-[#1f1f35]
+                            border border-[#3b82f6]/30
+                            shadow-lg hover:shadow-xl
+                            transition-all duration-300
+                            hover:scale-[1.02]
+                        "
                                             >
-                                                {iconData.icon}
-                                            </div>
+                                                {/* İKON + METİN */}
+                                                <div className="flex items-center gap-4">
+                                                    <div
+                                                        className={`
+                                    w-12 h-12 rounded-full flex items-center justify-center text-xl
+                                    bg-gradient-to-br ${iconData.color}
+                                    shadow-lg
+                                `}
+                                                    >
+                                                        {iconData.icon}
+                                                    </div>
 
-                                            <div className="flex-1">
-                                                <p className="text-white font-medium">
-                                                    {club.name}
-                                                </p>
-                                                <p className="text-gray-400 text-sm">
-                                                    {club.departmentName}
-                                                </p>
-                                            </div>
+                                                    <div>
+                                                        <p className="text-white text-lg font-semibold">
+                                                            {club.name}
+                                                        </p>
+                                                        <p className="text-gray-400 text-sm">
+                                                            {club.departmentName}
+                                                        </p>
+                                                    </div>
+                                                </div>
 
-                                            {/* Kulüpten Ayrıl Butonu */}
-                                            <div>
+                                                {/* AYRIL BUTONU */}
                                                 <button
-                                                    onClick={() =>
-                                                        handleLeaveClub(club.id)
-                                                    }
-                                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 
-                                                               text-white rounded-lg transition"
+                                                    onClick={() => handleLeaveClub(club.id)}
+                                                    className="
+                                px-4 py-2
+                                rounded-lg
+                                bg-red-600 hover:bg-red-700
+                                text-white font-medium
+                                transition-all duration-300
+                                hover:scale-105
+                            "
                                                 >
-                                                    Kulüpten Ayrıl
+                                                    Ayrıl
                                                 </button>
                                             </div>
-                                        </div>
-                                    );
-                                })}
+                                        );
+                                    })}
                             </div>
                         ) : (
-                            <p className="text-gray-400">
-                                Henüz üye olduğunuz kulüp bulunmamaktadır.
-                            </p>
+                            <p className="text-gray-400">Henüz üye olduğunuz kulüp bulunmamaktadır.</p>
                         )}
+
                     </div>
                 </div>
             ) : (
