@@ -102,12 +102,12 @@ using (var scope = app.Services.CreateScope())
         {
             Name = "Alper",
             Surname = "Temiz",
-            Email = "202303011111@dogus.edu.tr",
+            Email = "admin@dogus.edu.tr",
             PasswordHash = BCrypt.Net.BCrypt.EnhancedHashPassword("123456"),
             Role = "Admin"
         });
         db.SaveChanges();
-        Console.WriteLine("✅ Varsayılan Admin oluşturuldu (Alper - Admin)");
+        Console.WriteLine("✅ Varsayılan Admin oluşturuldu (Database-Admin)");
     }
 
     // ✅ Varsayılan Bölümler

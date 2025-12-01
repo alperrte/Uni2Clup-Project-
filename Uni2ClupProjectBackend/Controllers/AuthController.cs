@@ -98,7 +98,20 @@ namespace Uni2ClupProjectBackend.Controllers
             return Ok(new { message = "Şifre başarıyla güncellendi." });
         }
 
+        // Öğrenci Silme 
+        [HttpDelete("delete/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteUser(int id)
+        {
+            var user = await _db.Users.FindAsync(id);
+            if (user == null)
+                return NotFound(new { message = "❌ Kullanıcı bulunamadı." });
 
+            _db.Users.Remove(user);
+            await _db.SaveChangesAsync();
+
+            return Ok(new { message = "Kullanıcı başarıyla silindi." });
+        }
 
 
 

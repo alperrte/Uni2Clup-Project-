@@ -33,6 +33,14 @@ const translateRole = (role: string) => {
     }
 };
 
+const customTitles: Record<UserListPageProps["targetRole"], string> = {
+    Student: "Öğrenciler Listesi",
+    Academic: "Akademisyenler Listesi",
+    ClubManager: "Kulüp Yöneticileri Listesi",
+    Admin: "Yöneticiler Listesi"
+};
+
+
 const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
     const [users, setUsers] = useState<User[]>([]);
     const [search, setSearch] = useState("");
@@ -47,7 +55,15 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
     const [departments, setDepartments] = useState<Array<{ id: number; name: string; code: string }>>([]);
     const [selectedClubId, setSelectedClubId] = useState<number | null>(null);
     const token = localStorage.getItem("token")?.trim() || "";
-    const pageTitle = `${translateRole(targetRole)} Listesi`;
+    const pageTitle = customTitles[targetRole];
+    const [showToggleModal, setShowToggleModal] = useState(false);
+    const [pendingToggleUserId, setPendingToggleUserId] = useState<number | null>(null);
+    const [showConfirmAssignModal, setShowConfirmAssignModal] = useState(false);
+    const [pendingAssignUserId, setPendingAssignUserId] = useState<number | null>(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+
+
 
     // ✅ Token kontrolü
     const checkTokenValidity = useCallback(() => {
@@ -182,16 +198,11 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
         setShowClubModal(true);
     };
 
-    const handleToggleActive = async (id: number) => {
-        if (!checkTokenValidity()) return;
-        
-        const user = users.find(u => u.id === id);
-        const action = user?.isActive ? "pasif" : "aktif";
-        
-        if (!window.confirm(`Bu kullanıcıyı ${action} etmek istediğinizden emin misiniz?`)) return;
+    const confirmToggleActive = async () => {
+        if (!pendingToggleUserId) return;
 
         try {
-            const res = await fetch(`${API_URL}/api/Auth/toggle-active/${id}`, {
+            const res = await fetch(`${API_URL}/api/Auth/toggle-active/${pendingToggleUserId}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -199,29 +210,26 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
                 },
             });
 
-            if (res.status === 401) {
-                alert("🚫 Token geçersiz. Lütfen tekrar giriş yapın.");
-                localStorage.clear();
-                window.location.reload();
-                return;
-            }
-
             if (res.ok) {
                 const data = await res.json();
-                // Kullanıcı listesini güncelle
-                setUsers(users.map(u => 
-                    u.id === id ? { ...u, isActive: data.isActive } : u
-                ));
-                setSuccessMessage(data.message);
-                setShowSuccessModal(true);
-                setTimeout(() => setShowSuccessModal(false), 2000);
+
+                setUsers(prev =>
+                    prev.map(u =>
+                        u.id === pendingToggleUserId ? { ...u, isActive: data.isActive } : u
+                    )
+                );
+
             } else {
                 alert("❌ İşlem başarısız.");
             }
         } catch {
-            alert("🚫 Sunucu bağlantı hatası!");
+            alert("🚫 Sunucu hatası!");
+        } finally {
+            setShowToggleModal(false);
+            setPendingToggleUserId(null);
         }
     };
+
 
     const formatDate = (dateString: string) => {
         if (!dateString) return "Bilinmiyor";
@@ -280,6 +288,37 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
         return matchSearch && matchDept;
     });
 
+    const deleteUser = async () => {
+        if (!pendingToggleUserId) return;
+
+        if (!checkTokenValidity()) return;
+
+        try {
+            const res = await fetch(`${API_URL}/api/Auth/delete/${pendingToggleUserId}`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (res.ok) {
+                setUsers(prev => prev.filter(u => u.id !== pendingToggleUserId));
+                setSuccessMessage("Kullanıcı başarıyla silindi!");
+                setShowSuccessModal(true);
+
+                setTimeout(() => setShowSuccessModal(false), 3000);
+            } else {
+                const data = await res.json();
+                alert(data.message || "❌ Kullanıcı silinemedi.");
+            }
+        } catch (err) {
+            alert("🚫 Sunucu hatası!");
+        } finally {
+            setShowDeleteModal(false);
+            setPendingToggleUserId(null);
+        }
+    };
 
 
 
@@ -308,11 +347,12 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
                 ))}
             </div>
 
-            <div className="relative z-10 w-full max-w-6xl">
+            <div className="relative z-10 w-full max-w-full">
+
                 {/* Header */}
-                <div className="text-center mb-12">
+                <div className="text-center mb-10">
                     <div className="relative inline-block mb-8">
-                        <div className="w-24 h-24 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6] rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl animate-bounce">
+                        <div className="w-24 h-24 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6] rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl ">
                             <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
@@ -320,9 +360,10 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
                         <div className="absolute -top-2 -right-2 w-28 h-28 border-2 border-[#3b82f6] rounded-full animate-spin" style={{ animationDuration: '8s' }}></div>
                     </div>
 
-                    <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] bg-clip-text text-transparent">
+                    <h1 className="text-5xl font-bold mb-4 leading-snug bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] bg-clip-text text-transparent">
                         {pageTitle}
                     </h1>
+
                 </div>
 
                 <div className="flex items-center gap-4 justify-center mb-6">
@@ -372,7 +413,9 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
 
 
                 {/* User List */}
-                <div className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] border-2 border-transparent bg-clip-padding rounded-xl p-1 hover:border-[#3b82f6] transition-all duration-300">
+                <div className="w-full max-w-full mx-auto bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] border-2 border-transparent bg-clip-padding rounded-xl p-1 hover:border-[#3b82f6] transition-all duration-300">
+
+
                     <div className="bg-[#0f0f1a] rounded-lg p-6">
                         {fetching ? (
                             <div className="flex items-center justify-center py-12">
@@ -390,81 +433,117 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
                             </div>
                         ) : (
                             <div className="overflow-x-auto">
-                                <table className="min-w-full">
-                                    <thead>
-                                        <tr className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] border-b-2 border-[#3b82f6]">
-                                            <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">Ad Soyad</th>
-                                            <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">E-posta</th>
-                                            <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">Rol</th>
-                                            <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">Bölüm</th>
-                                            <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">Kayıt Tarihi
-                                            </th>
+                                        <table className="min-w-full table-auto whitespace-nowrap">
+                                            <thead>
+                                                <tr className="bg-[#151526] border-b border-[#3b82f6]/40">
+                                                    <th className="py-5 px-8 text-left text-lg font-bold text-[#3b82f6] whitespace-nowrap">Ad-Soyad</th>
+                                                    <th className="py-5 px-8 text-left text-lg font-bold text-[#3b82f6] whitespace-nowrap">E-posta</th>
+                                                    <th className="py-5 px-8 text-left text-lg font-bold text-[#3b82f6] whitespace-nowrap">Rol</th>
+                                                    {targetRole !== "Admin" && (
+                                                        <th className="py-5 px-8 text-left text-lg font-bold text-[#3b82f6] whitespace-nowrap">Bölüm</th>
+                                                    )}
+
+                                                    <th className="py-5 px-8 text-left text-lg font-bold text-[#3b82f6] whitespace-nowrap">Kayıt Tarihi</th>
                                                     {targetRole === "ClubManager" && (
-                                                        <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">
+                                                        <th className="py-5 px-8 text-left text-lg font-bold text-[#3b82f6] whitespace-nowrap">
                                                             Yönettiği Kulüp
                                                         </th>
                                                     )}
-                                            <th className="py-4 px-6 text-center text-lg font-bold text-[#3b82f6]">İşlemler</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-700">
-                                        {filteredUsers.map((user) => (
-                                            <tr
-                                                key={user.id}
-                                                className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] hover:from-[#2a2a3e] hover:to-[#3a3a4e] transition-all duration-300 group"
-                                            >
-                                                <td className="py-4 px-6 font-medium text-white text-lg">
-                                                    <div className="flex items-center space-x-3">
-                                                        <div className="w-10 h-10 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6] rounded-full flex items-center justify-center">
-                                                            <span className="text-white font-bold text-sm">
-                                                                {user.name.charAt(0).toUpperCase()}
-                                                            </span>
-                                                        </div>
-                                                        <span>{user.name} {user.surname}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="py-4 px-6 text-gray-300">{user.email}</td>
-                                                <td className="py-4 px-6">
-                                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] text-white">
-                                                        {translateRole(user.role)}
-                                                    </span>
-                                                </td>
-                                                <td className="py-4 px-6 text-gray-300">
-                                                    {departments.find(d => d.id === (user as any).departmentId)?.name || "-"}
-                                                </td>
-                                                <td className="py-4 px-6 text-gray-300 text-sm">{formatDate(user.registrationDate)}</td>
-                                                {targetRole === "ClubManager" && (
-                                                    <td className="py-4 px-6 text-gray-300">
-                                                        {clubs.find(c => c.id === user.clubId)?.name || "—"}
-                                                    </td>
-                                                )}
+                                                    <th className="py-5 px-8 text-center text-lg font-bold text-[#3b82f6] whitespace-nowrap">İşlemler</th>
+                                                </tr>
+                                            </thead>
 
-                                                <td className="py-4 px-6 text-center">
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        {targetRole === "Student" && (
-                                                            <button
-                                                                onClick={() => openClubModal(user.id)}
-                                                                className="px-4 py-2 rounded-lg font-semibold text-white bg-purple-600 hover:bg-purple-700 transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
-                                                            >
-                                                                🎯 Kulüp Yöneticisi Yap
-                                                            </button>
+                                            <tbody className="divide-y divide-gray-700 whitespace-nowrap">
+                                                {filteredUsers.map((user) => (
+                                                    <tr
+                                                        key={user.id}
+                                                        className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] hover:from-[#2a2a3e] hover:to-[#3a3a4e] transition-all duration-300 group whitespace-nowrap"
+                                                    >
+                                                        <td className="py-4 px-6 font-medium text-white text-lg whitespace-nowrap">
+                                                            <div className="flex items-center gap-3 whitespace-nowrap">
+                                                                <div className="w-10 h-10 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6] rounded-full flex items-center justify-center">
+                                                                    <span className="text-white font-bold text-sm">
+                                                                        {user.name.charAt(0).toUpperCase()}
+                                                                    </span>
+                                                                </div>
+                                                                <span className="whitespace-nowrap">
+                                                                    {user.name} {user.surname}
+                                                                </span>
+                                                            </div>
+                                                        </td>
+
+                                                        <td className="py-4 px-6 text-gray-300 text-md whitespace-nowrap">
+                                                            {user.email}
+                                                        </td>
+
+                                                        <td className="py-4 px-6 whitespace-nowrap">
+                                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] text-white whitespace-nowrap">
+                                                                {translateRole(user.role)}
+                                                            </span>
+                                                        </td>
+
+                                                        {targetRole !== "Admin" && (
+                                                            <td className="py-4 px-6 text-gray-300 text-md whitespace-nowrap">
+                                                                {departments.find(d => d.id === (user as any).departmentId)?.name || "-"}
+                                                            </td>
                                                         )}
-                                                        <button
-                                                            onClick={() => handleToggleActive(user.id)}
-                                                            className={`px-4 py-2 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-xl ${
-                                                                user.isActive
-                                                                    ? "bg-green-600 hover:bg-green-700"
-                                                                    : "bg-red-600 hover:bg-red-700"
-                                                            }`}
-                                                        >
-                                                            {user.isActive ? "✅ Aktif" : "⏸️ Pasif"}
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+
+
+                                                        <td className="py-4 px-6 text-gray-300 text-md whitespace-nowrap">
+                                                            {formatDate(user.registrationDate)}
+                                                        </td>
+
+                                                        {targetRole === "ClubManager" && (
+                                                            <td className="py-4 px-6 text-gray-300 whitespace-nowrap">
+                                                                {clubs.find(c => c.id === user.clubId)?.name || "—"}
+                                                            </td>
+                                                        )}
+
+                                                        <td className="py-4 px-6 text-center whitespace-nowrap">
+                                                            <div className="flex items-center justify-center gap-2 whitespace-nowrap">
+                                                                {targetRole === "Student" && (
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setPendingAssignUserId(user.id);
+                                                                            setShowConfirmAssignModal(true);
+                                                                        }}
+                                                                        className="px-4 py-2 rounded-lg font-semibold text-white bg-purple-600 hover:bg-purple-700 transition-all duration-300 whitespace-nowrap"
+                                                                    >
+                                                                        🎯 Kulüp Yöneticiliği Ata
+                                                                    </button>
+                                                                )}
+
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setPendingToggleUserId(user.id);
+                                                                        setShowToggleModal(true);
+                                                                    }}
+                                                                    className={`px-4 py-2 rounded-lg font-semibold text-white transition-all duration-300 whitespace-nowrap ${user.isActive ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
+                                                                        }`}
+                                                                >
+                                                                    {user.isActive ? "Aktif" : "Pasif"}
+                                                                </button>
+
+                                                                {targetRole === "Student" && (
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setPendingToggleUserId(user.id);
+                                                                            setShowDeleteModal(true);
+                                                                        }}
+                                                                        className="px-4 py-2 rounded-lg font-semibold text-white bg-red-700 hover:bg-red-800 transition-all duration-300 whitespace-nowrap"
+                                                                    >
+                                                                        🗑 Sil
+                                                                    </button>
+                                                                )}
+
+
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+
                             </div>
                         )}
                     </div>
@@ -487,6 +566,126 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
                     </div>
                 </div>
             )}
+
+            {showToggleModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+                    <div className="bg-[#1a1a2e] p-8 rounded-2xl border border-[#3b82f6] max-w-md w-full text-center">
+
+                        <h2 className="text-2xl font-bold text-white mb-4">
+                            Kullanıcı yetki durumu değiştirilsin mi?
+                        </h2>
+                        <p className="text-gray-300 mb-6">
+                            {(() => {
+                                const user = users.find(u => u.id === pendingToggleUserId);
+                                if (!user) return "İşlem yapılamıyor.";
+
+                                return user.isActive
+                                    ? "Bu kullanıcının yetkisini almak istediğinize emin misiniz?"
+                                    : "Bu kullanıcıya yetkisini geri vermek istediğinize emin misiniz?";
+                            })()}
+                        </p>
+
+
+                        <div className="flex gap-4">
+                            <button
+                                onClick={confirmToggleActive}
+                                className="flex-1 bg-green-600 hover:bg-green-700 py-3 rounded-lg font-bold text-white"
+                            >
+                                Evet
+                            </button>
+
+                            <button
+                                onClick={() => {
+                                    setShowToggleModal(false);
+                                    setPendingToggleUserId(null);
+                                }}
+                                className="flex-1 bg-red-600 hover:bg-red-700 py-3 rounded-lg font-bold text-white"
+                            >
+                                Hayır
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            )}
+
+            {showConfirmAssignModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-gradient-to-br from-[#1a1a2e] to-[#2a2a3e] border border-[#3b82f6] rounded-2xl p-8 mx-4 max-w-md w-full">
+                        <h2 className="text-2xl font-bold mb-6 text-white">Onay Gerekiyor</h2>
+
+                        <p className="text-gray-300 mb-8">
+                            Bu kullanıcıyı <span className="text-blue-400 font-bold">Kulüp Yöneticisi</span> yapmak istediğinize emin misiniz?
+                        </p>
+
+                        <div className="flex justify-between gap-3">
+                            {/* EVET */}
+                            <button
+                                onClick={() => {
+                                    setShowConfirmAssignModal(false);
+                                    openClubModal(pendingAssignUserId!);
+                                }}
+                                className="flex-1 bg-green-600 hover:bg-green-700 py-3 rounded-xl font-bold text-white"
+                            >
+                                Evet
+                            </button>
+
+                            {/* HAYIR */}
+                            <button
+                                onClick={() => {
+                                    setShowConfirmAssignModal(false);
+                                    setPendingAssignUserId(null);
+                                }}
+                                className="flex-1 bg-red-600 hover:bg-red-700 py-3 rounded-xl font-bold text-white"
+                            >
+                                Hayır
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+
+            {showDeleteModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+                    <div className="bg-[#1a1a2e] p-8 rounded-2xl border border-red-600 max-w-md w-full text-center">
+
+                        <h2 className="text-2xl font-bold text-white mb-4">
+                            Kullanıcı silinsin mi?
+                        </h2>
+
+                        <p className="text-gray-300 mb-6">
+                            Bu işlem geri alınamaz.
+                            <br />
+                            Seçilen öğrenciyi silmek istediğinize emin misiniz?
+                        </p>
+
+                        <div className="flex gap-4">
+                            <button
+                                onClick={deleteUser}
+                                className="flex-1 bg-red-600 hover:bg-red-700 py-3 rounded-lg font-bold text-white"
+                            >
+                                Evet, Sil
+                            </button>
+
+                            <button
+                                onClick={() => {
+                                    setShowDeleteModal(false);
+                                    setPendingToggleUserId(null);
+                                }}
+                                className="flex-1 bg-gray-600 hover:bg-gray-700 py-3 rounded-lg font-bold text-white"
+                            >
+                                İptal
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            )}
+
+
+
+
 
             {/* 🎯 Kulüp Seçim Modal */}
             {showClubModal && (

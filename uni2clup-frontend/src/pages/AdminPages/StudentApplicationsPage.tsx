@@ -24,6 +24,10 @@ const StudentApplicationsPage: React.FC = () => {
     const [sortField, setSortField] = useState<SortField>(null);
     const [sortOrder, setSortOrder] = useState<SortOrder>(null);
     const [search, setSearch] = useState("");
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [confirmAction, setConfirmAction] = useState<"approve" | "reject" | null>(null);
+    const [selectedId, setSelectedId] = useState<number | null>(null);
+
 
     const api = axios.create({
         baseURL: "http://localhost:8080/api/Auth",
@@ -44,36 +48,23 @@ const StudentApplicationsPage: React.FC = () => {
     };
 
     const handleApprove = async (id: number): Promise<void> => {
-        if (!window.confirm("Bu başvuruyu onaylamak istediğinizden emin misiniz?")) return;
-        
-        try {
-            await api.post(`/approve/${id}`);
-            await fetchApplications();
-            alert("✅ Başvuru onaylandı ve kullanıcı oluşturuldu.");
-        } catch (err: unknown) {
-            console.error("Onay hatası:", err);
-            alert("❌ Onay işlemi başarısız oldu.");
-        }
+        setSelectedId(id);
+        setConfirmAction("approve");
+        setShowConfirmModal(true);
+
     };
 
     const handleReject = async (id: number): Promise<void> => {
-        if (!window.confirm("Bu başvuruyu reddetmek istediğinizden emin misiniz?")) return;
-        
-        try {
-            await api.post(`/reject/${id}`);
-            await fetchApplications();
-            alert("🚫 Başvuru reddedildi.");
-        } catch (err: unknown) {
-            console.error("Reddetme hatası:", err);
-            alert("❌ Reddetme işlemi başarısız oldu.");
-        }
+        setSelectedId(id);
+        setConfirmAction("reject");
+        setShowConfirmModal(true);
+
     };
 
     // Filtreleme ve Sıralama
     const filteredAndSortedApplications = useMemo(() => {
         let filtered = applications;
 
-        // 🔍 Arama
         if (search.trim() !== "") {
             const s = search.toLowerCase();
             filtered = filtered.filter(app =>
@@ -84,13 +75,10 @@ const StudentApplicationsPage: React.FC = () => {
             );
         }
 
-
-        // Durum filtresi
         if (statusFilter !== "Tümü") {
             filtered = filtered.filter(app => app.status === statusFilter);
         }
 
-        // Sıralama
         if (sortField && sortOrder) {
             filtered = [...filtered].sort((a, b) => {
                 let aValue: string;
@@ -119,7 +107,6 @@ const StudentApplicationsPage: React.FC = () => {
 
     const handleSort = (field: SortField) => {
         if (sortField === field) {
-            // Aynı field'a tıklandıysa sıralama yönünü değiştir
             if (sortOrder === "asc") {
                 setSortOrder("desc");
             } else if (sortOrder === "desc") {
@@ -127,7 +114,6 @@ const StudentApplicationsPage: React.FC = () => {
                 setSortOrder(null);
             }
         } else {
-            // Yeni field'a tıklandıysa artan sırala
             setSortField(field);
             setSortOrder("asc");
         }
@@ -241,7 +227,9 @@ const StudentApplicationsPage: React.FC = () => {
                             </svg>
                         </div>
                     </div>
-                    <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] bg-clip-text text-transparent">
+                    <h1
+                        className=" text-5xl font-bold mb-4 bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] bg-clip-text text-transparent leading-[1.2] antialiased overflow-visible"
+                    >
                         Öğrenci Başvuruları
                     </h1>
                 </div>
@@ -311,32 +299,34 @@ const StudentApplicationsPage: React.FC = () => {
                                     </svg>
                                 </div>
                                 <p className="text-gray-400 text-lg">
-                                    {statusFilter === "Tümü" 
-                                        ? "Henüz başvuru bulunmamaktadır." 
+                                    {statusFilter === "Tümü"
+                                        ? "Henüz başvuru bulunmamaktadır."
                                         : `${statusFilter} durumunda başvuru bulunmamaktadır.`}
                                 </p>
                             </div>
                         ) : (
                             <div className="overflow-x-auto">
-                                <table className="min-w-full">
+                                <table className="min-w-full table-auto whitespace-nowrap">
                                     <thead>
-                                        <tr className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] border-b-2 border-[#3b82f6]">
-                                            <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">Ad Soyad</th>
-                                            <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">E-posta</th>
-                                            <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">Bölüm</th>
-                                            <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">Durum</th>
-                                            <th className="py-4 px-6 text-left text-lg font-bold text-[#3b82f6]">Başvuru Tarihi</th>
-                                            <th className="py-4 px-6 text-center text-lg font-bold text-[#3b82f6]">İşlem</th>
+                                        <tr className="bg-[#151526] border-b border-[#3b82f6]/40">
+                                            <th className="py-5 px-8 text-left text-lg font-bold text-[#3b82f6]">Ad-Soyad</th>
+                                            <th className="py-5 px-8 text-left text-lg font-bold text-[#3b82f6]">E-posta</th>
+                                            <th className="py-5 px-8 text-left text-lg font-bold text-[#3b82f6]">Bölüm</th>
+                                            <th className="py-5 px-8 text-left text-lg font-bold text-[#3b82f6]">Durum</th>
+                                            <th className="py-5 px-8 text-left text-lg font-bold text-[#3b82f6]">Başvuru Tarihi</th>
+                                            <th className="py-5 px-8 text-center text-lg font-bold text-[#3b82f6]">İşlem</th>
                                         </tr>
                                     </thead>
+
                                     <tbody className="divide-y divide-gray-700">
                                         {filteredAndSortedApplications.map((app) => (
                                             <tr
                                                 key={app.id}
-                                                className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] hover:from-[#2a2a3e] hover:to-[#3a3a4e] transition-all duration-300 group"
+                                                className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] hover:from-[#2a2a3e] hover:to-[#3a3a4e] transition-all duration-300"
                                             >
+                                                {/* AD SOYAD */}
                                                 <td className="py-4 px-6 font-medium text-white text-lg">
-                                                    <div className="flex items-center space-x-3">
+                                                    <div className="flex items-center gap-3">
                                                         <div className="w-10 h-10 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6] rounded-full flex items-center justify-center">
                                                             <span className="text-white font-bold text-sm">
                                                                 {app.name.charAt(0).toUpperCase()}
@@ -345,29 +335,47 @@ const StudentApplicationsPage: React.FC = () => {
                                                         <span>{app.name} {app.surname}</span>
                                                     </div>
                                                 </td>
-                                                <td className="py-4 px-6 text-gray-300">{app.email}</td>
-                                                <td className="py-4 px-6 text-gray-300">{app.department}</td>
-                                                <td className="py-4 px-6">{getStatusBadge(app.status)}</td>
-                                                <td className="py-4 px-6 text-gray-300 text-sm">{formatDate(app.createdAt)}</td>
+
+                                                {/* E-POSTA */}
+                                                <td className="py-4 px-6 text-gray-300 text-md">
+                                                    {app.email}
+                                                </td>
+
+                                                {/* BÖLÜM */}
+                                                <td className="py-4 px-6 text-gray-300 text-md">
+                                                    {app.department}
+                                                </td>
+
+                                                {/* DURUM BADGE */}
+                                                <td className="py-4 px-6">
+                                                    {getStatusBadge(app.status)}
+                                                </td>
+
+                                                {/* TARİH */}
+                                                <td className="py-4 px-6 text-gray-300 text-sm">
+                                                    {formatDate(app.createdAt)}
+                                                </td>
+
+                                                {/* BUTONLAR */}
                                                 <td className="py-4 px-6 text-center">
                                                     {app.status === "Beklemede" ? (
                                                         <div className="flex items-center justify-center gap-2">
                                                             <button
                                                                 onClick={() => handleApprove(app.id)}
-                                                                className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+                                                                className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-semibold text-white transition-all duration-300"
                                                             >
-                                                                ✅ Onayla
+                                                                Onayla
                                                             </button>
                                                             <button
                                                                 onClick={() => handleReject(app.id)}
-                                                                className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+                                                                className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-semibold text-white transition-all duration-300"
                                                             >
-                                                                ❌ Reddet
+                                                                Reddet
                                                             </button>
                                                         </div>
                                                     ) : (
-                                                        <span className="text-gray-400 italic">
-                                                            {app.status === "Onaylandı" ? "✅ İşlem Tamamlandı" : "❌ İşlem Tamamlandı"}
+                                                        <span className="text-gray-400">
+                                                            {app.status === "Onaylandı" ? "✔ Tamamlandı" : "✘ Tamamlandı"}
                                                         </span>
                                                     )}
                                                 </td>
@@ -379,6 +387,51 @@ const StudentApplicationsPage: React.FC = () => {
                         )}
                     </div>
                 </div>
+
+
+                {showConfirmModal && (
+                    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999]">
+                        <div className="bg-[#1a1a2e] p-8 rounded-2xl border border-[#3b82f6] max-w-md w-full text-center shadow-2xl">
+
+                            <h2 className="text-2xl font-bold text-white mb-4">Onay Ekranı</h2>
+
+                            <p className="text-gray-300 mb-6">
+                                {confirmAction === "approve"
+                                    ? "Bu başvuruyu onaylamak istediğinize emin misiniz?"
+                                    : "Bu başvuruyu reddetmek istediğinize emin misiniz?"}
+                            </p>
+
+                            <div className="flex gap-4 justify-center">
+                                <button
+                                    onClick={async () => {
+                                        setShowConfirmModal(false);
+                                        if (confirmAction === "approve" && selectedId !== null) {
+                                            await api.post(`/approve/${selectedId}`);
+                                            await fetchApplications();
+                                        }
+                                        if (confirmAction === "reject" && selectedId !== null) {
+                                            await api.post(`/reject/${selectedId}`);
+                                            await fetchApplications();
+                                        }
+                                    }}
+                                    className="px-6 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white font-semibold"
+                                >
+                                    Evet
+                                </button>
+
+                                <button
+                                    onClick={() => setShowConfirmModal(false)}
+                                    className="px-6 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white font-semibold"
+                                >
+                                    Hayır
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                )}
+
+
 
                 {/* İstatistik */}
                 <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -408,6 +461,7 @@ const StudentApplicationsPage: React.FC = () => {
             </div>
         </div>
     );
+
 };
 
 export default StudentApplicationsPage;
