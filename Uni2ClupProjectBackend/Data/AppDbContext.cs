@@ -17,6 +17,8 @@ namespace Uni2ClupProjectBackend.Data
         public DbSet<EventParticipant> EventParticipants => Set<EventParticipant>();
         public DbSet<Notification> Notifications => Set<Notification>();
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+        public DbSet<PastClubManager> PastClubManagers { get; set; }
+
 
         // ⭐ YENİ EKLEDİĞİMİZ TABLO (DUYURULAR)
         public DbSet<Announcement> Announcements => Set<Announcement>();

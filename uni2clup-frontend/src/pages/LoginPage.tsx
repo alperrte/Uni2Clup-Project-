@@ -50,6 +50,13 @@ const LoginPage = ({ onLoginSuccess }) => {
             const data = await res.json();
             const token = data.token;
 
+            // ❗ Hesap askıya alınmış mı?
+            if (data.status === "Passive") {
+                navigate("/status");
+                return;
+            }
+
+
             if (data.forcePasswordChange === true) {
                 localStorage.setItem("tempEmail", data.email);
                 navigate("/change-password");
