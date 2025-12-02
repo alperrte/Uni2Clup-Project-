@@ -21,8 +21,8 @@ import StatusPage from "./pages/AdminPages/StatusPage";
 
 
 // Club Manager
-import ClubManagerRoutes from "./pages/ClubManagerRoutes";
-import CreateAnnouncementPage from "./pages/CreateAnnouncementPage";
+import ClubManagerRoutes from "./pages/EventPages/ClubManagerRoutes";
+import CreateAnnouncementPage from "./pages/EventPages/CreateAnnouncementPage";
 
 // 🟦 Student Paneli
 import StudentLayout from "./components/StudentLayout";

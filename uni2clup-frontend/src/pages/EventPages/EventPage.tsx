@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useCallback, useMemo } from "react";
-import EventForm from "../components/EventForm";
+import EventForm from "../../components/EventForm";
 
 interface Event {
     id: number;
@@ -190,7 +190,7 @@ const EventPage: React.FC = () => {
             return;
         }
 
-        // Başarılı ise modalı kapat ve listeyi yenile
+
         setIsModalOpen(false);
         setEditingEvent(null);
         fetchEvents();

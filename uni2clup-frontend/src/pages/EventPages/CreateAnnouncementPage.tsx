@@ -37,12 +37,10 @@ const CreateAnnouncementPage: React.FC = () => {
     const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
     const [message, setMessage] = useState("");
     const [announcements, setAnnouncements] = useState<any[]>([]);
-
-    // ✅ Yeni eklenen state’ler
     const [showConfirm, setShowConfirm] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
 
-    // 📌 Etkinlikleri ve duyuruları çeken useEffect
+
     useEffect(() => {
         const fetchEvents = async () => {
             try {
@@ -78,18 +76,18 @@ const CreateAnnouncementPage: React.FC = () => {
         fetchAnnouncements();
     }, []);
 
-    // ✅ Sadece doğrulama + onay modalını açan fonksiyon
+
     const handleSubmit = () => {
         if (!selectedEventId || !message.trim()) {
             alert("Lütfen tüm alanları doldurun.");
             return;
         }
 
-        // Sadece “Emin misiniz?” modalı açılır
+
         setShowConfirm(true);
     };
 
-    // ✅ Asıl API isteğini atan fonksiyon
+
     const createAnnouncement = async () => {
         try {
             const res = await fetch(`${API_URL}/api/announcements/create`, {
@@ -106,14 +104,14 @@ const CreateAnnouncementPage: React.FC = () => {
 
             await res.json();
 
-            // Başarı modalını aç
+
             setShowSuccess(true);
 
-            // Form temizle
+
             setSelectedEventId(null);
             setMessage("");
 
-            // Listeyi yenile
+ 
             const listRes = await fetch(`${API_URL}/api/announcements/list`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -190,7 +188,7 @@ const CreateAnnouncementPage: React.FC = () => {
                 </div>
             )}
 
-            {/* 🔵 EMİN MİSİN MODALI */}
+            {/* EMİN MİSİN MODALI */}
             {showConfirm && (
                 <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50">
                     <div className="bg-[#1a1a2e] p-8 rounded-2xl w-[90%] max-w-md border border-blue-400/30 text-center shadow-2xl">
@@ -223,7 +221,7 @@ const CreateAnnouncementPage: React.FC = () => {
                 </div>
             )}
 
-            {/* 🟢 BAŞARI MODALI */}
+            {/* BAŞARI MODALI */}
             {showSuccess && (
                 <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50">
                     <div className="bg-[#1a1a2e] p-8 rounded-2xl w-[90%] max-w-md border border-blue-400/30 text-center shadow-2xl">

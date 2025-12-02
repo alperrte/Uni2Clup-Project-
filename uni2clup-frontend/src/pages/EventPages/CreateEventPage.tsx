@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import EventForm from "../components/EventForm";
+import EventForm from "../../components/EventForm";
 
 const TURKEY_DATE_FORMATTER = new Intl.DateTimeFormat("sv-SE", {
     timeZone: "Europe/Istanbul",
@@ -38,10 +38,9 @@ const CreateEventPage: React.FC = () => {
     const [selectedEvent, setSelectedEvent] = useState<any>(null);
     const [loading, setLoading] = useState<boolean>(false);
 
-    // ⭐ BAŞARI POPUP STATE
+
     const [showSuccess, setShowSuccess] = useState(false);
 
-    // ⭐ Düzenleme modunda etkinlik bilgisi çek
     useEffect(() => {
         if (!editId) return;
 
@@ -54,7 +53,7 @@ const CreateEventPage: React.FC = () => {
 
                 const data = await res.json();
 
-                // ✔ ESLINT DÜZELTİLMİŞ HALİ
+
                 const numericId = Number(editId);
                 const event = data.find(
                     (e: any) =>
@@ -85,7 +84,7 @@ const CreateEventPage: React.FC = () => {
         fetchEvent();
     }, [editId, token]);
 
-    // ⭐ KAYDET → Yeni oluşturma veya güncelleme
+
     const handleSave = async (formData: any) => {
         try {
             let url = "";

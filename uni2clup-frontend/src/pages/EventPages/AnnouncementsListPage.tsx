@@ -73,7 +73,7 @@ const AnnouncementsListPage: React.FC = () => {
         fetchAnnouncements();
     }, [token, fetchAnnouncements]);
 
-    // 🔍 Arama Filtresi
+    // Arama Filtresi
     const filteredAnnouncements = announcements.filter((a) =>
         a.eventName.toLowerCase().includes(search.toLowerCase())
     );
@@ -94,7 +94,7 @@ const AnnouncementsListPage: React.FC = () => {
                         </p>
                     </div>
 
-                    {/* 🔍 ARAMA + YENİLE */}
+                    {/* ARAMA + YENİLE */}
                     <div className="flex items-center gap-3">
                         <input
                             type="text"
