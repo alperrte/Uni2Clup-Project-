@@ -12,8 +12,6 @@ const AnnouncementsPage: React.FC = () => {
     const [selectedEventId, setSelectedEventId] = useState("");
     const [message, setMessage] = useState("");
     const [token, setToken] = useState<string | null>(null);
-
-    // 💜 Modal stateleri
     const [showConfirm, setShowConfirm] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
 
@@ -50,7 +48,6 @@ const AnnouncementsPage: React.FC = () => {
         fetchEvents();
     }, [token]);
 
-    // 💜 İlk basınca → sadece emin misiniz modalı açılıyor
     const handleSubmit = () => {
         if (!selectedEventId || !message.trim()) {
             alert("Lütfen tüm alanları doldurun.");
@@ -59,7 +56,6 @@ const AnnouncementsPage: React.FC = () => {
         setShowConfirm(true);
     };
 
-    // 💜 Onayla → backend’e kaydeder → başarı modalını açar
     const createAnnouncement = async () => {
         try {
             const res = await fetch(`${API_URL}/api/announcements/create`, {
@@ -76,11 +72,11 @@ const AnnouncementsPage: React.FC = () => {
 
             await res.json();
 
-            // Modal akışı
+ 
             setShowConfirm(false);
             setShowSuccess(true);
 
-            // Form temizleme
+
             setSelectedEventId("");
             setMessage("");
 
@@ -138,7 +134,7 @@ const AnnouncementsPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* 💜 1) EMİN MİSİN MODALI */}
+            {/* EMİN MİSİN MODALI */}
             {showConfirm && (
                 <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50">
                     <div className="bg-[#1a1a2e] p-8 rounded-2xl w-[90%] max-w-md border border-blue-400/30 text-center shadow-2xl">
@@ -168,7 +164,7 @@ const AnnouncementsPage: React.FC = () => {
                 </div>
             )}
 
-            {/* 💜 2) BAŞARI MODALI */}
+            {/* BAŞARI MODALI */}
             {showSuccess && (
                 <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50">
                     <div className="bg-[#1a1a2e] p-8 rounded-2xl w-[90%] max-w-md border border-blue-400/30 text-center shadow-2xl">

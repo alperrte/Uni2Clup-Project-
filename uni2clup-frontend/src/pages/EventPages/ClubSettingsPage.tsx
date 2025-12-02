@@ -43,7 +43,6 @@ const ClubSettingsPage: React.FC = () => {
 
     useEffect(() => {
         fetchClub();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleSave = async () => {

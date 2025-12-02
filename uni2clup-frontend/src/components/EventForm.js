@@ -1,4 +1,8 @@
 ﻿import React, { useState, useEffect } from "react";
+import DateTimePicker from "react-datetime-picker";
+import dayjs from "dayjs";
+import "dayjs/locale/tr";
+dayjs.locale("tr");
 
 const API_URL = "http://localhost:8080";
 const TURKEY_TIMEZONE = "Europe/Istanbul";
@@ -29,11 +33,20 @@ const formatDateForInput = (value) => {
 
 const parseTurkeyInputToDate = (value) => {
     if (!value) return null;
-    return new Date(value); // hiçbir şekilde +03:00 ekleme
+    return new Date(value);
 };
 
 
-const convertTurkeyInputToISO = (value) => value + ":00";
+const convertTurkeyInputToISO = (value) => {
+    if (!value) return null;
+
+    if (value instanceof Date) {
+        return value.toISOString().slice(0, 19);
+    }
+
+    return value;
+};
+
 
 
 
@@ -56,9 +69,10 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
 
     const [showSuccess, setShowSuccess] = useState(false);
 
+    const [errorMessage, setErrorMessage] = useState("");
+
     const turkeyNow = formatDateForInput(new Date());
 
-    // Sayfa açılınca veya selectedEvent değişince formu doldur
     useEffect(() => {
         if (selectedEvent) {
             setForm(selectedEvent);
@@ -77,7 +91,6 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
         }
     }, [selectedEvent]);
 
-    // Kulüp bilgisini otomatik çek
     useEffect(() => {
         if (selectedEvent) return;
 
@@ -115,49 +128,59 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
         fetchClub();
     }, [selectedEvent]);
 
-    // Input değişimleri
     const handleChange = (e) => {
         const { name, value } = e.target;
 
+        // Başlangıç Tarihi
         if (name === "startDate") {
-            const updated = { ...form, startDate: value };
-            const startDate = parseTurkeyInputToDate(value);
-            const endDate = parseTurkeyInputToDate(form.endDate);
-            if (startDate && endDate && endDate < startDate) {
-                updated.endDate = value;
+            const newStart = parseTurkeyInputToDate(value);
+            const currentEnd = parseTurkeyInputToDate(form.endDate);
+
+            if (newStart && currentEnd && newStart > currentEnd) {
+                // Bitişi başlangıca eşitliyoruz
+                setForm({
+                    ...form,
+                    startDate: value,
+                    endDate: value
+                });
+            } else {
+                setForm({ ...form, startDate: value });
             }
-            setForm(updated);
             return;
         }
 
+        // Bitiş Tarihi
         if (name === "endDate") {
-            const endDate = parseTurkeyInputToDate(value);
-            const startDate = parseTurkeyInputToDate(form.startDate);
-            if (startDate && endDate && endDate < startDate) {
-                alert("Bitiş tarihi başlangıç tarihinden önce olamaz.");
+            const newEnd = parseTurkeyInputToDate(value);
+            const currentStart = parseTurkeyInputToDate(form.startDate);
+
+            if (newEnd && currentStart && newEnd < currentStart) {
+                setErrorMessage("Geçmiş bir tarih için etkinlik planlayamazsınız.");
+
+                setForm({ ...form });
+
                 return;
             }
+
+            setForm({ ...form, endDate: value });
+            return;
         }
 
+        // Kontenjan
         if (name === "capacity") {
             const num = Number(value);
-
-            // kullanıcı siliyorsa boş bırakabilsin
             if (value === "" || isNaN(num)) {
                 setForm({ ...form, capacity: "" });
                 return;
             }
-
-            // negatif ve 0 engeli
-            if (num < 1) {
-                return;
-            }
+            if (num < 1) return;
         }
 
         setForm({ ...form, [name]: value });
     };
 
-    // Asıl kaydetme işlemini yapan fonksiyon
+
+
     const handleConfirmedSave = () => {
         const data = confirmData || form;
 
@@ -170,17 +193,10 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
             return;
         }
 
-        // Eğer yeni etkinlik oluşturuluyorsa geçmiş tarih engeli çalışsın
         if (!selectedEvent && startDate < now) {
             alert("Geçmiş bir tarih için etkinlik planlayamazsınız.");
             return;
         }
-
-
-        //if (endDate <= startDate) {
-          //  alert("Bitiş tarihi başlangıçtan sonra olmalıdır.");
-        //    return;
-       // }
 
         const formattedForm = {
             Id: selectedEvent?.id || 0,
@@ -201,10 +217,8 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
         console.log("📤 Gönderilen veri:", formattedForm);
         onSave(formattedForm);
 
-        // Başarı modalını aç
         setShowSuccess(true);
 
-        // Yeni kayıt sonrası formu sıfırla
         if (!selectedEvent) {
             const now = new Date();
             const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
@@ -222,18 +236,16 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
         }
     };
 
-    // Form submit
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        // Yeni etkinlik -> önce onay modalı
+
         if (!selectedEvent) {
             setConfirmData(form);
             setShowConfirm(true);
             return;
         }
 
-        // Düzenleme modunda direkt kaydet
         setConfirmData(form);
         handleConfirmedSave();
     };
@@ -341,15 +353,26 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
                                     <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" />
                                 </svg>
                             </div>
-                            <input
-                                type="datetime-local"
-                                name="startDate"
-                                min={turkeyNow}
-                                value={form.startDate}
-                                onChange={handleChange}
-                                className="flex-1 bg-transparent text-white outline-none text-lg cursor-pointer"
-                                required
+                            <DateTimePicker
+                                onChange={(value) =>
+                                    handleChange({
+                                        target: {
+                                            name: "startDate",
+                                            value: value ? dayjs(value).format("YYYY-MM-DDTHH:mm:ss") : ""
+                                        }
+                                    })
+                                }
+                                value={form.startDate ? new Date(form.startDate) : null}
+                                format="dd.MM.yyyy HH:mm"
+                                disableClock={true}
+                                calendarIcon={null}
+                                clearIcon={null}
+                                className="w-full text-white"
                             />
+
+
+
+
                         </div>
                     </div>
                 </div>
@@ -363,15 +386,27 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
                                     <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" />
                                 </svg>
                             </div>
-                            <input
-                                type="datetime-local"
-                                name="endDate"
-                                min=""
-                                value={form.endDate}
-                                onChange={handleChange}
-                                className="flex-1 bg-transparent text-white outline-none text-lg cursor-pointer"
-                                required
+                            <DateTimePicker
+                                onChange={(value) =>
+                                    handleChange({
+                                        target: {
+                                            name: "endDate",
+                                            value: value ? dayjs(value).format("YYYY-MM-DDTHH:mm:ss") : ""
+                                        }
+                                    })
+                                }
+                                value={form.endDate ? new Date(form.endDate) : null}
+                                format="dd.MM.yyyy HH:mm"
+                                disableClock={true}
+                                calendarIcon={null}
+                                clearIcon={null}
+                                className="w-full text-white"
                             />
+
+
+
+
+
                         </div>
                     </div>
                 </div>
@@ -453,6 +488,30 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
                     </div>
                 </div>
             )}
+
+
+            {/* HATA MODALI */}
+            {errorMessage && (
+                <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-gradient-to-br from-[#2a1a2e] to-[#3a2a4e] border border-red-400/40 rounded-2xl p-8 shadow-2xl w-[90%] max-w-md text-center animate-fadeIn">
+                        <h2 className="text-2xl font-bold text-red-400 mb-4">
+                            ⚠ Hata Oluştu
+                        </h2>
+
+                        <p className="text-gray-300 mb-6">
+                            {errorMessage}
+                        </p>
+
+                        <button
+                            onClick={() => setErrorMessage("")}
+                            className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold shadow-lg transition-all"
+                        >
+                            Tamam
+                        </button>
+                    </div>
+                </div>
+            )}
+
 
             {/* BAŞARI MODALI */}
             {showSuccess && (

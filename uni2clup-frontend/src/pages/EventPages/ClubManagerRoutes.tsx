@@ -1,15 +1,13 @@
 ﻿import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
-import ClubManagerLayout from "../components/ClubManagerLayout";
-
-// Sayfalar
+import ClubManagerLayout from "../../components/ClubManagerLayout";
 import EventPage from "./EventPage";
 import CreateEventPage from "./CreateEventPage";
-import AnnouncementsPage from "./AnnouncementsPage";   // ⭐ Buraya import ediyoruz
+import AnnouncementsPage from "./AnnouncementsPage";
 import AnnouncementsListPage from "./AnnouncementsListPage";
-import ClubSettingsPage from "./ClubSettingsPage";
 import MembersPage from "./MembersPage";
+import ClubSettingsPage from "./ClubSettingsPage";
 
 interface Props {
     handleLogout: () => void;
