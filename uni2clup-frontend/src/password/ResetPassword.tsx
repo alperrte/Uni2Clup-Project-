@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 
 const API_URL = "http://localhost:8080";
 
-// 🔥 Ortak PasswordInput component (buraya yapıştır)
 const PasswordInput = ({
     value,
     onChange,
@@ -49,18 +48,25 @@ const PasswordInput = ({
 const ResetPassword: React.FC = () => {
     const { token } = useParams<{ token: string }>();
     const navigate = useNavigate();
-
     const [password, setPassword] = useState("");
     const [password2, setPassword2] = useState("");
-
     const [show1, setShow1] = useState(false);
     const [show2, setShow2] = useState(false);
+    const [modal, setModal] = useState<{
+        type: "success" | "error" | "";
+        message: string;
+    }>({ type: "", message: "" });
+
+    const closeModal = () => setModal({ type: "", message: "" });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (password !== password2) {
-            alert("Şifreler eşleşmiyor!");
+            setModal({
+                type: "error",
+                message: "Şifreler eşleşmiyor!",
+            });
             return;
         }
 
@@ -75,11 +81,30 @@ const ResetPassword: React.FC = () => {
             });
 
             const data = await res.json();
-            alert(data.message);
 
-            if (res.ok) navigate("/");
+            if (!res.ok) {
+                setModal({
+                    type: "error",
+                    message: data.message || "Bir hata oluştu.",
+                });
+                return;
+            }
+
+            // ✔ Başarı
+            setModal({
+                type: "success",
+                message: data.message,
+            });
+
+            setTimeout(() => {
+                navigate("/");
+            }, 2000);
+
         } catch {
-            alert("Sunucu hatası!");
+            setModal({
+                type: "error",
+                message: "Sunucu hatası!",
+            });
         }
     };
 
@@ -114,6 +139,40 @@ const ResetPassword: React.FC = () => {
                     Şifreyi Kaydet
                 </button>
             </form>
+
+            {/* 🌟 MODAL */}
+            {modal.type !== "" && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+                    <div
+                        className={`p-8 rounded-xl w-full max-w-sm shadow-xl
+                        ${modal.type === "success"
+                                ? "bg-[#1a1a2e] border border-green-500"
+                                : "bg-[#1a1a2e] border border-red-500"
+                            }`}
+                    >
+                        <h2
+                            className={`text-xl font-bold mb-4 text-center 
+                            ${modal.type === "success" ? "text-green-400" : "text-red-400"}`}
+                        >
+                            {modal.type === "success" ? "✔ Başarılı" : "❌ Hata"}
+                        </h2>
+
+                        <p className="text-gray-300 text-center mb-6">
+                            {modal.message}
+                        </p>
+
+                        <button
+                            onClick={closeModal}
+                            className={`w-full py-3 rounded-lg
+                                ${modal.type === "success"
+                                    ? "bg-green-600"
+                                    : "bg-red-600"} text-white`}
+                        >
+                            Kapat
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
