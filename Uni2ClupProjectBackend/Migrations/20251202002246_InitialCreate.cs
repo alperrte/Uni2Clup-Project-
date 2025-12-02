@@ -59,6 +59,21 @@ namespace Uni2ClupProjectBackend.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "PastClubManagers",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    ClubName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RemovedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PastClubManagers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Clubs",
                 columns: table => new
                 {
@@ -304,6 +319,9 @@ namespace Uni2ClupProjectBackend.Migrations
 
             migrationBuilder.DropTable(
                 name: "PasswordResetTokens");
+
+            migrationBuilder.DropTable(
+                name: "PastClubManagers");
 
             migrationBuilder.DropTable(
                 name: "StudentApplications");

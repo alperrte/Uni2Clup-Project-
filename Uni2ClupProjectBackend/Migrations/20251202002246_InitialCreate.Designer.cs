@@ -12,7 +12,7 @@ using Uni2ClupProjectBackend.Data;
 namespace Uni2ClupProjectBackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251121003625_InitialCreate")]
+    [Migration("20251202002246_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -296,6 +296,29 @@ namespace Uni2ClupProjectBackend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("PasswordResetTokens");
+                });
+
+            modelBuilder.Entity("Uni2ClupProjectBackend.Models.PastClubManager", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClubName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("RemovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PastClubManagers");
                 });
 
             modelBuilder.Entity("Uni2ClupProjectBackend.Models.User", b =>

@@ -67,13 +67,14 @@ const StudentLayout: React.FC = () => {
 
     const checkToken = useCallback(() => {
         if (!token) {
-            alert("Oturum süresi doldu.");
-            localStorage.clear();
-            window.location.reload();
+            window.location.href = "/login";
             return false;
         }
-        return true;
+
+        return true; 
     }, [token]);
+
+
 
     // FETCH FUNCTIONS (Hiçbirine dokunulmadı)
     const fetchClubs = async () => {
@@ -319,11 +320,8 @@ const StudentLayout: React.FC = () => {
             ? notifications.filter((n: any) => !n.isRead)
             : notifications;
 
-    // ---------------------------------------------------------------------
-    // ---------------------------------------------------------------------
-    // 🎨 TASARIM BURADAN BAŞLIYOR – AdminLayout TASARIMI UYGULANDI
-    // ---------------------------------------------------------------------
-    // ---------------------------------------------------------------------
+
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#0a0a1a] via-[#0f0f2a] to-[#1a1a3a] text-white flex relative overflow-hidden">

@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
+
+
 // Login
 import LoginPage from "./pages/LoginPage";
 
@@ -11,6 +13,12 @@ import AddUserPage from "./pages/AdminPages/AddUserPage";
 import UserListPage from "./pages/AdminPages/UserListPage";
 import StudentApplicationsPage from "./pages/AdminPages/StudentApplicationsPage";
 import ClubManagementPage from "./pages/AdminPages/ClubManagementPage";
+import StatusPage from "./pages/AdminPages/StatusPage";
+
+
+
+
+
 
 // Club Manager
 import ClubManagerRoutes from "./pages/ClubManagerRoutes";
@@ -29,6 +37,28 @@ interface UserData {
     role: string;
     token: string;
 }
+
+
+// GLOBAL TOKEN / STATUS INTERCEPTOR
+const originalFetch = window.fetch;
+window.fetch = async (url, options) => {
+    const response = await originalFetch(url, options);
+
+    // Kullanıcı pasif → backend 403 gönderir
+    if (response.status === 403) {
+        window.location.href = "/status";
+        return response;
+    }
+
+    // Token bozuk / expired → backend 401 gönderir
+    if (response.status === 401) {
+        localStorage.clear();
+        window.location.href = "/";
+        return response;
+    }
+
+    return response;
+};
 
 const translateRole = (role: string) => {
     switch (role) {
@@ -105,6 +135,9 @@ const App: React.FC = () => {
                             : <LoginPage onLoginSuccess={handleLoginSuccess} />
                     }
                 />
+
+                <Route path="/status" element={<StatusPage />} />
+
 
                 {/* Şifremi unuttum → herkese açık */}
                 <Route path="/forgot-password" element={<ForgotPassword />} />

@@ -288,8 +288,15 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowReactApp");
+
 app.UseAuthentication();
 app.UseAuthorization();
+
+
+app.UseMiddleware<Uni2ClupProjectBackend.Status.UserStatusMiddleware>();
+
 app.MapControllers();
+app.Run();
+
 
 app.Run();
