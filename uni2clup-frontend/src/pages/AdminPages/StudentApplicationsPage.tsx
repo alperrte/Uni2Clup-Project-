@@ -1,5 +1,5 @@
 ﻿import React, { useEffect, useState, useMemo } from "react";
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError, AxiosHeaders } from "axios";
 
 interface Application {
     id: number;
@@ -30,13 +30,30 @@ const StudentApplicationsPage: React.FC = () => {
 
 
     const api = axios.create({
-        baseURL: "http://localhost:8080/api/Auth",
+        baseURL: "http://localhost:8080/api/Admin",
     });
+
+    api.interceptors.request.use((config) => {
+        const token = localStorage.getItem("token");
+
+        if (token) {
+            const headers = new AxiosHeaders(config.headers);
+
+            headers.set("Authorization", `Bearer ${token}`);
+
+            config.headers = headers;
+        }
+
+        return config;
+    });
+
+
+
 
     const fetchApplications = async (): Promise<void> => {
         try {
             setLoading(true);
-            const res = await api.get<Application[]>("/get-applications");
+            const res = await api.get<Application[]>("/student-applications");
             setApplications(res.data);
         } catch (err: unknown) {
             const axiosError = err as AxiosError;
@@ -406,11 +423,11 @@ const StudentApplicationsPage: React.FC = () => {
                                     onClick={async () => {
                                         setShowConfirmModal(false);
                                         if (confirmAction === "approve" && selectedId !== null) {
-                                            await api.post(`/approve/${selectedId}`);
+                                            await api.post(`/approve-student/${selectedId}`);
                                             await fetchApplications();
                                         }
                                         if (confirmAction === "reject" && selectedId !== null) {
-                                            await api.post(`/reject/${selectedId}`);
+                                            await api.post(`/reject-student/${selectedId}`);
                                             await fetchApplications();
                                         }
                                     }}

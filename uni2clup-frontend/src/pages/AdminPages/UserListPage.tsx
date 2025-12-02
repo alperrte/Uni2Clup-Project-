@@ -66,7 +66,7 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
 
 
 
-    // ✅ Token kontrolü
+    //  Token kontrolü
     const checkTokenValidity = useCallback(() => {
         if (!token) {
             alert("🔒 Oturum süresi dolmuş. Lütfen tekrar giriş yapın.");
@@ -77,12 +77,12 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
         return true;
     }, [token]);
 
-    // 👥 Kullanıcıları Listele (Filtreli)
+    // Kullanıcıları Listele
     const fetchUsers = async () => {
         if (!checkTokenValidity()) return;
         setFetching(true);
         try {
-            const res = await fetch(`${API_URL}/api/Auth/users`, {
+            const res = await fetch(`${API_URL}/api/Admin/users`, {
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
@@ -120,7 +120,6 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
 
             if (res.ok) {
                 const data = await res.json();
-                // Sadece aktif kulüpleri göster
                 setClubs(data.filter((c: any) => c.isActive).map((c: any) => ({
                     id: c.id,
                     name: c.name,
@@ -147,7 +146,7 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
 
     useEffect(() => {
         fetchUsers();
-        fetchDepartments();  // ⭐ BURAYA EKLENDİ
+        fetchDepartments();  
 
         if (targetRole === "Student" || targetRole === "ClubManager") {
             fetchClubs();
@@ -159,7 +158,8 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
         if (!checkTokenValidity() || !selectedUserId || !selectedClubId) return;
 
         try {
-            const res = await fetch(`${API_URL}/api/Auth/assign-club-manager/${selectedUserId}`, {
+            const res = await fetch(`${API_URL}/api/Admin/assign-manager/${selectedUserId}`, {
+
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -182,7 +182,7 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
                 setShowClubModal(false);
                 setSelectedUserId(null);
                 setSelectedClubId(null);
-                fetchUsers(); // Listeyi yenile
+                fetchUsers(); 
                 setTimeout(() => setShowSuccessModal(false), 3000);
             } else {
                 const errorData = await res.json();
@@ -203,7 +203,7 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
         if (!pendingToggleUserId) return;
 
         try {
-            const res = await fetch(`${API_URL}/api/Auth/toggle-active/${pendingToggleUserId}`, {
+            const res = await fetch(`${API_URL}/api/Admin/toggle-active/${pendingToggleUserId}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -236,7 +236,6 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
         if (!dateString) return "Bilinmiyor";
         try {
             const date = new Date(dateString);
-            // Sadece tarih göster (GG.AA.YYYY)
             return date.toLocaleDateString('tr-TR', {
                 year: 'numeric',
                 month: '2-digit',
@@ -273,11 +272,11 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
             u.email.toLowerCase().includes(search.toLowerCase()) ||
             deptName.toLowerCase().includes(search.toLowerCase());
 
-        // 🎯 Bölüm filtresi (Student, Academic, Admin için)
+        //  Bölüm filtresi 
         const matchDept =
             filterDept === "Hepsi" || deptName === filterDept;
 
-        // 🎯 Kulüp filtresi (Sadece Kulüp Yöneticisi sayfasında)
+        //  Kulüp filtresi
         const matchClub =
             filterClub === "Hepsi" || clubName === filterClub;
 
@@ -285,7 +284,7 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
             return matchSearch && matchClub;
         }
 
-        // 🎯 Diğer roller (Student, Academic, Admin)
+        //  Diğer roller 
         return matchSearch && matchDept;
     });
 
@@ -295,7 +294,7 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
         if (!checkTokenValidity()) return;
 
         try {
-            const res = await fetch(`${API_URL}/api/Auth/delete/${pendingToggleUserId}`, {
+            const res = await fetch(`${API_URL}/api/Admin/delete-user/${pendingToggleUserId}`, {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",
@@ -325,7 +324,7 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
         if (!pendingToggleUserId) return;
 
         try {
-            const res = await fetch(`${API_URL}/api/admin/remove-manager/${pendingToggleUserId}`, {
+            const res = await fetch(`${API_URL}/api/Admin/remove-manager/${pendingToggleUserId}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -413,7 +412,6 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
 
                     {/* Filtre Alanı */}
                     {targetRole === "Student" && (
-                        // 🎯 Yalnızca Öğrenci sayfasında Bölüm filtresi
                         <select
                             value={filterDept}
                             onChange={(e) => setFilterDept(e.target.value)}
@@ -427,7 +425,6 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
                     )}
 
                     {targetRole === "ClubManager" && (
-                        // 🎯 Yalnızca Kulüp Yöneticilerinde kulüp filtresi
                         <select
                             value={filterClub}
                             onChange={(e) => setFilterClub(e.target.value)}
@@ -546,7 +543,6 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
                                                 <td className="py-4 px-6 text-center whitespace-nowrap">
                                                     <div className="flex items-center justify-center gap-2 whitespace-nowrap">
 
-                                                        {/* 🎓 Öğrenciler bölümündeyiz */}
                                                         {targetRole === "Student" && (
                                                             <>
                                                                 {/* Kulüp yöneticiliği ata */}
@@ -585,7 +581,7 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
                                                             </>
                                                         )}
 
-                                                        {/* 🧑‍💼 Kulüp yöneticileri bölümündeyiz */}
+                                                        {/* Kulüp yöneticileri bölümündeyiz */}
                                                         {targetRole === "ClubManager" && (
                                                             <button
                                                                 onClick={() => {
@@ -598,16 +594,15 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
                                                             </button>
                                                         )}
 
-                                                        {/* 🧑‍🏫 Akademisyenler */}
+                                                        {/*  Akademisyenler */}
                                                         {targetRole === "Academic" && (
                                                             <span className="text-gray-400">—</span>
                                                         )}
 
-                                                        {/* 🛑 YÖNETİCİLER SAYFASI */}
+                                                        {/* YÖNETİCİLER SAYFASI */}
                                                         {targetRole === "Admin" && (
                                                             <>
                                                                 {user.email === "admin@dogus.edu.tr" ? (
-                                                                    // Korunan ana yönetici
                                                                     <span className="text-gray-400">Sistem Yöneticisi</span>
                                                                 ) : (
                                                                     <>
@@ -652,7 +647,7 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
                 </div>
             </div>
 
-            {/* ✅ Success Modal */}
+            {/* Success Modal */}
             {showSuccessModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
                     <div className="bg-gradient-to-br from-[#1a1a2e] to-[#2a2a3e] border border-[#3b82f6] rounded-2xl p-8 mx-4 max-w-md w-full transform animate-bounceIn shadow-2xl">
@@ -763,7 +758,7 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
                             <button
                                 onClick={() => {
                                     setShowConfirmAssignModal(false);
-                                    openClubModal(pendingAssignUserId!);
+                                    if (pendingAssignUserId) openClubModal(pendingAssignUserId);
                                 }}
                                 className="flex-1 bg-green-600 hover:bg-green-700 py-3 rounded-xl font-bold text-white"
                             >
@@ -827,7 +822,7 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
 
 
 
-            {/* 🎯 Kulüp Seçim Modal */}
+            {/* Kulüp Seçim Modal */}
             {showClubModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-gradient-to-br from-[#1a1a2e] to-[#2a2a3e] border border-[#3b82f6] rounded-2xl p-8 mx-4 max-w-md w-full">

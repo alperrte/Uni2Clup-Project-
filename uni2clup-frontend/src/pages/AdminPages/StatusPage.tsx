@@ -5,21 +5,21 @@ const StatusPage: React.FC = () => {
     const navigate = useNavigate();
 
     const goToLogin = () => {
-        localStorage.clear();      // 👉 Tüm session verilerini temizle
-        navigate("/", { replace: true });  // 👉 Kesin login sayfasına döndür
+        localStorage.clear();      
+        navigate("/", { replace: true });  
     };
 
     return (
         <div className="min-h-screen relative bg-gradient-to-br from-[#0a0a1a] via-[#0f0f2a] to-[#1a1a3a] flex items-center justify-center text-white overflow-hidden">
 
-            {/* 🔥 Arka Plan Efektleri */}
+            {/* Arka Plan Efektleri */}
             <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-red-900 to-red-600 rounded-full opacity-20 blur-3xl animate-pulse"></div>
             <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-red-800 to-red-500 rounded-full opacity-10 blur-3xl animate-pulse delay-700"></div>
 
             {/* Kart */}
             <div className="relative z-10 max-w-md w-full text-center bg-[#1a1a2e] border border-red-700/50 p-10 rounded-2xl shadow-2xl">
 
-                {/* 🔥 Ortalanmış Yanıp Sönen Uyarı İkonu */}
+                {/* Yanıp Sönen Uyarı İkonu */}
                 <div className="relative mx-auto mb-6 flex items-center justify-center">
                     <div className="relative">
                         <div className="w-28 h-28 bg-gradient-to-br from-red-800 to-red-600 rounded-full flex items-center justify-center shadow-2xl animate-pulse">
@@ -48,7 +48,7 @@ const StatusPage: React.FC = () => {
                     Lütfen sistem yöneticileri ile iletişime geçiniz.
                 </p>
 
-                {/* 🔙 Giriş Sayfasına Dön */}
+                {/* Giriş Sayfasına Dön */}
                 <button
                     onClick={goToLogin}
                     className="w-full bg-red-700 hover:bg-red-800 py-3 rounded-xl text-lg font-semibold transition-all duration-300 hover:scale-105"
