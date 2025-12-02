@@ -41,8 +41,23 @@ const LoginPage = ({ onLoginSuccess }) => {
                 body: JSON.stringify({ email, password }),
             });
 
-            if (!res.ok) {
+            // 🚫 Hesap PASİF → 403 → direkt status page
+            if (res.status === 403) {
+                navigate("/status");
+                setIsLoading(false);
+                return;
+            }
+
+            // ❌ Yanlış şifre → 401
+            if (res.status === 401) {
                 alert("❌ Hatalı e-posta veya şifre.");
+                setIsLoading(false);
+                return;
+            }
+
+            // ❌ Diğer hatalar
+            if (!res.ok) {
+                alert("❌ Giriş yapılamadı. (Sunucu hatası)");
                 setIsLoading(false);
                 return;
             }

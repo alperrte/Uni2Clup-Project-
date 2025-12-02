@@ -31,6 +31,7 @@ import StudentLayout from "./components/StudentLayout";
 import ForgotPassword from "./password/ForgotPassword";
 import ResetPassword from "./password/ResetPassword";
 import ChangePassword from "./password/ChangePassword";
+import PastManagersPage from "./pages/AdminPages/PastManagersPage";
 
 interface UserData {
     name: string;
@@ -113,6 +114,8 @@ const App: React.FC = () => {
 
                 <Route path="applications" element={<StudentApplicationsPage />} />
                 <Route path="clubs" element={<ClubManagementPage />} />
+
+                <Route path="past-managers" element={<PastManagersPage />} />
 
                 <Route path="*" element={<Navigate to="add-user" replace />} />
 
