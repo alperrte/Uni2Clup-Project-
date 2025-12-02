@@ -13,6 +13,15 @@ const LoginPage = ({ onLoginSuccess }) => {
     const [successMessage, setSuccessMessage] = useState("");
     const [showRegisterModal, setShowRegisterModal] = useState(false);
     const navigate = useNavigate();
+    const [showRegisterConfirm, setShowRegisterConfirm] = useState(false);
+    const [registerData, setRegisterData] = useState(null);
+
+    const [showRegisterSuccess, setShowRegisterSuccess] = useState(false);
+    const [registerSuccessMessage, setRegisterSuccessMessage] = useState("");
+
+    const [showRegisterError, setShowRegisterError] = useState(false);
+    const [registerErrorMessage, setRegisterErrorMessage] = useState("");
+
     // ✅ Bölüm listesi
     const [departments, setDepartments] = useState([]);
 
@@ -116,33 +125,44 @@ const LoginPage = ({ onLoginSuccess }) => {
     };
 
     // REGISTER -----
-    const handleRegister = async (e) => {
+    const handleRegister = (e) => {
         e.preventDefault();
         const form = e.target;
 
         const name = form.name.value;
         const surname = form.surname.value;
         const email = form.email.value;
-        const departmentId = form.departmentId.value;  // 👈 DÜZELTİLDİ
+        const departmentId = form.departmentId.value;
+
+        setRegisterData({ name, surname, email, departmentId });
+        setShowRegisterConfirm(true); // 🚀 Confirm Modal aç
+    };
+
+    const submitRegistration = async () => {
+        if (!registerData) return;
 
         try {
             const res = await fetch(`${API_URL}/api/Auth/student-apply`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, surname, email, departmentId }), // 👈 DÜZELTİLDİ
+                body: JSON.stringify(registerData),
             });
 
             if (res.ok) {
-                alert("🎉 Başvurunuz alınmıştır. Onay sonrası e-posta gönderilecektir.");
+                setRegisterSuccessMessage("🎉 Başvurunuz alınmıştır. Onay sonrası mail gelecektir.");
+                setShowRegisterSuccess(true);
                 setShowRegisterModal(false);
             } else {
                 const err = await res.json();
-                alert(err.message || "Kayıt sırasında bir hata oluştu");
+                setRegisterErrorMessage(err.message || "Bir hata oluştu.");
+                setShowRegisterError(true);
             }
         } catch {
-            alert("🚫 Sunucuya ulaşılamadı!");
+            setRegisterErrorMessage("🚫 Sunucuya bağlanılamadı.");
+            setShowRegisterError(true);
         }
     };
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#0a0a1a] via-[#0f0f2a] to-[#1a1a3a] text-white 
@@ -368,6 +388,89 @@ flex flex-col items-center justify-center relative overflow-hidden">
                     </div>
                 </div>
             )}
+
+            {showRegisterConfirm && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+                    <div className="bg-[#1a1a2e] p-8 rounded-xl w-full max-w-md border border-[#3b82f6] shadow-xl">
+
+                        <h2 className="text-xl text-white font-bold mb-4 text-center">
+                            📩 Başvuruyu göndermek istediğinize emin misiniz?
+                        </h2>
+
+                        <p className="text-gray-300 text-center mb-6">
+                            Ad: {registerData?.name} <br />
+                            Soyad: {registerData?.surname} <br />
+                            E-posta: {registerData?.email}
+                        </p>
+
+                        <div className="flex gap-4">
+                            <button
+                                className="flex-1 bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] text-white py-3 rounded-lg"
+                                onClick={() => {
+                                    setShowRegisterConfirm(false);
+                                    submitRegistration(); // 🚀 Backend’e gönder
+                                }}
+                            >
+                                Evet, Gönder
+                            </button>
+
+                            <button
+                                className="flex-1 bg-[#222] text-gray-300 py-3 rounded-lg"
+                                onClick={() => setShowRegisterConfirm(false)}
+                            >
+                                İptal
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+
+            {showRegisterSuccess && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+                    <div className="bg-[#1a1a2e] p-8 rounded-xl w-full max-w-md border border-green-500 shadow-xl">
+
+                        <h2 className="text-xl text-green-400 font-bold mb-4 text-center">
+                            ✔ Başvurunuz Alındı
+                        </h2>
+
+                        <p className="text-gray-300 text-center mb-6">
+                            {registerSuccessMessage}
+                        </p>
+
+                        <button
+                            className="w-full bg-green-600 text-white py-3 rounded-lg"
+                            onClick={() => setShowRegisterSuccess(false)}
+                        >
+                            Tamam
+                        </button>
+                    </div>
+                </div>
+            )}
+
+
+            {showRegisterError && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+                    <div className="bg-[#1a1a2e] p-8 rounded-xl w-full max-w-md border border-red-500 shadow-xl">
+
+                        <h2 className="text-xl text-red-400 font-bold mb-4 text-center">
+                            ❌ Başvuru Hatası
+                        </h2>
+
+                        <p className="text-gray-300 text-center mb-6">
+                            {registerErrorMessage}
+                        </p>
+
+                        <button
+                            className="w-full bg-red-600 text-white py-3 rounded-lg"
+                            onClick={() => setShowRegisterError(false)}
+                        >
+                            Kapat
+                        </button>
+                    </div>
+                </div>
+            )}
+
 
             {/* SUCCESS MODAL */}
             {showSuccessModal && (
