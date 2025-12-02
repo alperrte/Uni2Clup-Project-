@@ -76,14 +76,9 @@ const App: React.FC = () => {
 
     // Uygulama açıldığında localStorage kontrolü
     useEffect(() => {
-        const token = localStorage.getItem("token");
-        const role = localStorage.getItem("userRole");
-        const name = localStorage.getItem("userName");
-
-        if (token && role && name) {
-            setUser({ name, role, token });
-        }
+        setUser(null);
     }, []);
+
 
     const handleLoginSuccess = (userData: UserData) => {
         localStorage.setItem("token", userData.token);
