@@ -265,9 +265,8 @@ namespace Uni2ClupProjectBackend.Controllers
             });
         }
 
-        // --------------------------------------------------------------------
-        // 6) Etkinlik İptal Et (Neden ile birlikte)
-        // --------------------------------------------------------------------
+        //Etkinlik İptal Et (Neden ile birlikte)
+
         [HttpPut("cancel/{id}")]
         [Authorize(Roles = "ClubManager")]
         public async Task<IActionResult> CancelEvent(int id, [FromBody] CancelEventDto dto)
@@ -286,15 +285,35 @@ namespace Uni2ClupProjectBackend.Controllers
             if (!string.Equals(ev.CreatedBy, email, StringComparison.OrdinalIgnoreCase))
                 return StatusCode(403, new { message = "Bu etkinlik üzerinde yetkiniz yok." });
 
-            // Etkinliği iptal edilmiş gibi işaretle (şimdilik açıklamaya ekliyoruz)
+            // Etkinliği iptal edildi olarak işaretle
             ev.Description += $"\n\n[İPTAL EDİLDİ] Neden: {dto.Reason}";
+
+            // --- Kulüp üyelerine bildirim gönder ---
+            var members = await _db.ClubMembers
+                .Where(cm => cm.ClubId == ev.ClubId)
+                .Include(cm => cm.User)
+                .ToListAsync();
+
+            foreach (var m in members)
+            {
+                _db.Notifications.Add(new Notification
+                {
+                    UserId = m.UserId,
+                    Title = "Etkinlik İptal Edildi",
+                    Message = $"{ev.Name} etkinliği iptal edildi. Sebep: {dto.Reason}",
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+
             await _db.SaveChangesAsync();
 
-            return Ok(new { message = "Etkinlik başarıyla iptal edildi." });
+            return Ok(new { message = "Etkinlik başarıyla iptal edildi ve öğrencilere bildirildi." });
         }
+
 
         public class CancelEventDto
         {
             public string Reason { get; set; }
         }
-
+    }
+}
