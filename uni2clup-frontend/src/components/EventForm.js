@@ -34,9 +34,10 @@ const parseTurkeyInputToDate = (value) => {
 };
 
 const convertTurkeyInputToISO = (value) => {
-    const parsed = parseTurkeyInputToDate(value);
-    return parsed ? parsed.toISOString() : "";
+    if (!value) return "";
+    return value + ":00"; // saniyeyi zorla ekle
 };
+
 
 function EventForm({ onSave, selectedEvent, clearSelected }) {
     const [form, setForm] = useState({
@@ -171,15 +172,17 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
             return;
         }
 
-        if (startDate < now) {
+        // Eğer yeni etkinlik oluşturuluyorsa geçmiş tarih engeli çalışsın
+        if (!selectedEvent && startDate < now) {
             alert("Geçmiş bir tarih için etkinlik planlayamazsınız.");
             return;
         }
 
-        if (endDate <= startDate) {
-            alert("Bitiş tarihi başlangıçtan sonra olmalıdır.");
-            return;
-        }
+
+        //if (endDate <= startDate) {
+          //  alert("Bitiş tarihi başlangıçtan sonra olmalıdır.");
+        //    return;
+       // }
 
         const formattedForm = {
             Id: selectedEvent?.id || 0,
@@ -365,7 +368,7 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
                             <input
                                 type="datetime-local"
                                 name="endDate"
-                                min={form.startDate || turkeyNow}
+                                min=""
                                 value={form.endDate}
                                 onChange={handleChange}
                                 className="flex-1 bg-transparent text-white outline-none text-lg cursor-pointer"
