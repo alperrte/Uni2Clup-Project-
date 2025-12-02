@@ -28,9 +28,9 @@ const PastManagersPage: React.FC = () => {
 
     const token = localStorage.getItem("token");
 
-    // 🟦 Aktif Kulüp Yöneticilerini Çek
+    // Aktif Kulüp Yöneticilerini Çek
     const fetchActiveManagers = async () => {
-        const res = await fetch(`${API_URL}/api/Auth/users`, {
+        const res = await fetch(`${API_URL}/api/Admin/users`, {
             headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -43,8 +43,9 @@ const PastManagersPage: React.FC = () => {
         setActiveManagers(active);
     };
 
+
     const fetchUsers = async () => {
-        const res = await fetch(`${API_URL}/api/Auth/users`, {
+        const res = await fetch(`${API_URL}/api/Admin/users`, {
             headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -61,6 +62,7 @@ const PastManagersPage: React.FC = () => {
         setUsers(mapped);
     };
 
+
     const fetchPastManagers = async () => {
         const res = await fetch(`${API_URL}/api/Admin/past-managers`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -74,7 +76,7 @@ const PastManagersPage: React.FC = () => {
     useEffect(() => {
         fetchUsers();
         fetchPastManagers();
-        fetchActiveManagers(); // 🟦 EKLENDİ
+        fetchActiveManagers(); 
     }, []);
 
     const formatDate = (dateStr: string) => {
@@ -86,7 +88,6 @@ const PastManagersPage: React.FC = () => {
         });
     };
 
-    // ✔ Duplicate kayıtları kaldır → sadece en son alınma tarihi
     useEffect(() => {
         if (data.length === 0 || users.length === 0) return;
 
