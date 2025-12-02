@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 
 const API_URL = "http://localhost:8080";
 
@@ -61,7 +62,7 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
     const [showConfirmAssignModal, setShowConfirmAssignModal] = useState(false);
     const [pendingAssignUserId, setPendingAssignUserId] = useState<number | null>(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-
+    const [showManagerRemoveModal, setShowManagerRemoveModal] = useState(false);
 
 
 
@@ -320,7 +321,39 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
         }
     };
 
+    const confirmRemoveManager = async () => {
+        if (!pendingToggleUserId) return;
 
+        try {
+            const res = await fetch(`${API_URL}/api/admin/remove-manager/${pendingToggleUserId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (res.ok) {
+                setSuccessMessage("Yöneticilik başarıyla kaldırıldı.");
+                setShowSuccessModal(true);
+
+                // listeden düşür
+                setUsers(prev => prev.filter(u => u.id !== pendingToggleUserId));
+
+                setTimeout(() => setShowSuccessModal(false), 3000);
+            } else {
+                const data = await res.json();
+                alert(data.message || "❌ İşlem başarısız.");
+            }
+        } catch {
+            alert("🚫 Sunucu hatası!");
+        } finally {
+            setShowManagerRemoveModal(false);
+            setPendingToggleUserId(null);
+        }
+    };
+
+    const navigate = useNavigate();
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#0a0a1a] via-[#0f0f2a] to-[#1a1a3a] text-white flex flex-col items-center py-10 px-4 relative overflow-hidden">
@@ -407,6 +440,17 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
                         </select>
                     )}
 
+                    {targetRole === "ClubManager" && (
+                        <button
+                            onClick={() => navigate("/admin/past-managers")}
+                            className="px-5 py-2 rounded-lg font-semibold text-white 
+                   bg-gradient-to-r from-[#3b82f6] to-[#2d1b69]
+                   hover:opacity-90 transition-all duration-300 shadow-lg border border-[#3b82f6]/40"
+                        >
+                            ⏳ Geçmiş Yöneticiler
+                        </button>
+                    )}
+
 
 
                 </div>
@@ -433,86 +477,90 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
                             </div>
                         ) : (
                             <div className="overflow-x-auto">
-                                        <table className="min-w-full table-auto whitespace-nowrap">
-                                            <thead>
-                                                <tr className="bg-[#151526] border-b border-[#3b82f6]/40">
-                                                    <th className="py-5 px-8 text-left text-lg font-bold text-[#3b82f6] whitespace-nowrap">Ad-Soyad</th>
-                                                    <th className="py-5 px-8 text-left text-lg font-bold text-[#3b82f6] whitespace-nowrap">E-posta</th>
-                                                    <th className="py-5 px-8 text-left text-lg font-bold text-[#3b82f6] whitespace-nowrap">Rol</th>
-                                                    {targetRole !== "Admin" && (
-                                                        <th className="py-5 px-8 text-left text-lg font-bold text-[#3b82f6] whitespace-nowrap">Bölüm</th>
-                                                    )}
+                                <table className="min-w-full table-auto whitespace-nowrap">
+                                    <thead>
+                                        <tr className="bg-[#151526] border-b border-[#3b82f6]/40">
+                                            <th className="py-5 px-8 text-left text-lg font-bold text-[#3b82f6] whitespace-nowrap">Ad-Soyad</th>
+                                            <th className="py-5 px-8 text-left text-lg font-bold text-[#3b82f6] whitespace-nowrap">E-posta</th>
+                                            <th className="py-5 px-8 text-left text-lg font-bold text-[#3b82f6] whitespace-nowrap">Rol</th>
+                                            {targetRole !== "Admin" && (
+                                                <th className="py-5 px-8 text-left text-lg font-bold text-[#3b82f6] whitespace-nowrap">Bölüm</th>
+                                            )}
 
-                                                    <th className="py-5 px-8 text-left text-lg font-bold text-[#3b82f6] whitespace-nowrap">Kayıt Tarihi</th>
-                                                    {targetRole === "ClubManager" && (
-                                                        <th className="py-5 px-8 text-left text-lg font-bold text-[#3b82f6] whitespace-nowrap">
-                                                            Yönettiği Kulüp
-                                                        </th>
-                                                    )}
-                                                    <th className="py-5 px-8 text-center text-lg font-bold text-[#3b82f6] whitespace-nowrap">İşlemler</th>
-                                                </tr>
-                                            </thead>
+                                            <th className="py-5 px-8 text-left text-lg font-bold text-[#3b82f6] whitespace-nowrap">Kayıt Tarihi</th>
+                                            {targetRole === "ClubManager" && (
+                                                <th className="py-5 px-8 text-left text-lg font-bold text-[#3b82f6] whitespace-nowrap">
+                                                    Yönettiği Kulüp
+                                                </th>
+                                            )}
+                                            <th className="py-5 px-8 text-center text-lg font-bold text-[#3b82f6] whitespace-nowrap">İşlemler</th>
+                                        </tr>
+                                    </thead>
 
-                                            <tbody className="divide-y divide-gray-700 whitespace-nowrap">
-                                                {filteredUsers.map((user) => (
-                                                    <tr
-                                                        key={user.id}
-                                                        className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] hover:from-[#2a2a3e] hover:to-[#3a3a4e] transition-all duration-300 group whitespace-nowrap"
-                                                    >
-                                                        <td className="py-4 px-6 font-medium text-white text-lg whitespace-nowrap">
-                                                            <div className="flex items-center gap-3 whitespace-nowrap">
-                                                                <div className="w-10 h-10 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6] rounded-full flex items-center justify-center">
-                                                                    <span className="text-white font-bold text-sm">
-                                                                        {user.name.charAt(0).toUpperCase()}
-                                                                    </span>
-                                                                </div>
-                                                                <span className="whitespace-nowrap">
-                                                                    {user.name} {user.surname}
-                                                                </span>
-                                                            </div>
-                                                        </td>
-
-                                                        <td className="py-4 px-6 text-gray-300 text-md whitespace-nowrap">
-                                                            {user.email}
-                                                        </td>
-
-                                                        <td className="py-4 px-6 whitespace-nowrap">
-                                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] text-white whitespace-nowrap">
-                                                                {translateRole(user.role)}
+                                    <tbody className="divide-y divide-gray-700 whitespace-nowrap">
+                                        {filteredUsers.map((user) => (
+                                            <tr
+                                                key={user.id}
+                                                className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] hover:from-[#2a2a3e] hover:to-[#3a3a4e] transition-all duration-300 group whitespace-nowrap"
+                                            >
+                                                <td className="py-4 px-6 font-medium text-white text-lg whitespace-nowrap">
+                                                    <div className="flex items-center gap-3 whitespace-nowrap">
+                                                        <div className="w-10 h-10 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6] rounded-full flex items-center justify-center">
+                                                            <span className="text-white font-bold text-sm">
+                                                                {user.name.charAt(0).toUpperCase()}
                                                             </span>
-                                                        </td>
+                                                        </div>
+                                                        <span className="whitespace-nowrap">
+                                                            {user.name} {user.surname}
+                                                        </span>
+                                                    </div>
+                                                </td>
 
-                                                        {targetRole !== "Admin" && (
-                                                            <td className="py-4 px-6 text-gray-300 text-md whitespace-nowrap">
-                                                                {departments.find(d => d.id === (user as any).departmentId)?.name || "-"}
-                                                            </td>
-                                                        )}
+                                                <td className="py-4 px-6 text-gray-300 text-md whitespace-nowrap">
+                                                    {user.email}
+                                                </td>
+
+                                                <td className="py-4 px-6 whitespace-nowrap">
+                                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] text-white whitespace-nowrap">
+                                                        {translateRole(user.role)}
+                                                    </span>
+                                                </td>
+
+                                                {targetRole !== "Admin" && (
+                                                    <td className="py-4 px-6 text-gray-300 text-md whitespace-nowrap">
+                                                        {departments.find(d => d.id === (user as any).departmentId)?.name || "-"}
+                                                    </td>
+                                                )}
 
 
-                                                        <td className="py-4 px-6 text-gray-300 text-md whitespace-nowrap">
-                                                            {formatDate(user.registrationDate)}
-                                                        </td>
+                                                <td className="py-4 px-6 text-gray-300 text-md whitespace-nowrap">
+                                                    {formatDate(user.registrationDate)}
+                                                </td>
 
-                                                        {targetRole === "ClubManager" && (
-                                                            <td className="py-4 px-6 text-gray-300 whitespace-nowrap">
-                                                                {clubs.find(c => c.id === user.clubId)?.name || "—"}
-                                                            </td>
-                                                        )}
+                                                {targetRole === "ClubManager" && (
+                                                    <td className="py-4 px-6 text-gray-300 whitespace-nowrap">
+                                                        {clubs.find(c => c.id === user.clubId)?.name || "—"}
+                                                    </td>
+                                                )}
 
-                                                        <td className="py-4 px-6 text-center whitespace-nowrap">
-                                                            <div className="flex items-center justify-center gap-2 whitespace-nowrap">
-                                                                {targetRole === "Student" && (
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            setPendingAssignUserId(user.id);
-                                                                            setShowConfirmAssignModal(true);
-                                                                        }}
-                                                                        className="px-4 py-2 rounded-lg font-semibold text-white bg-purple-600 hover:bg-purple-700 transition-all duration-300 whitespace-nowrap"
-                                                                    >
-                                                                        🎯 Kulüp Yöneticiliği Ata
-                                                                    </button>
-                                                                )}
+                                                <td className="py-4 px-6 text-center whitespace-nowrap">
+                                                    <div className="flex items-center justify-center gap-2 whitespace-nowrap">
 
+                                                        {/* 🎓 Öğrenciler bölümündeyiz */}
+                                                        {targetRole === "Student" && (
+                                                            <>
+                                                                {/* Kulüp yöneticiliği ata */}
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setPendingAssignUserId(user.id);
+                                                                        setShowConfirmAssignModal(true);
+                                                                    }}
+                                                                    className="px-4 py-2 rounded-lg font-semibold text-white bg-purple-600 hover:bg-purple-700 transition-all duration-300 whitespace-nowrap"
+                                                                >
+                                                                    🎯 Kulüp Yöneticiliği Ata
+                                                                </button>
+
+                                                                {/* Aktif / Pasif */}
                                                                 <button
                                                                     onClick={() => {
                                                                         setPendingToggleUserId(user.id);
@@ -524,25 +572,79 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
                                                                     {user.isActive ? "Aktif" : "Pasif"}
                                                                 </button>
 
-                                                                {targetRole === "Student" && (
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            setPendingToggleUserId(user.id);
-                                                                            setShowDeleteModal(true);
-                                                                        }}
-                                                                        className="px-4 py-2 rounded-lg font-semibold text-white bg-red-700 hover:bg-red-800 transition-all duration-300 whitespace-nowrap"
-                                                                    >
-                                                                        🗑 Sil
-                                                                    </button>
+                                                                {/* Sil */}
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setPendingToggleUserId(user.id);
+                                                                        setShowDeleteModal(true);
+                                                                    }}
+                                                                    className="px-4 py-2 rounded-lg font-semibold text-white bg-red-700 hover:bg-red-800 transition-all duration-300 whitespace-nowrap"
+                                                                >
+                                                                    🗑 Sil
+                                                                </button>
+                                                            </>
+                                                        )}
+
+                                                        {/* 🧑‍💼 Kulüp yöneticileri bölümündeyiz */}
+                                                        {targetRole === "ClubManager" && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setPendingToggleUserId(user.id);
+                                                                    setShowManagerRemoveModal(true);
+                                                                }}
+                                                                className="px-4 py-2 rounded-lg font-semibold text-white bg-red-600 hover:bg-red-700 transition-all duration-300 whitespace-nowrap"
+                                                            >
+                                                                🛑 Yöneticiliği Al
+                                                            </button>
+                                                        )}
+
+                                                        {/* 🧑‍🏫 Akademisyenler */}
+                                                        {targetRole === "Academic" && (
+                                                            <span className="text-gray-400">—</span>
+                                                        )}
+
+                                                        {/* 🛑 YÖNETİCİLER SAYFASI */}
+                                                        {targetRole === "Admin" && (
+                                                            <>
+                                                                {user.email === "admin@dogus.edu.tr" ? (
+                                                                    // Korunan ana yönetici
+                                                                    <span className="text-gray-400">Sistem Yöneticisi</span>
+                                                                ) : (
+                                                                    <>
+                                                                        {/* Aktif/Pasif */}
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                setPendingToggleUserId(user.id);
+                                                                                setShowToggleModal(true);
+                                                                            }}
+                                                                            className={`px-4 py-2 rounded-lg font-semibold text-white transition-all duration-300 whitespace-nowrap ${user.isActive ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
+                                                                                }`}
+                                                                        >
+                                                                            {user.isActive ? "Aktif" : "Pasif"}
+                                                                        </button>
+
+                                                                        {/* Sil */}
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                setPendingToggleUserId(user.id);
+                                                                                setShowDeleteModal(true);
+                                                                            }}
+                                                                            className="px-4 py-2 rounded-lg font-semibold text-white bg-red-700 hover:bg-red-800 transition-all duration-300 whitespace-nowrap"
+                                                                        >
+                                                                            🗑 Sil
+                                                                        </button>
+                                                                    </>
                                                                 )}
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </td>
 
 
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
 
                             </div>
                         )}
@@ -566,6 +668,44 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
                     </div>
                 </div>
             )}
+
+
+            {showManagerRemoveModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+                    <div className="bg-[#1a1a2e] p-8 rounded-2xl border border-red-600 max-w-md w-full text-center">
+
+                        <h2 className="text-2xl font-bold text-white mb-4">
+                            Bu kullanıcının kulüp yöneticiliğini almak istiyor musunuz?
+                        </h2>
+
+                        <p className="text-gray-300 mb-6">
+                            İşlemin ardından kullanıcı tekrar öğrenci olacaktır.
+                        </p>
+
+                        <div className="flex gap-4">
+                            <button
+                                onClick={confirmRemoveManager}
+                                className="flex-1 bg-green-600 hover:bg-green-700 py-3 rounded-lg font-bold text-white"
+                            >
+                                Evet
+                            </button>
+
+                            <button
+                                onClick={() => {
+                                    setShowManagerRemoveModal(false);
+                                    setPendingToggleUserId(null);
+                                }}
+                                className="flex-1 bg-red-600 hover:bg-red-700 py-3 rounded-lg font-bold text-white"
+                            >
+                                İptal
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            )}
+
+
 
             {showToggleModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">

@@ -44,6 +44,15 @@ namespace Uni2ClupProjectBackend.Controllers
                 if (!isPasswordValid)
                     return Unauthorized(new { message = "❌ Hatalı e-posta veya şifre." });
 
+                // ❗ PASİF kullanıcı giriş yapamasın
+                if (!user.IsActive)
+                {
+                    return StatusCode(403, new { message = "SUSPENDED" });
+                }
+
+
+
+
                 // ⭐⭐ GEÇİCİ ŞİFRE KULLANANLAR BURADA YAKALANIR ⭐⭐
                 if (user.MustChangePassword)
                 {
