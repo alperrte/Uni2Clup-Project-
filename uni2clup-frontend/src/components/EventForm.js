@@ -29,14 +29,12 @@ const formatDateForInput = (value) => {
 
 const parseTurkeyInputToDate = (value) => {
     if (!value) return null;
-    const parsed = new Date(`${value}:00${TURKEY_OFFSET}`);
-    return isNaN(parsed.getTime()) ? null : parsed;
+    return new Date(value); // hiçbir şekilde +03:00 ekleme
 };
 
-const convertTurkeyInputToISO = (value) => {
-    if (!value) return "";
-    return value + ":00"; // saniyeyi zorla ekle
-};
+
+const convertTurkeyInputToISO = (value) => value + ":00";
+
 
 
 function EventForm({ onSave, selectedEvent, clearSelected }) {

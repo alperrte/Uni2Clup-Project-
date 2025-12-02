@@ -35,11 +35,10 @@ const inputFormatter = new Intl.DateTimeFormat("sv-SE", {
 
 const parseEventDate = (value: string) => {
     if (!value) return null;
-    const hasTimezone = /Z|[+-]\d{2}:\d{2}$/i.test(value);
-    const normalized = hasTimezone ? value : `${value}Z`;
-    const date = new Date(normalized);
+    const date = new Date(value); 
     return isNaN(date.getTime()) ? null : date;
 };
+
 
 const formatForDisplay = (value: string) => {
     const date = parseEventDate(value);

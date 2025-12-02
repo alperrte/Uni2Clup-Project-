@@ -74,10 +74,27 @@ const translateRole = (role: string) => {
 const App: React.FC = () => {
     const [user, setUser] = useState<UserData | null>(null);
 
-    // Uygulama açıldığında localStorage kontrolü
+    const [loadingUser, setLoadingUser] = useState(true);
+
     useEffect(() => {
-        setUser(null);
+        const token = localStorage.getItem("token");
+        const role = localStorage.getItem("userRole");
+        const name = localStorage.getItem("userName");
+
+        if (token && role && name) {
+            setUser({ token, role, name });
+        }
+
+        setLoadingUser(false);
     }, []);
+
+    if (loadingUser) {
+        return (
+            <div className="text-white p-10 text-center">
+                Yükleniyor...
+            </div>
+        );
+    }
 
 
     const handleLoginSuccess = (userData: UserData) => {
@@ -119,6 +136,8 @@ const App: React.FC = () => {
             </Routes>
         </AdminLayout>
     );
+
+
 
     return (
         <Router>
