@@ -15,6 +15,13 @@ const MembersPage: React.FC = () => {
     const [members, setMembers] = useState<Member[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const [removeModalOpen, setRemoveModalOpen] = useState(false);
+    const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+
+    const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+    const [removeReason, setRemoveReason] = useState("");
+    const [search, setSearch] = useState("");
+
     const fetchMembers = async () => {
         const token = localStorage.getItem("token");
         const clubId = localStorage.getItem("clubId");
@@ -33,116 +40,204 @@ const MembersPage: React.FC = () => {
         setLoading(false);
     };
 
-    const toggleActive = async (userId: number) => {
-        const token = localStorage.getItem("token");
-
-        const res = await fetch(`${API_URL}/api/Club/members/toggle/${userId}`, {
-            method: "PUT",
-            headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (res.ok) {
-            await fetchMembers();
-        }
-    };
-
     useEffect(() => {
         fetchMembers();
     }, []);
 
+    const filtered = members.filter((m) => {
+        const query = search.toLowerCase();
+        return (
+            m.name.toLowerCase().includes(query) ||
+            m.surname.toLowerCase().includes(query) ||
+            m.email.toLowerCase().includes(query) ||
+            m.email.split("@")[0].includes(query)
+        );
+    });
+
+    const openRemoveModal = (userId: number) => {
+        setSelectedUserId(userId);
+        setRemoveReason("");
+        setRemoveModalOpen(true);
+    };
+
+    const handleRemoveConfirm = () => {
+        setRemoveModalOpen(false);
+        setConfirmModalOpen(true);
+    };
+
+    const removeMember = async () => {
+        if (!selectedUserId || !removeReason.trim()) return;
+
+        const token = localStorage.getItem("token");
+
+        const res = await fetch(
+            `${API_URL}/api/Club/members/remove/${selectedUserId}`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ reason: removeReason }),
+            }
+        );
+
+        if (res.ok) {
+            setConfirmModalOpen(false);
+            await fetchMembers();
+        } else {
+            alert("Üye çıkarılamadı!");
+        }
+    };
+
     return (
         <div className="relative text-white">
+            {/* Background */}
             <div className="absolute inset-0 -z-10 opacity-40 blur-3xl bg-gradient-to-br 
                             from-indigo-900 via-purple-900 to-blue-900"></div>
 
             <div className="max-w-5xl mx-auto py-10 space-y-10">
+                {/* Başlık */}
                 <div
                     className="bg-gradient-to-br from-[#1c1f44] to-[#111326] 
                                border border-[#3b82f6]/30 rounded-3xl p-8 shadow-2xl"
                 >
                     <h1 className="text-4xl font-extrabold mb-3">Kulüp Üyeleri</h1>
-                    <p className="text-gray-300">Üyeleri görüntüleyebilir ve aktif/pasif yapabilirsiniz.</p>
+                    <p className="text-gray-300">
+                        Üyeleri görüntüleyebilir ve kulüpten çıkarabilirsiniz.
+                    </p>
+
+                    {/* 🔍 Arama Kutusu */}
+                    <div className="mt-6">
+                        <input
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="İsim, soyisim, email veya öğrenci numarası ara..."
+                            className="w-full px-5 py-3 bg-[#0a0a1a] text-white border border-[#3b82f6]/40 
+                                       rounded-2xl shadow-lg focus:outline-none focus:border-[#3b82f6] 
+                                       transition-all"
+                        />
+                    </div>
                 </div>
 
+                {/* LİSTE */}
                 {loading ? (
                     <div className="bg-[#0f0f1a]/90 border border-[#3b82f6]/40 rounded-3xl p-8 text-center">
                         Üyeler yükleniyor...
                     </div>
-                ) : members.length === 0 ? (
+                ) : filtered.length === 0 ? (
                     <div className="bg-[#0f0f1a]/90 border border-[#3b82f6]/40 rounded-3xl p-8 text-center">
-                        Bu kulüpte henüz üye bulunmamaktadır.
+                        Aramanıza uygun üye bulunamadı.
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        {members.map(member => (
+                        {filtered.map((member) => (
                             <div
                                 key={member.id}
-                                className="bg-[#0f0f1a]/90 border border-[#3b82f6]/50 
-                                    rounded-2xl p-6 shadow-xl flex items-center justify-between
-                                    backdrop-blur-md transition shadow-blue-900/30"
+                                className="bg-[#0f0f1a]/90 border border-[#3b82f6]/50 rounded-2xl 
+                                           p-6 shadow-xl flex justify-between items-center"
                             >
-                                {/* Sol Bölüm */}
-                                <div className="space-y-2 text-white">
-                                    <p className="text-base">
-                                        <span className="font-semibold text-white">Ad - Soyad:</span>{" "}
+                                {/* SOL BİLGİLER */}
+                                <div className="space-y-2 text-[16px] leading-relaxed">
+                                    <p>
+                                        👤 <span className="font-semibold">Ad - Soyad:</span>{" "}
                                         {member.name} {member.surname}
                                     </p>
 
-                                    <p className="text-base">
-                                        <span className="font-semibold text-white">E-Mail:</span>{" "}
+                                    <p>
+                                        📧 <span className="font-semibold">Email:</span>{" "}
                                         {member.email}
                                     </p>
 
-                                    <p className="text-base">
-                                        <span className="font-semibold text-white">Öğrenci Numarası:</span>{" "}
+                                    <p>
+                                        🎓 <span className="font-semibold">Öğrenci No:</span>{" "}
                                         {member.email.split("@")[0]}
                                     </p>
 
-                                    <p className="text-sm opacity-90">
-                                        <span className="font-semibold text-white">Üyelik Tarihi:</span>{" "}
+                                    <p>
+                                        📅 <span className="font-semibold">Üyelik Tarihi:</span>{" "}
                                         {new Date(member.createdAt).toLocaleDateString("tr-TR")}
                                     </p>
                                 </div>
 
-                                {/* Sağ - Toggle */}
-                                <div className="flex flex-col items-end">
-                                    <span
-                                        className={`mb-2 font-semibold ${member.isActive ? "text-green-400" : "text-red-400"
-                                            }`}
-                                    >
-                                        {member.isActive ? "Aktif" : "Pasif"}
-                                    </span>
-
-                                    <label className="relative inline-flex items-center cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={member.isActive}
-                                            onChange={() => toggleActive(member.id)}
-                                            className="sr-only peer"
-                                        />
-
-                                        {/* Toggle Track */}
-                                        <div
-                                            className={`w-16 h-8 rounded-full transition-all duration-300
-                                            border-2 
-                                            ${member.isActive
-                                                    ? "bg-green-600 border-green-400"
-                                                    : "bg-red-600 border-red-400"
-                                                }`}
-                                        ></div>
-
-                                        {/* White Circle */}
-                                        <span
-                                            className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow 
-                                            transition-all duration-300 peer-checked:translate-x-8`}
-                                        ></span>
-                                    </label>
-                                </div>
+                                {/* Çıkar Butonu */}
+                                <button
+                                    onClick={() => openRemoveModal(member.id)}
+                                    className="px-5 py-3 bg-red-600 text-white rounded-xl 
+                                               shadow-lg hover:bg-red-700 transition"
+                                >
+                                    ❌ Kulüpten Çıkar
+                                </button>
                             </div>
                         ))}
                     </div>
                 )}
             </div>
+
+            {/* 📌 Çıkarma Nedeni Modal */}
+            {removeModalOpen && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+                    <div className="bg-[#1a1a2e] p-6 rounded-xl w-full max-w-md border border-[#3b82f6]">
+                        <h2 className="text-xl font-bold mb-4">Çıkarma Nedeni</h2>
+
+                        <textarea
+                            value={removeReason}
+                            onChange={(e) => setRemoveReason(e.target.value)}
+                            placeholder="Kulüpten çıkarma sebebini yazınız..."
+                            className="w-full p-3 bg-[#0f0f1a] text-white rounded-xl border border-[#3b82f6]/40"
+                            rows={4}
+                        />
+
+                        <div className="flex justify-end gap-3 mt-4">
+                            <button
+                                onClick={() => setRemoveModalOpen(false)}
+                                className="px-4 py-2 bg-gray-600 rounded-xl"
+                            >
+                                Vazgeç
+                            </button>
+
+                            <button
+                                onClick={handleRemoveConfirm}
+                                className="px-4 py-2 bg-red-600 rounded-xl"
+                            >
+                                Devam Et
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 📌 Emin misiniz Modal */}
+            {confirmModalOpen && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+                    <div className="bg-[#1a1a2e] p-6 rounded-xl w-full max-w-md border border-red-500">
+                        <h2 className="text-xl font-bold mb-4">Emin misiniz?</h2>
+
+                        <p className="text-gray-300 mb-6">
+                            Bu üyeyi kulüpten çıkarmak istediğinize emin misiniz?
+                            <br />
+                            <br />
+                            <b>Neden:</b> {removeReason}
+                        </p>
+
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setConfirmModalOpen(false)}
+                                className="px-4 py-2 bg-gray-600 rounded-xl"
+                            >
+                                Vazgeç
+                            </button>
+
+                            <button
+                                onClick={removeMember}
+                                className="px-4 py-2 bg-red-600 rounded-xl"
+                            >
+                                Çıkar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

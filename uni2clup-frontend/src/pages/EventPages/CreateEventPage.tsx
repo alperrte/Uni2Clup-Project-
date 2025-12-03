@@ -118,7 +118,7 @@ const CreateEventPage: React.FC = () => {
     };
 
     return (
-        <div className="relative text-white">
+        <div className="relative z-0 text-white">
             <div className="absolute inset-0 -z-10 opacity-40 blur-3xl bg-gradient-to-r from-indigo-900 via-purple-900 to-blue-900"></div>
 
             <div className="max-w-6xl mx-auto py-10 space-y-10">

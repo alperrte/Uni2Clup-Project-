@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using Uni2ClupProjectBackend.Data;
 using Uni2ClupProjectBackend.Models;
+using Uni2ClupProjectBackend.Services;
 
 namespace Uni2ClupProjectBackend.Controllers
 {
@@ -12,13 +13,15 @@ namespace Uni2ClupProjectBackend.Controllers
     public class ClubController : ControllerBase
     {
         private readonly AppDbContext _db;
+        private readonly EmailService _emailService;
 
-        public ClubController(AppDbContext db)
+        public ClubController(AppDbContext db, EmailService emailService)
         {
             _db = db;
+            _emailService = emailService;
         }
 
-        // 👥 Kulüp Üyelerini Getir
+        // Kulüp Üyelerini Getir
         [HttpGet("{clubId}/members")]
         [Authorize(Roles = "ClubManager")]
         public async Task<IActionResult> GetClubMembers(int clubId)
@@ -44,12 +47,14 @@ namespace Uni2ClupProjectBackend.Controllers
             return Ok(members);
         }
 
-        // 🔄 Üye Aktif/Pasif Yap
-        // 🔄 Kulüp Üyesi Aktif/Pasif Toggle
-        [HttpPut("members/toggle/{userId}")]
+        //  Üyeyi Kulüpten Çıkar
+        [HttpPost("members/remove/{userId}")]
         [Authorize(Roles = "ClubManager")]
-        public async Task<IActionResult> ToggleMemberActive(int userId)
+        public async Task<IActionResult> RemoveMember(int userId, [FromBody] RemoveMemberDto dto)
         {
+            if (string.IsNullOrWhiteSpace(dto.Reason))
+                return BadRequest(new { message = "Çıkarma nedeni zorunludur." });
+
             var email = User.FindFirstValue(ClaimTypes.Email);
             if (email == null)
                 return Unauthorized(new { message = "Oturum bulunamadı." });
@@ -58,34 +63,61 @@ namespace Uni2ClupProjectBackend.Controllers
             if (manager == null || manager.ClubId == null)
                 return Unauthorized(new { message = "Kulüp yöneticisi değilsiniz." });
 
-            // 🔍 Bu user gerçekten bu kulübün üyesi mi?
-            var member = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
-            if (member == null)
-                return NotFound(new { message = "Üye bulunamadı." });
-
             var relation = await _db.ClubMembers
                 .FirstOrDefaultAsync(cm => cm.UserId == userId && cm.ClubId == manager.ClubId.Value);
 
             if (relation == null)
-                return BadRequest(new { message = "Bu kullanıcı sizin kulübünüze ait değil." });
+                return BadRequest(new { message = "Bu kullanıcı kulübünüzde üye değil." });
 
-            // 🔄 DURUMU DEĞİŞTİR
-            member.IsActive = !member.IsActive;
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null)
+                return NotFound(new { message = "Kullanıcı bulunamadı." });
+
+            var club = await _db.Clubs.FirstOrDefaultAsync(c => c.Id == manager.ClubId);
+
+            // Üyeliği siliyoruz
+            _db.ClubMembers.Remove(relation);
+
+            // Bildirim oluştur
+            _db.Notifications.Add(new Notification
+            {
+                UserId = userId,
+                Title = "Kulüpten Çıkarıldınız",
+                Message = $"Kulüpten çıkarıldınız. Nedeni: {dto.Reason}",
+                CreatedAt = DateTime.UtcNow
+            });
+
+            // 📩 ***Mail gönderimi (AdminController ile aynı tarzda)***
+            await _emailService.SendEmailAsync(
+                user.Email,
+                $"{club.Name} Kulübünden Çıkarıldınız",
+        $@"
+Sayın {user.Name} {user.Surname},<br><br>
+
+<strong>{club.Name}</strong> kulübünden çıkarılmış bulunmaktasınız.<br><br>
+
+<strong>Çıkarılma Nedeni:</strong> {dto.Reason}<br><br>
+
+Bu işlem kulüp yöneticiniz tarafından gerçekleştirilmiştir.<br><br>
+
+Daha fazla bilgi almak isterseniz kulüp yönetimiyle iletişime geçebilirsiniz.<br><br>
+
+Saygılarımızla,<br>
+<strong>Uni2Clup</strong>
+");
 
             await _db.SaveChangesAsync();
 
-            return Ok(new
-            {
-                message = member.IsActive ? "Üye aktif edildi." : "Üye pasif edildi.",
-                isActive = member.IsActive
-            });
+            return Ok(new { message = "Üye kulüpten çıkarıldı, bildirim ve mail gönderildi." });
         }
 
 
+        public class RemoveMemberDto
+        {
+            public string Reason { get; set; }
+        }
 
-
-
-        // 👤 Giriş yapan kulüp yöneticisinin kulübünü getir
+        // Giriş yapan kulüp yöneticisinin kulübünü getir
         [HttpGet("my-club")]
         [Authorize(Roles = "ClubManager")]
         public async Task<IActionResult> GetMyClubAsync()
@@ -117,7 +149,7 @@ namespace Uni2ClupProjectBackend.Controllers
             });
         }
 
-        // ✏️ Kulüp yöneticisi açıklama güncelle
+        // Kulüp yöneticisi açıklama güncelle
         [HttpPut("update-description")]
         [Authorize(Roles = "ClubManager")]
         public async Task<IActionResult> UpdateMyClubDescription([FromBody] ClubDescriptionUpdateDto dto)
@@ -148,7 +180,7 @@ namespace Uni2ClupProjectBackend.Controllers
             });
         }
 
-        // 📋 Tüm kulüpleri listele
+        // Tüm kulüpleri listele
         [HttpGet]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllClubs()
@@ -172,7 +204,7 @@ namespace Uni2ClupProjectBackend.Controllers
             return Ok(clubs);
         }
 
-        // ➕ Yeni kulüp oluştur
+        //  Yeni kulüp oluştur
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateClub([FromBody] ClubCreateDto dto)
@@ -212,7 +244,7 @@ namespace Uni2ClupProjectBackend.Controllers
             });
         }
 
-        // ✏️ Kulüp güncelle
+        // Kulüp güncelle
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateClub(int id, [FromBody] ClubUpdateDto dto)
@@ -251,38 +283,8 @@ namespace Uni2ClupProjectBackend.Controllers
             });
         }
 
-        // 🔄 Aktif/Pasif Toggle
-        [HttpPut("toggle-active/{id}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> ToggleClubActive(int id)
-        {
-            var club = await _db.Clubs.FindAsync(id);
-            if (club == null)
-                return NotFound(new { message = "❌ Kulüp bulunamadı." });
 
-            club.IsActive = !club.IsActive;
-            
-            // Pasif edilirse kapanış tarihi ekle, aktif edilirse kaldır
-            if (!club.IsActive && club.ClosedAt == null)
-            {
-                club.ClosedAt = DateTime.UtcNow;
-            }
-            else if (club.IsActive)
-            {
-                club.ClosedAt = null;
-            }
-
-            await _db.SaveChangesAsync();
-
-            return Ok(new
-            {
-                message = club.IsActive ? "✅ Kulüp aktif edildi." : "⏸️ Kulüp pasif edildi.",
-                isActive = club.IsActive,
-                closedAt = club.ClosedAt
-            });
-        }
-
-        // 🗑️ Kulüp sil
+        //  Kulüp sil
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteClub(int id)
