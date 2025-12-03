@@ -1,5 +1,6 @@
 ﻿// JoinedEventsPage.tsx
-import React from "react";
+import React, { useEffect, useState } from "react";
+
 
 interface EventItem {
     id: number;
@@ -30,6 +31,29 @@ const JoinedEventsPage: React.FC<JoinedEventsPageProps> = ({
     formatDate,
     handleLeaveEventStarter
 }) => {
+
+    // ⏰ Sayfayı yenilemeden otomatik güncelleme için canlı zaman
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 1000); // her 1 saniyede bir kontrol
+
+        return () => clearInterval(timer);
+    }, []);
+
+
+    
+
+    // ⛔ Bitiş tarihi geçmiş etkinlikleri listeden çıkar
+    const activeEvents = myEvents.filter(event => {
+        const end = new Date(event.EndDate || event.endDate || "");
+        return end > currentTime; // ⬅ canlı zaman ile karşılaştır
+    });
+
+
+
     return (
         <div className="text-white">
             <h1
@@ -42,21 +66,23 @@ const JoinedEventsPage: React.FC<JoinedEventsPageProps> = ({
 
             
 
-            {myEvents.length === 0 ? (
+            {activeEvents.length === 0 ? (
+
                 <div className="text-center py-12">
                     <p className="text-gray-400 text-lg">
                         Henüz katıldığınız etkinlik bulunmamaktadır.
                     </p>
                 </div>
             ) : (
-                <div className="space-y-4">
-                    {myEvents.map((event) => (
-                        <div
-                            key={event.id}
-                            className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e]
-                                       border border-[#3b82f6]/50 rounded-xl p-6 shadow-xl
-                                       hover:scale-[1.01] transition-all duration-300"
-                        >
+                    <div className="space-y-4">
+                        {activeEvents.map((event) => (
+                            <div
+                                key={event.id}
+                                className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e]
+                       border border-[#3b82f6]/50 rounded-xl p-6 shadow-xl
+                       hover:scale-[1.01] transition-all duration-300"
+                            >
+
                             <h3 className="text-xl font-bold text-[#3b82f6] mb-3">
                                 {event.Name || event.name}
                             </h3>
