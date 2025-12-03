@@ -123,16 +123,19 @@ const EventPage: React.FC = () => {
 
             const data = await res.json();
 
-            const normalized: Event[] = data.map((e: any) => ({
-                id: e.id ?? e.Id,
-                Name: e.name ?? e.Name,
-                Capacity: e.capacity ?? e.Capacity,
-                Location: e.location ?? e.Location,
-                StartDate: e.startDate ?? e.StartDate,
-                EndDate: e.endDate ?? e.EndDate,
-                ClubName: e.clubName ?? e.ClubName,
-                Description: e.description ?? e.Description,
-            }));
+            const normalized: Event[] = data
+                .filter((e: any) => !e.isCancelled)  
+                .map((e: any) => ({
+                    id: e.id ?? e.Id,
+                    Name: e.name ?? e.Name,
+                    Capacity: e.capacity ?? e.Capacity,
+                    Location: e.location ?? e.Location,
+                    StartDate: e.startDate ?? e.StartDate,
+                    EndDate: e.endDate ?? e.EndDate,
+                    ClubName: e.clubName ?? e.ClubName,
+                    Description: e.description ?? e.Description,
+                }));
+
 
             setEvents(normalized);
         } finally {
@@ -218,14 +221,16 @@ const EventPage: React.FC = () => {
     const filtered = events.filter((ev) => {
         const status = getStatus(ev.StartDate, ev.EndDate);
         const statusOk = filter === "Tümü" || status === filter;
-        const nameOk = nameFilter === "Tüm İsimler" || nameFilter === ev.Name;
 
         const s = searchTerm.toLowerCase();
         const searchOk =
-            s === "" || ev.Name.toLowerCase().includes(s) || ev.Location.toLowerCase().includes(s);
+            s === "" ||
+            ev.Name.toLowerCase().includes(s) ||
+            ev.Location.toLowerCase().includes(s);
 
-        return statusOk && nameOk && searchOk;
+        return statusOk && searchOk;
     });
+
 
     return (
         <>
@@ -268,47 +273,84 @@ const EventPage: React.FC = () => {
                         {/* FİLTRELER */}
                         <div className="flex flex-col sm:flex-row items-end md:items-center gap-3 relative">
 
-                            <select
-                                value={nameFilter}
-                                onChange={(e) => setNameFilter(e.target.value)}
-                                className="px-6 py-3 rounded-2xl bg-[#1a1a2e] border border-[#3b82f6]/40">
-                                <option value="Tüm İsimler">Tüm İsimler</option>
-                                {uniqueNames.map((name) => (
-                                    <option key={name}>{name}</option>
-                                ))}
-                            </select>
 
-                            <div className="relative">
-                                <button
-                                    onClick={() => setOpen((p) => !p)}
-                                    className="px-6 py-3 rounded-2xl bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] shadow-lg flex items-center">
-                                    {filter} <span className="opacity-80 ml-1">⌄</span>
-                                </button>
+                            {/* 🔴 İptal Edilen Etkinlikler Butonu */}
+                            <button
+                                onClick={() => window.location.href = "/club/cancelled-events"}
+                                className="px-6 py-3 rounded-2xl bg-gradient-to-r from-red-600 to-red-800 text-white font-semibold shadow-lg hover:scale-105 transition-all"
+                            >
+                                ❌ İptal Edilenler
+                            </button>
 
-                                {open && (
-                                    <div className="absolute right-0 mt-3 bg-[#0f0f1a] w-48 rounded-2xl border border-[#3b82f6]/40 shadow-xl">
-                                        {["Tümü", "Devam Ediyor", "Yaklaşıyor", "Bitti"].map((item) => (
-                                            <div
-                                                key={item}
-                                                onClick={() => { setFilter(item); setOpen(false); }}
-                                                className={`px-5 py-3 cursor-pointer text-sm 
-                                                    ${filter === item ? "bg-[#1d2760]" : "hover:bg-[#111a3b]"}`}>
-                                                {item}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
+                            {/* 🔍 Arama Kutusu */}
                             <input
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 placeholder="Etkinlik ara..."
-                                className="px-4 py-2 rounded-2xl bg-[#1a1a2e] border border-[#3b82f6]/40"
+                                className="px-4 py-3 rounded-2xl bg-[#1a1a2e] border border-[#3b82f6]/40 w-48 text-white"
                             />
-                        </div>
-                    </div>
 
+                            {/* 🟦 Durum Filtresi */}
+                            <div className="relative z-50">
+                                <button
+                                    onClick={() => setOpen((prev) => !prev)}
+                                    className={`
+                px-6 py-3 rounded-2xl shadow-lg flex items-center gap-2 transition-all font-semibold
+                ${filter === "Devam Ediyor" ? "bg-green-600" : ""}
+                ${filter === "Yaklaşıyor" ? "bg-yellow-600 text-black" : ""}
+                ${filter === "Bitti" ? "bg-red-600" : ""}
+                ${filter === "Tümü" ? "bg-gradient-to-r from-[#2d1b69] to-[#3b82f6]" : ""}
+            `}
+                                >
+                                    <span>{filter}</span>
+
+                                    {/* Modern arrow icon */}
+                                    <svg
+                                        className={`w-4 h-4 transition-transform ${open ? "rotate-180" : ""}`}
+                                        fill="none"
+                                        stroke="white"
+                                        strokeWidth="2"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+
+                                {/* Dropdown Menü */}
+                                {open && (
+                                    <div className="absolute right-0 mt-3 bg-[#0f0f1a] w-52 rounded-2xl border border-[#3b82f6]/40 shadow-xl overflow-hidden">
+
+                                        <div
+                                            onClick={() => { setFilter("Tümü"); setOpen(false); }}
+                                            className="px-5 py-3 hover:bg-[#1d2760] cursor-pointer text-white">
+                                            🔵 Tümü
+                                        </div>
+
+                                        <div
+                                            onClick={() => { setFilter("Devam Ediyor"); setOpen(false); }}
+                                            className="px-5 py-3 hover:bg-green-500/20 cursor-pointer text-green-400">
+                                            🟢 Devam Ediyor
+                                        </div>
+
+                                        <div
+                                            onClick={() => { setFilter("Yaklaşıyor"); setOpen(false); }}
+                                            className="px-5 py-3 hover:bg-yellow-500/20 cursor-pointer text-yellow-300">
+                                            🟡 Yaklaşıyor
+                                        </div>
+
+                                        <div
+                                            onClick={() => { setFilter("Bitti"); setOpen(false); }}
+                                            className="px-5 py-3 hover:bg-red-500/20 cursor-pointer text-red-400">
+                                            🔴 Bitti
+                                        </div>
+
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+
+</div>
                     {/* ETKİNLİK LİSTESİ */}
                     {isLoading ? (
                         <div className="text-center p-10">Yükleniyor...</div>
@@ -392,6 +434,7 @@ const EventPage: React.FC = () => {
                     )}
                 </div>
             </div>
+
 
             {/* GÜNCELLEME MODALI */}
             {isModalOpen && editingEvent && (
@@ -513,32 +556,63 @@ const EventPage: React.FC = () => {
             {/* Katılımcı Modalı */}
             {participantsModalOpen && (
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-                    <div className="bg-[#0f0f1a] p-6 rounded-2xl border border-[#3b82f6]/40 w-full max-w-2xl relative">
+                    <div className="bg-[#0f0f1a] p-6 rounded-2xl border border-[#3b82f6]/40 w-full max-w-3xl relative">
 
+                        {/* Kapat */}
                         <button
                             onClick={() => setParticipantsModalOpen(false)}
                             className="absolute top-3 right-3 text-white text-2xl">×</button>
 
-                        <h2 className="text-2xl font-bold text-white mb-4">Katılan Öğrenciler</h2>
+                        <h2 className="text-3xl font-bold text-white mb-6">Katılan Öğrenciler</h2>
+
+                        {/* 🔍 Arama Kutusu */}
+                        <input
+                            type="text"
+                            placeholder="Email ile ara..."
+                            onChange={(e) => {
+                                const term = e.target.value.toLowerCase();
+                                setParticipants((prev) =>
+                                    prev.map(p => ({ ...p, hidden: !p.email.toLowerCase().includes(term) }))
+                                );
+                            }}
+                            className="w-full p-3 rounded-xl bg-[#1a1a2e] border border-[#3b82f6]/40 text-white mb-6"
+                        />
 
                         {participants.length === 0 ? (
                             <p className="text-gray-400">Henüz katılım yok.</p>
                         ) : (
-                            <div className="space-y-3">
-                                {participants.map((p) => (
-                                    <div key={p.id}>
-                                        <p className="text-gray-300 text-sm"><b>Ad:</b> {p.name} {p.surname}</p>
-                                        <p className="text-gray-300 text-sm"><b>Email:</b> {p.email}</p>
-                                        <p className="text-gray-300 text-sm"><b>Bölüm:</b> {p.departmentName}</p>
-                                        <p className="text-gray-300 text-sm"><b>Katılım Tarihi:</b> {toTurkeyTime(p.joinedAt)}</p>
-                                    </div>
-                                ))}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-2">
+
+                                {participants
+                                    .filter(p => !p.hidden)
+                                    .map((p) => (
+                                        <div
+                                            key={p.id}
+                                            className="bg-[#111326] border border-[#3b82f6]/30 p-4 rounded-2xl shadow-lg hover:scale-[1.02] transition-transform"
+                                        >
+                                            <p className="text-white text-lg font-semibold flex items-center gap-2">
+                                                👤 {p.name} {p.surname}
+                                            </p>
+
+                                            <p className="text-gray-300 text-sm mt-2 flex items-center gap-2">
+                                                📧 <span className="break-all">{p.email}</span>
+                                            </p>
+
+                                            <p className="text-gray-300 text-sm mt-2 flex items-center gap-2">
+                                                🎓 {p.departmentName}
+                                            </p>
+
+                                            <p className="text-gray-300 text-sm mt-2 flex items-center gap-2">
+                                                📅 {toTurkeyTime(p.joinedAt)}
+                                            </p>
+                                        </div>
+                                    ))}
                             </div>
                         )}
-
                     </div>
                 </div>
             )}
+
         </>
     );
 };

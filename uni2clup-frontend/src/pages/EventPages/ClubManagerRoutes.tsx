@@ -8,6 +8,7 @@ import AnnouncementsPage from "./AnnouncementsPage";
 import AnnouncementsListPage from "./AnnouncementsListPage";
 import MembersPage from "./MembersPage";
 import ClubSettingsPage from "./ClubSettingsPage";
+import CancelledEventsPage from "./CancelledEventsPage";
 
 interface Props {
     handleLogout: () => void;
@@ -41,6 +42,9 @@ const ClubManagerRoutes: React.FC<Props> = ({ handleLogout }) => {
 
                 {/* Yanlış URL → create-event */}
                 <Route path="*" element={<Navigate to="/club/create-event" replace />} />
+
+                <Route path="cancelled-events" element={<CancelledEventsPage />} />
+
 
             </Routes>
         </ClubManagerLayout>

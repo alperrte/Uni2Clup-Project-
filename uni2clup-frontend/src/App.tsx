@@ -23,6 +23,7 @@ import StatusPage from "./pages/AdminPages/StatusPage";
 // Club Manager
 import ClubManagerRoutes from "./pages/EventPages/ClubManagerRoutes";
 import CreateAnnouncementPage from "./pages/EventPages/CreateAnnouncementPage";
+import CancelledEventsPage from "./pages/EventPages/CancelledEventsPage";
 
 // 🟦 Student Paneli
 import StudentLayout from "./components/StudentLayout";
@@ -173,13 +174,18 @@ const App: React.FC = () => {
                             path="/club/*"
                             element={<ClubManagerRoutes handleLogout={handleLogout} />}
                         />
+
+
+
                         <Route
                             path="/club/create-announcement"
                             element={<CreateAnnouncementPage />}
                         />
+
                         <Route path="*" element={<Navigate to="/club" replace />} />
                     </>
                 )}
+
 
                 {/* 🟦 STUDENT & ACADEMIC */}
                 {(user?.role === "Student" || user?.role === "Academic") && (

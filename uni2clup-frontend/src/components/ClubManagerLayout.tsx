@@ -19,6 +19,7 @@ const ClubManagerLayout: React.FC<LayoutProps> = ({ children, handleLogout }) =>
     const location = useLocation();
     const [clubName, setClubName] = useState<string>("");
     const [clubError, setClubError] = useState<string>("");
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -67,27 +68,63 @@ const ClubManagerLayout: React.FC<LayoutProps> = ({ children, handleLogout }) =>
                 ))}
             </div>
 
+            {showConfirmModal && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[99999]">
+                    <div className="bg-[#1a1a2e] p-8 rounded-xl border border-[#3b82f6] max-w-md w-full mx-4">
+
+                        <h2 className="text-2xl font-bold mb-4 text-center text-white">Onay Gerekli</h2>
+
+                        <p className="text-gray-300 mb-8 text-center text-lg">
+                            Kulüp Panelinden çıkış yapmak istediğinize emin misiniz?
+                        </p>
+
+                        <div className="flex gap-4">
+                            <button
+                                className="flex-1 bg-green-600 hover:bg-green-700 py-3 rounded-xl font-bold text-white"
+                                onClick={() => {
+                                    handleLogout && handleLogout();
+                                    setShowConfirmModal(false);
+                                }}
+                            >
+                                Evet
+                            </button>
+
+                            <button
+                                className="flex-1 bg-red-600 hover:bg-red-700 py-3 rounded-xl font-bold text-white"
+                                onClick={() => setShowConfirmModal(false)}
+                            >
+                                Hayır
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            )}
+
             {/* Sidebar */}
             <aside className="fixed left-0 top-0 h-screen 
 w-48 sm:w-56 md:w-64 lg:w-72 xl:w-80
 bg-gradient-to-br from-[#0a0a1a] via-[#0f0f2a] to-[#1a1a3a] border-r-2 border-[#3b82f6] flex flex-col justify-between p-6 shadow-2xl">
 
+                {/* 🔵 SOL ÜST LOGO (Sabit) */}
+                <div className="mb-6 text-center mt-4 flex flex-col items-center justify-center">
+                    {/* Glow arka plan */}
+                    <div className="absolute w-48 h-48 bg-[#3b82f6] blur-3xl opacity-20 rounded-full"></div>
 
+                    {/* Logo */}
+                    <img
+                        src="/kulüp-paneli-logosu.png"
+                        alt="Kulüp Paneli Logosu"
+                        className="w-40 h-40 object-contain relative z-10"
+                    />
 
-                <div className="mb-6 text-center mt-4">
-                    <div className="relative inline-block mb-4">
-                        <div className="w-20 h-20 bg-gradient-to-br from-[#2d1b69] to-[#3b82f6] rounded-full flex items-center justify-center text-4xl shadow-xl">
-                            ✔️
-                        </div>
-                        <div className="absolute -top-1 -right-1 w-20 h-20 border-2 border-[#3b82f6] rounded-full animate-spin" style={{ animationDuration: "8s" }}></div>
-                    </div>
                     <h1 className="text-2xl font-bold text-center bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] bg-clip-text text-transparent">
 
-                        Uni2Clup Kulüp Yönetim Paneli
+                        Uni2Clup Kulüp Paneli
                     </h1>
                     <p className="mt-4 text-lg font-semibold text-white">
                         {clubName
-                            ? `Yönetim  - ${clubName}`
+                            ? `Yönetilen Kulüp - ${clubName}`
                             : (clubError || "Kulüp bilgisi yükleniyor...")}
                     </p>
                 </div>
@@ -119,7 +156,7 @@ bg-gradient-to-br from-[#0a0a1a] via-[#0f0f2a] to-[#1a1a3a] border-r-2 border-[#
 
                     <div className="pt-6 border-t border-[#3b82f6]/30">
                         <button
-                            onClick={handleLogout}
+                            onClick={() => setShowConfirmModal(true)}
                             className="w-full bg-indigo-700 hover:bg-indigo-900 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl flex items-center justify-center gap-2"
                         >
                             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -130,12 +167,16 @@ bg-gradient-to-br from-[#0a0a1a] via-[#0f0f2a] to-[#1a1a3a] border-r-2 border-[#
                     </div>
 
 
+
+
+
                 </nav>
             </aside>
 
-            <main className="relative z-10 flex-1 overflow-y-auto 
+            <main className="flex-1 overflow-y-auto 
 ml-64 md:ml-72 lg:ml-80
 h-screen">
+
 
                 <div className="p-8">
                     {children}

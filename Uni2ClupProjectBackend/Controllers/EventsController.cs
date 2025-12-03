@@ -20,9 +20,8 @@ namespace Uni2ClupProjectBackend.Controllers
             _db = db;
         }
 
-        // --------------------------------------------------------------------
+
         // 1) Etkinlik Listesi (Tümünü gösterir)
-        // --------------------------------------------------------------------
         [HttpGet("list")]
         [Authorize(Roles = "ClubManager")]
         public async Task<IActionResult> GetEvents()
@@ -74,9 +73,37 @@ namespace Uni2ClupProjectBackend.Controllers
             return Ok(events);
         }
 
-        // --------------------------------------------------------------------
+        // Tüm Kulüp Üyelerini Getir
+        private async Task<List<User>> GetClubMembersUsers(int clubId)
+        {
+            return await _db.ClubMembers
+                .Where(cm => cm.ClubId == clubId)
+                .Include(cm => cm.User)
+                .Select(cm => cm.User)
+                .ToListAsync();
+        }
+
+        // Kulüp Üyelerine Bildirim Gönder
+        private async Task SendNotificationToClubMembers(int clubId, string title, string message)
+        {
+            var users = await GetClubMembersUsers(clubId);
+
+            foreach (var user in users)
+            {
+                _db.Notifications.Add(new Notification
+                {
+                    UserId = user.Id,
+                    Title = title,
+                    Message = message,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+
+            await _db.SaveChangesAsync();
+        }
+
+
         // 2) Sadece kendi oluşturduğu etkinlikler
-        // --------------------------------------------------------------------
         [HttpGet("my-events")]
         [Authorize(Roles = "ClubManager")]
         public async Task<IActionResult> GetMyEvents()
@@ -111,9 +138,8 @@ namespace Uni2ClupProjectBackend.Controllers
             return Ok(events);
         }
 
-        // --------------------------------------------------------------------
+
         // 3) Etkinlik Oluştur
-        // --------------------------------------------------------------------
         [HttpPost("create")]
         [Authorize(Roles = "ClubManager")]
         public async Task<IActionResult> Create([FromBody] EventCreateDto dto)
@@ -157,7 +183,7 @@ namespace Uni2ClupProjectBackend.Controllers
             _db.Events.Add(entity);
             await _db.SaveChangesAsync();
 
-            // Bildirim + mail
+
             var members = await _db.ClubMembers
                 .Where(cm => cm.ClubId == user.ClubId.Value)
                 .Include(cm => cm.User)
@@ -196,9 +222,8 @@ namespace Uni2ClupProjectBackend.Controllers
             });
         }
 
-        // --------------------------------------------------------------------
+
         // 4) Etkinlik Güncelle
-        // --------------------------------------------------------------------
         [HttpPut("update/{id}")]
         [Authorize(Roles = "ClubManager")]
         public async Task<IActionResult> Update(int id, [FromBody] EventCreateDto dto)
@@ -207,66 +232,152 @@ namespace Uni2ClupProjectBackend.Controllers
             if (email == null)
                 return Unauthorized(new { message = "❌ Oturum bulunamadı." });
 
-            var existing = await _db.Events.FindAsync(id);
-            if (existing == null)
+            var ev = await _db.Events.FindAsync(id);
+            if (ev == null)
                 return NotFound(new { message = "❌ Etkinlik bulunamadı." });
 
-            if (!string.Equals(existing.CreatedBy, email, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(ev.CreatedBy, email, StringComparison.OrdinalIgnoreCase))
                 return StatusCode(403, new { message = "Bu etkinliği güncelleme yetkiniz yok." });
-
-            if (existing.IsCancelled)
-                return BadRequest(new { message = "İptal edilmiş etkinlik güncellenemez." });
 
             if (dto.EndDate < dto.StartDate)
                 return BadRequest(new { message = "Bitiş tarihi başlangıç tarihinden önce olamaz." });
 
-            // ✔ Eski değerleri sakla
-            var oldName = existing.Name;
-            var oldCapacity = existing.Capacity;
-            var oldLocation = existing.Location;
-            var oldStart = existing.StartDate;
-            var oldEnd = existing.EndDate;
 
-            // ✔ Güncelle
-            existing.Name = dto.Name.Trim();
-            existing.Location = dto.Location.Trim();
-            existing.Description = dto.Description?.Trim() ?? "";
-            existing.Capacity = dto.Capacity;
-            existing.StartDate = dto.StartDate;
-            existing.EndDate = dto.EndDate;
+
+            var oldName = ev.Name;
+            var oldCapacity = ev.Capacity;
+            var oldLocation = ev.Location;
+            var oldStart = ev.StartDate;
+            var oldEnd = ev.EndDate;
+
+
+            ev.Name = dto.Name.Trim();
+            ev.Location = dto.Location.Trim();
+            ev.Description = dto.Description?.Trim() ?? "";
+            ev.Capacity = dto.Capacity;
+            ev.StartDate = dto.StartDate;
+            ev.EndDate = dto.EndDate;
 
             await _db.SaveChangesAsync();
 
-            // ✔ Değişiklik listesi
-            List<string> changes = new List<string>();
 
-            if (oldName != existing.Name)
-                changes.Add($"Etkinlik adı '{oldName}' → '{existing.Name}' olarak güncellendi.");
 
-            if (oldLocation != existing.Location)
-                changes.Add($"Etkinlik yeri '{oldLocation}' → '{existing.Location}' olarak güncellendi.");
+            List<string> changeMessages = new();
 
-            if (oldCapacity != existing.Capacity)
+
+  
+            if (oldName != ev.Name)
             {
-                int diff = existing.Capacity - oldCapacity;
-                if (diff > 0)
-                    changes.Add($"Kontenjan {diff} kişi artırıldı.");
-                else
-                    changes.Add($"Kontenjan {Math.Abs(diff)} kişi azaltıldı.");
+                string msg = $"“{oldName}” etkinliğinin adı “{ev.Name}” olarak güncellenmiştir.";
+                await SendNotificationToClubMembers(ev.ClubId, "Etkinlik Adı Güncellendi", msg);
+                changeMessages.Add(msg);
             }
 
-            if (oldStart != existing.StartDate || oldEnd != existing.EndDate)
-                changes.Add($"Etkinliğin tarihi {oldStart:dd.MM.yyyy HH:mm} → {existing.StartDate:dd.MM.yyyy HH:mm} olarak güncellendi.");
+
+            if (oldCapacity != ev.Capacity)
+            {
+                int diff = ev.Capacity - oldCapacity;
+                string msg = diff > 0
+                    ? $"“{ev.Name}” etkinliğinin kontenjanı {diff} kişi artırılmıştır."
+                    : $"“{ev.Name}” etkinliğinin kontenjanı {Math.Abs(diff)} kişi azaltılmıştır.";
+
+                await SendNotificationToClubMembers(ev.ClubId, "Kontenjan Güncellendi", msg);
+                changeMessages.Add(msg);
+            }
+
+            if (oldLocation != ev.Location)
+            {
+                string msg = $"“{ev.Name}” etkinliğinin yeri “{ev.Location}” olarak güncellenmiştir.";
+                await SendNotificationToClubMembers(ev.ClubId, "Yer Güncellendi", msg);
+                changeMessages.Add(msg);
+            }
+
+            if (oldStart != ev.StartDate || oldEnd != ev.EndDate)
+            {
+                string msg =
+                    $"“{ev.Name}” etkinliğinin tarihi " +
+                    $"{oldStart:dd.MM.yyyy HH:mm} → {ev.StartDate:dd.MM.yyyy HH:mm} olarak güncellenmiştir.";
+
+                await SendNotificationToClubMembers(ev.ClubId, "Tarih Güncellendi", msg);
+                changeMessages.Add(msg);
+            }
+
+
 
             return Ok(new
             {
-                message = "✏️ Etkinlik başarıyla güncellendi.",
-                changes = changes
+                message = "✔ Etkinlik güncellendi.",
+                changes = changeMessages
             });
         }
 
-        //Etkinlik İptal Et (Neden ile birlikte)
 
+        // Etkinliğe Katılan Öğrenciler
+        [HttpGet("participants/{eventId}")]
+        [Authorize(Roles = "ClubManager")]
+        public async Task<IActionResult> GetParticipants(int eventId)
+        {
+            var ev = await _db.Events.FindAsync(eventId);
+            if (ev == null)
+                return NotFound(new { message = "Etkinlik bulunamadı." });
+
+            var participants = await _db.EventParticipants
+                .Where(ep => ep.EventId == eventId)
+                .Include(ep => ep.User)
+                .Select(ep => new
+                {
+                    ep.User.Id,
+                    ep.User.Name,
+                    ep.User.Surname,
+                    ep.User.Email,
+                    departmentName = ep.User.Department != null ? ep.User.Department.Name : "-",
+                    joinedAt = ep.JoinedAt
+                })
+                .ToListAsync();
+
+            return Ok(participants);
+        }
+
+        // 🔥 İptal Edilen Etkinlikleri Listele
+        [HttpGet("cancelled")]
+        [Authorize(Roles = "Admin,ClubManager")]
+        public async Task<IActionResult> GetCancelledEvents()
+        {
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (email == null)
+                return Unauthorized(new { message = "❌ Oturum bulunamadı." });
+
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+            var query = _db.Events
+                .Where(e => e.IsCancelled == true)
+                .Include(e => e.Club)
+                .OrderByDescending(e => e.StartDate)
+                .Select(e => new
+                {
+                    e.Id,
+                    e.Name,
+                    e.Location,
+                    e.Capacity,
+                    ClubName = e.Club.Name,
+                    e.Description,
+                    e.CancelReason,
+                    e.StartDate,
+                    e.EndDate,
+                    e.ClubId
+                });
+
+            // ClubManager sadece kendi kulübünün iptal edilen etkinliklerini görür
+            if (user.Role == "ClubManager" && user.ClubId != null)
+                query = query.Where(e => e.ClubId == user.ClubId);
+
+            var cancelledEvents = await query.ToListAsync();
+
+            return Ok(cancelledEvents);
+        }
+
+
+        //Etkinlik İptal Et 
         [HttpPut("cancel/{id}")]
         [Authorize(Roles = "ClubManager")]
         public async Task<IActionResult> CancelEvent(int id, [FromBody] CancelEventDto dto)
@@ -278,24 +389,30 @@ namespace Uni2ClupProjectBackend.Controllers
             if (email == null)
                 return Unauthorized(new { message = "Kullanıcı oturumu bulunamadı." });
 
-            var ev = await _db.Events.FindAsync(id);
+            var ev = await _db.Events
+                .Include(e => e.Club)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
             if (ev == null)
                 return NotFound(new { message = "Etkinlik bulunamadı." });
 
             if (!string.Equals(ev.CreatedBy, email, StringComparison.OrdinalIgnoreCase))
                 return StatusCode(403, new { message = "Bu etkinlik üzerinde yetkiniz yok." });
 
-            // Etkinliği iptal edildi olarak işaretle
             ev.Description += $"\n\n[İPTAL EDİLDİ] Neden: {dto.Reason}";
+            ev.IsCancelled = true;
+            ev.CancelReason = dto.Reason;
 
-            // --- Kulüp üyelerine bildirim gönder ---
             var members = await _db.ClubMembers
                 .Where(cm => cm.ClubId == ev.ClubId)
                 .Include(cm => cm.User)
                 .ToListAsync();
 
+            var emailService = HttpContext.RequestServices.GetRequiredService<EmailService>();
+
             foreach (var m in members)
             {
+
                 _db.Notifications.Add(new Notification
                 {
                     UserId = m.UserId,
@@ -303,12 +420,29 @@ namespace Uni2ClupProjectBackend.Controllers
                     Message = $"{ev.Name} etkinliği iptal edildi. Sebep: {dto.Reason}",
                     CreatedAt = DateTime.UtcNow
                 });
+
+
+                await emailService.SendEmailAsync(
+                    m.User.Email,
+                    $"Etkinlik İptal Edildi: {ev.Name}",
+                    $@"
+                <h2>{ev.Club.Name} - Etkinlik İptali</h2>
+                <p><b>Etkinlik:</b> {ev.Name}</p>
+                <p><b>Yer:</b> {ev.Location}</p>
+                <p><b>Başlangıç:</b> {ev.StartDate:dd.MM.yyyy HH:mm}</p>
+                <p><b>Bitiş:</b> {ev.EndDate:dd.MM.yyyy HH:mm}</p>
+                <br />
+                <p><b>İptal Nedeni:</b> {dto.Reason}</p>
+                <br />
+                <p><i>Bu etkinlik kulüp yöneticisi tarafından iptal edilmiştir.</i></p>
+            ");
             }
 
             await _db.SaveChangesAsync();
 
-            return Ok(new { message = "Etkinlik başarıyla iptal edildi ve öğrencilere bildirildi." });
+            return Ok(new { message = "Etkinlik iptal edildi, üyelere bildirim ve email gönderildi." });
         }
+
 
 
         public class CancelEventDto
