@@ -27,6 +27,10 @@ const StudentLayout: React.FC = () => {
     const [departments, setDepartments] = useState([]);
     const [selectedDept, setSelectedDept] = useState("");
     const [showEventDropdown, setShowEventDropdown] = useState(false);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [confirmMessage, setConfirmMessage] = useState("");
+    const [confirmAction, setConfirmAction] = useState<() => void>(() => { });
+
     const [confirmModal, setConfirmModal] = useState({
         show: false,
         title: "",
@@ -40,22 +44,52 @@ const StudentLayout: React.FC = () => {
         setToast({ show: true, message: msg, subtitle });
     };
     const [currentPage, setCurrentPage] = useState(1);
-    const clubsPerPage = 4; 
+    const clubsPerPage = 4;
+    const missedEvents = clubEvents
+        .filter(ev => new Date(ev.endDate) < new Date()) // Süresi geçmiş
+        .filter(ev => !myEvents.some(j => j.id === ev.id)); // Katılmamış
+    const joinedPastEvents = myEvents.filter(ev => {
+        const end =
+            ev.EndDate ||
+            ev.Enddate ||
+            ev.endDate ||
+            ev.enddate ||
+            ev.end_date;
 
+        return end && new Date(end) < new Date();
+    });
+
+
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+    };
 
 
     const [notifTab, setNotifTab] = useState<"unread" | "history">("unread");
 
     const formatDate = (date: string | undefined | null) => {
         if (!date) return "Tarih yok";
-        return new Date(date).toLocaleString("tr-TR", {
+
+        // Gelen tarih string'i örneğin: "2025-12-02T20:00:00"
+        // Bunu manuel olarak parçalayarak TR saatine göre göstereceğiz.
+        const d = new Date(date);
+
+        const day = d.toLocaleDateString("tr-TR", {
             day: "2-digit",
             month: "long",
-            year: "numeric",
+            year: "numeric"
+        });
+
+        const time = d.toLocaleTimeString("tr-TR", {
             hour: "2-digit",
             minute: "2-digit"
         });
+
+        return `${day} ${time}`;
     };
+
+
 
     const getClubIcon = (name: string) => {
         return {
@@ -71,7 +105,7 @@ const StudentLayout: React.FC = () => {
             return false;
         }
 
-        return true; 
+        return true;
     }, [token]);
 
 
@@ -173,7 +207,7 @@ const StudentLayout: React.FC = () => {
             }
         });
     };
-      
+
 
     const handleLeaveClub = async (clubId: number) => {
         if (!checkToken()) return;
@@ -381,7 +415,7 @@ const StudentLayout: React.FC = () => {
                                 : "bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] hover:border-[#3b82f6] border-2 border-transparent"
                             }`}
                     >
-                       🎯 Kulüpler
+                        🎯 Kulüpler
                     </button>
 
                     {/* Etkinlik Dropdown */}
@@ -405,7 +439,7 @@ const StudentLayout: React.FC = () => {
                                     className={`block w-full text-left p-3 rounded-lg text-md transition-all duration-300 
                             ${activeMenu === "joined-events" ? "bg-[#3b82f6]" : "hover:bg-[#2a2a3e]"}`}
                                 >
-                                   ✔ Katıldığım Etkinlikler
+                                    ✔ Katıldığım Etkinlikler
                                 </button>
 
                                 {/* Katıldığım Kulüplerin Etkinlikleri */}
@@ -430,7 +464,7 @@ const StudentLayout: React.FC = () => {
                                 : "bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] hover:border-[#3b82f6] border-2 border-transparent"
                             }`}
                     >
-                      🕒 Geçmiş Etkinlikler
+                        🕒 Geçmiş Etkinlikler
                     </button>
 
                     {/* Profil */}
@@ -442,23 +476,26 @@ const StudentLayout: React.FC = () => {
                                 : "bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e] hover:border-[#3b82f6] border-2 border-transparent"
                             }`}
                     >
-                       👤 Profil
+                        👤 Profil
                     </button>
 
                 </nav>
 
-                {/* Çıkış Yap */}
+              
+                {/* Çıkış Yap Butonu */}
                 <button
                     onClick={() => {
-                        localStorage.clear();
-                        window.location.href = "/login";
+                        setConfirmMessage("Öğrenci Panelinden çıkış yapmak istediğinize emin misiniz?");
+                        setConfirmAction(() => () => handleLogout());
+                        setShowConfirmModal(true);
                     }}
-                    className="mt-6 w-full bg-indigo-700 hover:bg-indigo-900 text-white font-bold py-4 px-6 rounded-xl 
-                   transition-all duration-300 hover:scale-105"
+                    className="mt-auto w-full bg-indigo-700 hover:bg-indigo-900 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl flex items-center justify-center space-x-2"
                 >
-                 [→ Çıkış Yap
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.59L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
+                    </svg>
+                    <span>Çıkış Yap</span>
                 </button>
-
             </div>
 
 
@@ -500,27 +537,72 @@ const StudentLayout: React.FC = () => {
 
                     {activeMenu === "club-events" && (
                         <ClubEventsPage
-                            clubEvents={clubEvents}
-                            handleJoinEvent={handleJoinEvent}   // ✔ ARTIK GERÇEK FONKSİYON
+                            clubEvents={clubEvents.filter(ev => {
+                                const end = new Date(ev.EndDate || ev.endDate);
+                                return end >= new Date(); // sadece bitmemiş etkinlikleri gönder
+                            })}
+                            handleJoinEvent={handleJoinEvent}
                             formatDate={formatDate}
                         />
+
                     )}
 
                     {activeMenu === "past-events" && (
-                        <PastEventsPage pastEvents={pastEvents} formatDate={formatDate} />
+                        <PastEventsPage
+                            pastEvents={joinedPastEvents}   // ✔ Katıldığın geçmiş
+                            missedEvents={missedEvents}     // ✔ Kaçırdığın geçmiş
+                            formatDate={formatDate}
+                        />
+
                     )}
+
 
                     {activeMenu === "profile" && (
                         <ProfilePage
                             profile={profile}
                             getClubIcon={getClubIcon}
                             handleLeaveClub={handleLeaveClub}
+                            myEvents={myEvents}
+                            pastEvents={missedEvents}
+
                         />
                     )}
 
 
                 </div>
             </main>
+
+            {showConfirmModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[999]">
+                    <div className="bg-[#1a1a2e] p-8 rounded-xl border border-[#3b82f6] max-w-md w-full mx-4">
+                        <h2 className="text-2xl font-bold mb-4 text-center text-white">Onay Gerekli</h2>
+
+                        <p className="text-gray-300 mb-8 text-center text-lg">
+                            {confirmMessage}
+                        </p>
+
+                        <div className="flex gap-4">
+                            <button
+                                className="flex-1 bg-green-600 hover:bg-green-700 py-3 rounded-xl font-bold text-white"
+                                onClick={() => {
+                                    if (confirmAction) confirmAction();
+                                    setShowConfirmModal(false);
+                                }}
+                            >
+                                Evet
+                            </button>
+
+                            <button
+                                className="flex-1 bg-red-600 hover:bg-red-700 py-3 rounded-xl font-bold text-white"
+                                onClick={() => setShowConfirmModal(false)}
+                            >
+                                Hayır
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
 
             {confirmModal.show && (
                 <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm animate-fadeIn">
@@ -587,14 +669,14 @@ const StudentLayout: React.FC = () => {
                 {showNotifications && (
                     <div className="absolute right-0 mt-3 w-96 bg-[#1a1a2e] border border-[#3b82f6] rounded-xl p-4 shadow-2xl z-50">
 
-                            
+
                         {/* 🔵 SEKME BAŞLIKLARI */}
                         <div className="flex mb-4 border-b border-[#3b82f6]/40">
                             <button
                                 onClick={() => setNotifTab("unread")}
                                 className={`flex-1 py-2 text-center ${notifTab === "unread"
-                                        ? "text-[#3b82f6] border-b-2 border-[#3b82f6]"
-                                        : "text-gray-400"
+                                    ? "text-[#3b82f6] border-b-2 border-[#3b82f6]"
+                                    : "text-gray-400"
                                     }`}
                             >
                                 Okunmamış
@@ -603,8 +685,8 @@ const StudentLayout: React.FC = () => {
                             <button
                                 onClick={() => setNotifTab("history")}
                                 className={`flex-1 py-2 text-center ${notifTab === "history"
-                                        ? "text-[#3b82f6] border-b-2 border-[#3b82f6]"
-                                        : "text-gray-400"
+                                    ? "text-[#3b82f6] border-b-2 border-[#3b82f6]"
+                                    : "text-gray-400"
                                     }`}
                             >
                                 Geçmiş

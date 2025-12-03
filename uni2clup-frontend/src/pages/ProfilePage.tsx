@@ -27,10 +27,13 @@ interface ProfilePageProps {
     profile: ProfileData | null;
     getClubIcon: (clubName: string) => ClubIconData;
     handleLeaveClub: (clubId: number) => void;   // 🔥 EKLENECEK SATIR
+    myEvents: any[];
+    pastEvents: any[];
+
 }
 
-    
-const ProfilePage: React.FC<ProfilePageProps> = ({ profile, getClubIcon, handleLeaveClub }) => {
+
+const ProfilePage: React.FC<ProfilePageProps> = ({ profile, getClubIcon, handleLeaveClub, myEvents, pastEvents }) => {
     return (
         <div className="text-white">
             <h1
@@ -41,7 +44,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ profile, getClubIcon, handleL
                 Profil
             </h1>
 
-            
+
 
             {profile ? (
                 <div
@@ -58,7 +61,7 @@ hover:shadow-[0_0_40px_rgba(59,130,246,0.25)]
 "
 
                 >
-                    
+
 
                     {/* Avatar */}
                     <div
@@ -94,7 +97,8 @@ hover:shadow-[0_0_40px_rgba(59,130,246,0.25)]
                     border border-[#3b82f6]/40 shadow-lg hover:shadow-[#2d1b69]/30 
                     transition-all duration-300">
                             <div className="text-3xl font-bold text-white">
-                                {profile?.joinedEventsCount ?? 0}
+                                {myEvents.length}
+
                             </div>
                             <div className="text-gray-300 text-sm">Katıldığı Etkinlik Sayısı</div>
                         </div>
@@ -104,7 +108,8 @@ hover:shadow-[0_0_40px_rgba(59,130,246,0.25)]
                     border border-[#3b82f6]/40 shadow-lg hover:shadow-[#3b82f6]/20 
                     transition-all duration-300">
                             <div className="text-3xl font-bold text-white">
-                                {profile?.unreadNotifications ?? 0}
+                                {pastEvents.length}
+
                             </div>
                             <div className="text-gray-300 text-sm">Kaçırdığı Etkinlik Sayısı</div>
                         </div>
