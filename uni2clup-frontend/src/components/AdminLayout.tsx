@@ -11,7 +11,6 @@ interface AdminLayoutProps {
 const navItems = [
     { name: "Kullanıcı Ekle", path: "/admin/add-user", role: "Admin", icon: "➕" },
     { name: "Öğrenciler", path: "/admin/students", role: "Student", icon: "👨‍🎓" },
-    { name: "Akademisyenler", path: "/admin/academics", role: "Academic", icon: "👨‍🏫" },
     { name: "Kulüp Yöneticileri", path: "/admin/club-managers", role: "ClubManager", icon: "👔" },
     { name: "Yöneticiler", path: "/admin/admins", role: "Admin", icon: "👑" },
     { name: "Öğrenci Başvuruları", path: "/admin/applications", role: "Admin", icon: "📩" },
