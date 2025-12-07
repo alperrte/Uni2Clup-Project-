@@ -393,11 +393,27 @@ flex flex-col items-center justify-center relative overflow-hidden">
                             📩 Başvuruyu göndermek istediğinize emin misiniz?
                         </h2>
 
-                        <p className="text-gray-300 text-center mb-6">
-                            Ad: {registerData?.name} <br />
-                            Soyad: {registerData?.surname} <br />
-                            E-posta: {registerData?.email}
-                        </p>
+                        <div className="text-gray-300 text-left mb-6 flex flex-col gap-2">
+
+                            <div className="flex items-center gap-2">
+                                <span className="w-5 text-center">👤</span>
+                                <span className="font-semibold">Ad: {registerData?.name}</span>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <span className="w-5 text-center">🪪</span>
+                                <span className="font-semibold">Soyad: {registerData?.surname}</span>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <span className="w-5 text-center">✉️</span>
+                                <span className="font-semibold">E-posta: {registerData?.email}</span>
+                            </div>
+
+                        </div>
+
+
+
 
                         <div className="flex gap-4">
                             <button
