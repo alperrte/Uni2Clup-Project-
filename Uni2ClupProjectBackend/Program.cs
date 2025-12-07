@@ -189,7 +189,7 @@ using (var scope = app.Services.CreateScope())
         IsActive = true, CreatedAt = DateTime.UtcNow
     },
 
-    // ========== ELEKTRİK-ELEKTRONİK MÜH. ==========
+    // ========== ELEKTRİK-ELEKTRONİK MÜHENDİSLİĞİ ==========
     new Club {
         Name = "Robotik Sistemler ve Otomasyon Kulübü",
         DepartmentId = deptEEE!.Id,
@@ -285,8 +285,107 @@ using (var scope = app.Services.CreateScope())
         DepartmentId = deptLAW!.Id,
         Description = "Öğrencilerin mahkeme simülasyonlarına hazırlanarak savunma, analiz ve ikna becerilerini geliştirdikleri akademik bir topluluk.",
         IsActive = true, CreatedAt = DateTime.UtcNow
-    }
+    },
+
+    // ========== ÇEVRE MÜHENDİSLİĞİ ==========
+    new Club {
+        Name = "Çevre Teknolojileri ve Sürdürülebilirlik Kulübü",
+        DepartmentId = deptENV!.Id,
+        Description = "Sürdürülebilirlik, çevre koruma, geri dönüşüm ve ekolojik farkındalık üzerine çalışmalar yürütür.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
+    new Club {
+        Name = "Doğa Koruma ve Ekolojik Bilinç Kulübü",
+        DepartmentId = deptENV!.Id,
+        Description = "Ekosistem yönetimi, doğa koruma projeleri, çevresel farkındalık ve saha gezileri üzerine çalışmalar yürütür.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
+
+    // ========== İKTİSAT ==========
+    new Club {
+        Name = "Ekonomi ve Finans Analiz Kulübü",
+        DepartmentId = deptECO!.Id,
+        Description = "Makro-mikro ekonomi analizleri, finansal modelleme ve piyasa araştırmaları üzerine etkinlikler düzenler.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
+    new Club {
+        Name = "Uygulamalı Ekonomi ve Veri Analizi Kulübü",
+        DepartmentId = deptECO!.Id,
+        Description = "Ekonomik veri analizi, istatistiksel modelleme, piyasa simülasyonları ve ekonomi temelli araştırmalar yürütür.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
+
+    // ========== GÜZEL SANATLAR ==========
+    new Club {
+        Name = "Güzel Sanatlar ve Tasarım Kulübü",
+        DepartmentId = deptFA!.Id,
+        Description = "Grafik tasarım, çizim, dijital sanatlar, fotoğrafçılık ve yaratıcı sanat çalışmaları için etkinlikler düzenler.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
+    new Club {
+        Name = "Yaratıcı Sanatlar ve Sahne Performansı Kulübü",
+        DepartmentId = deptFA!.Id,
+        Description = "Tiyatro, sahne sanatları, yaratıcı drama, performans çalışmaları ve sanat üretimi üzerine etkinlikler düzenler.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
+
+    // ========== FİZİK ==========
+    new Club {
+        Name = "Fizik ve Uzay Bilimleri Kulübü",
+        DepartmentId = deptPHY!.Id,
+        Description = "Kuantum fiziği, astrofizik, deneysel fizik ve uzay bilimleri üzerine akademik çalışmalar yürütür.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
+    new Club {
+        Name = "Deneysel Fizik ve Bilim Uygulamaları Kulübü",
+        DepartmentId = deptPHY!.Id,
+        Description = "Laboratuvar deneyleri, optik uygulamalar, modern fizik deneyleri ve bilimsel projeler üzerine çalışmalar yürütür.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
+
+    // ========== KİMYA ==========
+    new Club {
+        Name = "Kimya ve Moleküler Bilimler Kulübü",
+        DepartmentId = deptCHEM!.Id,
+        Description = "Organik, anorganik ve analitik kimya çalışmaları, laboratuvar uygulamaları ve bilimsel araştırmalar yapar.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
+    new Club {
+        Name = "Uygulamalı Kimya ve Laboratuvar Çalışmaları Kulübü",
+        DepartmentId = deptCHEM!.Id,
+        Description = "Kimyasal analizler, laboratuvar teknikleri, malzeme kimyası ve bilimsel uygulamalar üzerine çalışmalar yürütür.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
+
+    // ========== MATEMATİK ==========
+    new Club {
+        Name = "Matematik ve Bilimsel Düşünce Kulübü",
+        DepartmentId = deptMATH!.Id,
+        Description = "Teorik matematik, uygulamalı matematik, problem çözme ve bilimsel düşünme üzerine etkinlikler düzenler.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
+    new Club {
+        Name = "Uygulamalı Matematik ve Problem Çözme Kulübü",
+        DepartmentId = deptMATH!.Id,
+        Description = "Matematiksel modelleme, algoritmalar, problem çözme yarışmaları ve bilimsel uygulamalar üzerine çalışır.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
+
+    // ========== BİYOLOJİ ==========
+    new Club {
+        Name = "Biyoloji ve Yaşam Bilimleri Kulübü",
+        DepartmentId = deptBIO!.Id,
+        Description = "Genetik, hücre biyolojisi, ekoloji, biyoteknoloji ve canlı bilimleri üzerine çalışmalar yürütür.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
+    new Club {
+        Name = "Genetik ve Moleküler Biyoloji Araştırma Kulübü",
+        DepartmentId = deptBIO!.Id,
+        Description = "Genetik analizler, moleküler biyoloji uygulamaları, laboratuvar teknikleri ve biyoteknoloji projeleri üzerine etkinlikler yürütür.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
 };
+
 
 
         db.Clubs.AddRange(clubs);
