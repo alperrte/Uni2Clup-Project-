@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useCallback } from "react";
+﻿import React, { useState, useEffect,useCallback } from "react";
 
 const API_URL = "http://localhost:8080";
 
@@ -37,6 +37,9 @@ const ClubManagementPage: React.FC = () => {
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [confirmMessage, setConfirmMessage] = useState("");
     const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [successMessage, setSuccessMessage] = useState("");
+
 
     const token = localStorage.getItem("token")?.trim() || "";
 
@@ -108,7 +111,9 @@ const ClubManagementPage: React.FC = () => {
             });
 
             if (res.ok) {
-                alert("✅ Kulüp başarıyla oluşturuldu.");
+                setSuccessMessage("✅Kulüp başarıyla oluşturuldu");
+                setShowSuccessModal(true);
+
                 setShowCreateModal(false);
                 setFormData({ name: "", departmentId: 0, description: "" });
                 fetchClubs();
@@ -137,7 +142,9 @@ const ClubManagementPage: React.FC = () => {
             });
 
             if (res.ok) {
-                alert("✅ Kulüp başarıyla güncellendi.");
+                setSuccessMessage("✅Kulüp başarıyla güncellendi");
+                setShowSuccessModal(true);
+                
                 setShowEditModal(false);
                 setEditingClub(null);
                 setFormData({ name: "", departmentId: 0, description: "" });
@@ -164,6 +171,9 @@ const ClubManagementPage: React.FC = () => {
             });
 
             if (res.ok) {
+                setSuccessMessage("✅Kulüp başarıyla silindi");
+                setShowSuccessModal(true);
+
                 fetchClubs();
             } else {
                 alert("❌ İşlem başarısız.");
@@ -185,8 +195,9 @@ const ClubManagementPage: React.FC = () => {
                 },
             });
 
-            if (res.ok) {
-                alert("✅ Kulüp başarıyla silindi.");
+            if (res.ok || res.status === 200 || res.status === 204) {
+                setSuccessMessage("✅Kulüp başarıyla silindi");
+                setShowSuccessModal(true);
                 fetchClubs();
             } else {
                 alert("❌ Kulüp silinemedi.");
@@ -525,6 +536,27 @@ const ClubManagementPage: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {showSuccessModal && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999]">
+                    <div className="bg-[#1a1a2e] p-8 rounded-2xl border border-[#3b82f6]/30 shadow-2xl w-[90%] max-w-md text-center">
+
+                        <h2 className="text-2xl font-bold text-white mb-4">
+                            {successMessage}
+                        </h2>
+
+                        <button
+                            onClick={() => setShowSuccessModal(false)}
+                            className="mt-4 bg-[#4e3df5] hover:bg-[#3f2de8] text-white px-6 py-3 rounded-xl font-semibold transition"
+                        >
+                            Tamam
+                        </button>
+
+                    </div>
+                </div>
+            )}
+
+
         </div>
     );
 };
