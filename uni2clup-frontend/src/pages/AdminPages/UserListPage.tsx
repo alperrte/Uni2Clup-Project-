@@ -567,17 +567,6 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
                                                                 >
                                                                     {user.isActive ? "Aktif" : "Pasif"}
                                                                 </button>
-
-                                                                {/* Sil */}
-                                                                <button
-                                                                    onClick={() => {
-                                                                        setPendingToggleUserId(user.id);
-                                                                        setShowDeleteModal(true);
-                                                                    }}
-                                                                    className="px-4 py-2 rounded-lg font-semibold text-white bg-red-700 hover:bg-red-800 transition-all duration-300 whitespace-nowrap"
-                                                                >
-                                                                    🗑 Sil
-                                                                </button>
                                                             </>
                                                         )}
 
