@@ -37,7 +37,7 @@ services:
         condition: service_healthy
     networks:
       - uni2clup-net
-    restart: always  # 🔁 Otomatik yeniden başlatma
+    restart: always  
 
 volumes:
   mssql-data:

@@ -102,7 +102,7 @@ const navigate = useNavigate();
 
 
                         {clubs
-                            .sort((a, b) => a.name.localeCompare(b.name, "tr"))   // 🔥 alfabetik sırala (Türkçe)
+                            .sort((a, b) => a.name.localeCompare(b.name, "tr"))   
                             .map((club) => {
 
 

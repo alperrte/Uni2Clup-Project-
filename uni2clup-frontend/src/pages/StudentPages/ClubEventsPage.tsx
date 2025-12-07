@@ -1,5 +1,4 @@
-﻿// ClubEventsPage.tsx
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 
 
 interface EventItem {
@@ -71,7 +70,6 @@ const ClubEventsPage: React.FC<ClubEventsPageProps> = ({
                 return start > currentTime;
             }
 
-            // Genel liste için yine bitmiş etkinlikleri gizleyelim
             return end >= currentTime;
         })
 
@@ -173,7 +171,7 @@ const ClubEventsPage: React.FC<ClubEventsPageProps> = ({
            hover:shadow-[#3b82f6]/30 hover:scale-[1.01]
            transition-all duration-300 rounded-2xl p-6"
                             >
-                                {/* 🟡🟢 ETİKET BURAYA EKLENECEK */}
+                                {/* ETİKET */}
                                 {(() => {
                                     const status = getEventStatus(event.StartDate || event.startDate, event.EndDate || event.endDate);
                                     return status ? (

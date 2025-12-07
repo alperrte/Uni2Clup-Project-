@@ -137,7 +137,6 @@ function EventForm({ onSave, selectedEvent, clearSelected }) {
             const currentEnd = parseTurkeyInputToDate(form.endDate);
 
             if (newStart && currentEnd && newStart > currentEnd) {
-                // Bitişi başlangıca eşitliyoruz
                 setForm({
                     ...form,
                     startDate: value,

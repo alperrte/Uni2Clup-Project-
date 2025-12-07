@@ -64,12 +64,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         options.SaveToken = true;
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = false,  // ❌ Issuer kontrolünü devre dışı bırak
+            ValidateIssuer = false,  
             ValidateAudience = false,
-            ValidateLifetime = false, // 🔥 TEST İÇİN: Token süresi kontrolünü geçici olarak devre dışı bırak
+            ValidateLifetime = false, 
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-            RoleClaimType = ClaimTypes.Role,   // ✅ DOĞRU ROLE TİPİ
+            RoleClaimType = ClaimTypes.Role,   
             NameClaimType = ClaimTypes.Email
         };
     });

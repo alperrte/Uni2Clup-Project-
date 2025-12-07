@@ -1,5 +1,4 @@
-﻿// PastEventsPage.tsx
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 
 interface EventItem {
     id: number;

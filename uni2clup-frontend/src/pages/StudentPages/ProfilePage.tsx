@@ -1,11 +1,10 @@
-﻿// ProfilePage.tsx
-import React from "react";
+﻿import React from "react";
 
 interface ClubItem {
     id: number;
     name: string;
     departmentName?: string;
-    isMember?: boolean; // Opsiyonel ama filtrede kullanılmıyor
+    isMember?: boolean; 
 }
 
 interface ProfileData {
@@ -26,7 +25,7 @@ interface ClubIconData {
 interface ProfilePageProps {
     profile: ProfileData | null;
     getClubIcon: (clubName: string) => ClubIconData;
-    handleLeaveClub: (clubId: number) => void;   // 🔥 EKLENECEK SATIR
+    handleLeaveClub: (clubId: number) => void;   
     myEvents: any[];
     pastEvents: any[];
 

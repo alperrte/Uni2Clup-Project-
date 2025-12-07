@@ -7,7 +7,7 @@ const AIRecommendationsPage = () => {
     const [loading, setLoading] = useState(true);
     const [recommendations, setRecommendations] = useState([]);
     const [error, setError] = useState("");
-    const [toast, setToast] = useState(""); // 🔥 Toast mesajı
+    const [toast, setToast] = useState(""); 
     const navigate = useNavigate();
 
     const fetchRecommendations = () => {
@@ -38,7 +38,7 @@ const AIRecommendationsPage = () => {
 
     const showToast = (msg) => {
         setToast(msg);
-        setTimeout(() => setToast(""), 3000); // 3 saniyede kaybolur
+        setTimeout(() => setToast(""), 3000); 
     };
 
     const joinClub = (clubId) => {
@@ -57,13 +57,13 @@ const AIRecommendationsPage = () => {
             });
     };
 
-    // 🟣 LOADING
+    // LOADING
     if (loading) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#0a0a1a] via-[#0f0f2a] to-[#1a1a3a] text-white">
 
                 <img
-                    src="/Copilot_20251129_235210.png"
+                    src="uni2clup-logo.png"
                     alt="Loading Logo"
                     className="w-32 h-32 mb-6 animate-pulse drop-shadow-xl"
                 />
@@ -79,7 +79,6 @@ const AIRecommendationsPage = () => {
         );
     }
 
-    // ❌ ERROR
     if (error) {
         return <div className="min-h-screen bg-[#0a0a1a] text-red-500 p-10 text-center">{error}</div>;
     }
