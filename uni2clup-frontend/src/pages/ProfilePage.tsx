@@ -83,9 +83,11 @@ hover:shadow-[0_0_40px_rgba(59,130,246,0.25)]
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8 mt-6">
 
                         {/* Toplam Kulüp Sayısı */}
-                        <div className="p-6 rounded-xl bg-gradient-to-br from-[#2d1b69]/80 to-[#3b82f6]/40
-                    border border-[#3b82f6]/40 shadow-lg hover:shadow-[#3b82f6]/30 
-                    transition-all duration-300">
+                        <div className="bg-gradient-to-br from-[#1f1b4e] via-[#242050] to-[#1b1b3a]
+           border border-[#3b82f6]/40 shadow-xl
+           hover:shadow-[#3b82f6]/30 hover:scale-[1.01]
+           transition-all duration-300 rounded-2xl p-6"
+                        >
                             <div className="text-3xl font-bold text-white">
                                 {profile?.clubs?.length ?? 0}
                             </div>
@@ -93,9 +95,11 @@ hover:shadow-[0_0_40px_rgba(59,130,246,0.25)]
                         </div>
 
                         {/* Katıldığı Etkinlik Sayısı */}
-                        <div className="p-6 rounded-xl bg-gradient-to-br from-[#3b82f6]/40 to-[#2d1b69]/80
-                    border border-[#3b82f6]/40 shadow-lg hover:shadow-[#2d1b69]/30 
-                    transition-all duration-300">
+                        <div className="bg-gradient-to-br from-[#1f1b4e] via-[#242050] to-[#1b1b3a]
+           border border-[#3b82f6]/40 shadow-xl
+           hover:shadow-[#3b82f6]/30 hover:scale-[1.01]
+           transition-all duration-300 rounded-2xl p-6"
+                        >
                             <div className="text-3xl font-bold text-white">
                                 {myEvents.length}
 
@@ -104,9 +108,11 @@ hover:shadow-[0_0_40px_rgba(59,130,246,0.25)]
                         </div>
 
                         {/* Bildirim Sayısı */}
-                        <div className="p-6 rounded-xl bg-gradient-to-br from-[#2d1b69]/70 to-[#3b82f6]/30
-                    border border-[#3b82f6]/40 shadow-lg hover:shadow-[#3b82f6]/20 
-                    transition-all duration-300">
+                        <div className="bg-gradient-to-br from-[#1f1b4e] via-[#242050] to-[#1b1b3a]
+           border border-[#3b82f6]/40 shadow-xl
+           hover:shadow-[#3b82f6]/30 hover:scale-[1.01]
+           transition-all duration-300 rounded-2xl p-6"
+                        >
                             <div className="text-3xl font-bold text-white">
                                 {pastEvents.length}
 
@@ -120,35 +126,29 @@ hover:shadow-[0_0_40px_rgba(59,130,246,0.25)]
 
                     {/* Name */}
                     <div
-                        className="
-        bg-[#0f0f1a]/60 p-6 rounded-xl border border-[#3b82f6]/20 
-        shadow-lg backdrop-blur-sm mb-8 text-center
-    "
+                        className="bg-gradient-to-br from-[#1f1b4e] via-[#242050] to-[#1b1b3a]
+           border border-[#3b82f6]/40 shadow-xl
+           hover:shadow-[#3b82f6]/30 hover:scale-[1.01]
+           transition-all duration-300 rounded-2xl p-6 mb-8"
                     >
-                        <h2
-                            className="
-            text-3xl font-bold 
-            bg-gradient-to-r from-[#2d1b69] to-[#3b82f6]
-            bg-clip-text text-transparent
-            drop-shadow-md
-        "
-                        >
+                        <h2 className="text-2xl font-bold mb-2">
                             {profile.name} {profile.surname}
                         </h2>
 
-                        <p className="text-gray-300 mt-2 text-lg">
+                        <p className="text-gray-200 text-lg">
                             {profile.email}
                         </p>
                     </div>
 
 
+                   
+                    
+
                     <div
-                        className="
-        bg-gradient-to-br from-[#101020] to-[#1b1b2e]
-        border border-[#3b82f6]/30 
-        rounded-xl p-6 mb-8
-        shadow-lg hover:shadow-xl transition-all duration-300
-    "
+                        className="bg-gradient-to-br from-[#1f1b4e] via-[#242050] to-[#1b1b3a]
+           border border-[#3b82f6]/40 shadow-xl
+           hover:shadow-[#3b82f6]/30 hover:scale-[1.01]
+           transition-all duration-300 rounded-2xl p-6 mb-8"
                     >
                         <div className="flex items-center gap-4">
                             <div
@@ -189,15 +189,10 @@ hover:shadow-[0_0_40px_rgba(59,130,246,0.25)]
                                         return (
                                             <div
                                                 key={club.id}
-                                                className="
-                            flex items-center justify-between
-                            p-5 rounded-xl
-                            bg-gradient-to-r from-[#151525] to-[#1f1f35]
-                            border border-[#3b82f6]/30
-                            shadow-lg hover:shadow-xl
-                            transition-all duration-300
-                            hover:scale-[1.02]
-                        "
+                                                className="bg-gradient-to-br from-[#1f1b4e] via-[#242050] to-[#1b1b3a]
+           border border-[#3b82f6]/40 shadow-xl
+           hover:shadow-[#3b82f6]/30 hover:scale-[1.01]
+           transition-all duration-300 rounded-2xl p-6"
                                             >
                                                 {/* İKON + METİN */}
                                                 <div className="flex items-center gap-4">

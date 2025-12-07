@@ -84,8 +84,10 @@ const PastEventsPage: React.FC<PastEventsPageProps> = ({
                         {pastEvents.map(event => (
                             <div
                                 key={event.id}
-                                className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e]
-                               border border-[#3b82f6]/50 rounded-xl p-6 shadow-xl opacity-95"
+                                className="bg-gradient-to-br from-[#1f1b4e] via-[#242050] to-[#1b1b3a]
+           border border-[#3b82f6]/40 shadow-xl
+           hover:shadow-[#3b82f6]/30 hover:scale-[1.01]
+           transition-all duration-300 rounded-2xl p-6"
                             >
                                 <h3 className="text-xl font-bold text-[#3b82f6] mb-3">
                                     {event.Name || event.name}
@@ -124,8 +126,10 @@ const PastEventsPage: React.FC<PastEventsPageProps> = ({
                         {missedEvents.map(event => (
                             <div
                                 key={event.id}
-                                className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e]
-                               border border-[#3b82f6]/50 rounded-xl p-6 shadow-xl opacity-95"
+                                className="bg-gradient-to-br from-[#1f1b4e] via-[#242050] to-[#1b1b3a]
+           border border-[#3b82f6]/40 shadow-xl
+           hover:shadow-[#3b82f6]/30 hover:scale-[1.01]
+           transition-all duration-300 rounded-2xl p-6"
                             >
                                 <h3 className="text-xl font-bold text-[#3b82f6] mb-3">
                                     {event.Name || event.name}
