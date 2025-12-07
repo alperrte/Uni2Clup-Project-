@@ -122,7 +122,7 @@ const CreateEventPage: React.FC = () => {
             <div className="absolute inset-0 -z-10 opacity-40 blur-3xl bg-gradient-to-r from-indigo-900 via-purple-900 to-blue-900"></div>
 
             <div className="max-w-6xl mx-auto py-10 space-y-10">
-                <div className="bg-gradient-to-br from-[#1c1f44] to-[#111326] border border-[#3b82f6]/40 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+                <div className="relative bg-gradient-to-br from-[#1f1b4e] via-[#242050] to-[#1b1b3a] border border-[#3b82f6]/40 shadow-[0_0_25px_rgba(59,130,246,0.25)] hover:shadow-[#3b82f6]/30 hover:scale-[1.01] transition-all duration-300 rounded-3xl p-8 overflow-hidden">
                     <div className="absolute inset-y-0 right-0 w-1/3 opacity-30 pointer-events-none bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.35),_transparent_70%)]" />
                     <p className="uppercase tracking-[0.35em] text-sm text-[#93c5fd] mb-3">
                         {editId ? "ETKİNLİK GÜNCELLEME" : "ETKİNLİK PLANLAMA"}

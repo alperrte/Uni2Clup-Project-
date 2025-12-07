@@ -279,8 +279,7 @@ const EventPage: React.FC = () => {
                 <div className="max-w-6xl mx-auto py-10 space-y-8 text-white">
 
                     {/* ÜST FİLTRE KARTI */}
-                    <div className="bg-gradient-to-br from-[#1c1f44] to-[#111326] border border-[#3b82f6]/30
-                        rounded-3xl p-8 shadow-2xl flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                    <div className="relative bg-gradient-to-br from-[#1f1b4e] via-[#242050] to-[#1b1b3a] border border-[#3b82f6]/40 shadow-[0_0_25px_rgba(59,130,246,0.25)] hover:shadow-[#3b82f6]/30 hover:scale-[1.01] transition-all duration-300 rounded-3xl p-8 overflow-hidden flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
 
                         <div>
                             <p className="text-sm uppercase tracking-[0.4em] text-[#93c5fd] mb-2">

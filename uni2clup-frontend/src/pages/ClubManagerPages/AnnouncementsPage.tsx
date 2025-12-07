@@ -92,7 +92,7 @@ const AnnouncementsPage: React.FC = () => {
             <div className="max-w-5xl mx-auto py-10 space-y-10">
 
                 {/* ÜST KUTU */}
-                <div className="bg-gradient-to-br from-[#1c1f44] to-[#111326] border border-[#3b82f6]/30 rounded-3xl p-8 shadow-2xl">
+                <div className="relative bg-gradient-to-br from-[#1f1b4e] via-[#242050] to-[#1b1b3a] border border-[#3b82f6]/40 shadow-[0_0_25px_rgba(59,130,246,0.25)] hover:shadow-[#3b82f6]/30 hover:scale-[1.01] transition-all duration-300 rounded-3xl p-8 overflow-hidden">
                     <p className="text-sm uppercase tracking-[0.4em] text-[#93c5fd] mb-2">Kulüp Duyuruları</p>
                     <h1 className="text-4xl font-extrabold">Duyuru Oluştur</h1>
                     <p className="text-gray-300 mt-3 max-w-2xl">
