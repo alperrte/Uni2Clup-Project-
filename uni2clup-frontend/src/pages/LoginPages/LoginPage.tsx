@@ -50,21 +50,18 @@ const LoginPage = ({ onLoginSuccess }) => {
                 body: JSON.stringify({ email, password }),
             });
 
-            // 🚫 Hesap PASİF → 403 → direkt status page
             if (res.status === 403) {
                 navigate("/status");
                 setIsLoading(false);
                 return;
             }
 
-            // ❌ Yanlış şifre → 401
             if (res.status === 401) {
                 alert("❌ Hatalı e-posta veya şifre.");
                 setIsLoading(false);
                 return;
             }
 
-            // ❌ Diğer hatalar
             if (!res.ok) {
                 alert("❌ Giriş yapılamadı. (Sunucu hatası)");
                 setIsLoading(false);
@@ -74,7 +71,6 @@ const LoginPage = ({ onLoginSuccess }) => {
             const data = await res.json();
             const token = data.token;
 
-            // ❗ Hesap askıya alınmış mı?
             if (data.status === "Passive") {
                 navigate("/status");
                 return;
@@ -135,7 +131,7 @@ const LoginPage = ({ onLoginSuccess }) => {
         const departmentId = form.departmentId.value;
 
         setRegisterData({ name, surname, email, departmentId });
-        setShowRegisterConfirm(true); // 🚀 Confirm Modal aç
+        setShowRegisterConfirm(true); 
     };
 
     const submitRegistration = async () => {
@@ -195,7 +191,7 @@ flex flex-col items-center justify-center relative overflow-hidden">
             {/* WELCOME SECTION */}
             <div className="text-center mb-12 w-full max-w-4xl mx-auto px-4 z-20">
                 <img
-                    src="/Copilot_20251129_235210.png"
+                    src="uni2clup-logo.png"
                     alt="U2C Logo"
                     className="w-40 mx-auto mb-6 drop-shadow-[0_0_15px_rgba(59,130,246,0.7)]"
                 />
@@ -356,7 +352,7 @@ flex flex-col items-center justify-center relative overflow-hidden">
                             <input name="surname" placeholder="Soyad" className="w-full p-3 rounded-lg bg-[#0f0f1a] border border-[#3b82f6] text-white" required />
                             <input name="email" type="email" placeholder="E-posta (@dogus.edu.tr)" className="w-full p-3 rounded-lg bg-[#0f0f1a] border border-[#3b82f6] text-white" required />
 
-                            {/* 🔽 DROPDOWN EKLENDİ */}
+                            {/* 🔽 DROPDOWN */}
                             <select
                                 name="departmentId"
                                 className="w-full p-3 rounded-lg bg-[#0f0f1a] border border-[#3b82f6] text-white"
@@ -408,7 +404,7 @@ flex flex-col items-center justify-center relative overflow-hidden">
                                 className="flex-1 bg-gradient-to-r from-[#2d1b69] to-[#3b82f6] text-white py-3 rounded-lg"
                                 onClick={() => {
                                     setShowRegisterConfirm(false);
-                                    submitRegistration(); // 🚀 Backend’e gönder
+                                    submitRegistration(); 
                                 }}
                             >
                                 Evet, Gönder
@@ -480,7 +476,7 @@ flex flex-col items-center justify-center relative overflow-hidden">
                             {/* ÜST ROL LOGOSU */}
                             <div className="w-28 h-28 rounded-full mx-auto mb-6 flex items-center justify-center overflow-hidden shadow-lg">
                                 <img
-                                    src="/Copilot_20251129_235210.png"
+                                    src="uni2clup-logo.png"
                                     alt="Uni2Clup Logo"
                                     className="w-full h-full object-contain"
                                 />

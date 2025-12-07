@@ -1,17 +1,14 @@
-﻿// StudentLayout.tsx
-import React, { useState, useEffect, useCallback } from "react";
+﻿import React, { useState, useEffect, useCallback } from "react";
 
-import ClubsPage from "../pages/ClubsPage";
-import JoinedEventsPage from "../pages/JoinedEventsPage";
-import ClubEventsPage from "../pages/ClubEventsPage";
-import PastEventsPage from "../pages/PastEventsPage";
-import ProfilePage from "../pages/ProfilePage";
+import ClubsPage from "../pages/StudentPages/ClubsPage";
+import JoinedEventsPage from "../pages/StudentPages/JoinedEventsPage";
+import ClubEventsPage from "../pages/StudentPages/ClubEventsPage";
+import PastEventsPage from "../pages/StudentPages/PastEventsPage";
+import ProfilePage from "../pages/StudentPages/ProfilePage";
 
 const StudentLayout: React.FC = () => {
     const API_URL = "http://localhost:8080";
     const token = localStorage.getItem("token");
-
-    // STATES (Aynen korunuyor)
     const [clubs, setClubs] = useState([]);
     const [myEvents, setMyEvents] = useState([]);
     const [clubEvents, setClubEvents] = useState([]);
@@ -46,8 +43,8 @@ const StudentLayout: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const clubsPerPage = 4;
     const missedEvents = clubEvents
-        .filter(ev => new Date(ev.endDate) < new Date()) // Süresi geçmiş
-        .filter(ev => !myEvents.some(j => j.id === ev.id)); // Katılmamış
+        .filter(ev => new Date(ev.endDate) < new Date()) 
+        .filter(ev => !myEvents.some(j => j.id === ev.id)); 
     const joinedPastEvents = myEvents.filter(ev => {
         const end =
             ev.EndDate ||
@@ -74,7 +71,7 @@ const StudentLayout: React.FC = () => {
             return { label: "Yaklaşıyor", color: "bg-yellow-600 text-black bg-gradient-to-r from-yellow-500/70 to-yellow-700/40"   };
         }
 
-        return null; // geçmiş etkinliklere etiket yok
+        return null; 
     };
 
 
@@ -83,14 +80,11 @@ const StudentLayout: React.FC = () => {
         window.location.href = "/login";
     };
 
-
     const [notifTab, setNotifTab] = useState<"unread" | "history">("unread");
 
     const formatDate = (date: string | undefined | null) => {
         if (!date) return "Tarih yok";
 
-        // Gelen tarih string'i örneğin: "2025-12-02T20:00:00"
-        // Bunu manuel olarak parçalayarak TR saatine göre göstereceğiz.
         const d = new Date(date);
 
         const day = d.toLocaleDateString("tr-TR", {
@@ -107,15 +101,12 @@ const StudentLayout: React.FC = () => {
         return `${day} ${time}`;
     };
 
-
-
     const getClubIcon = (name: string) => {
         return {
             icon: "★",
             color: "from-[#2d1b69] to-[#3b82f6]"
         };
     };
-
 
     const checkToken = useCallback(() => {
         if (!token) {
@@ -126,9 +117,7 @@ const StudentLayout: React.FC = () => {
         return true;
     }, [token]);
 
-
-
-    // FETCH FUNCTIONS (Hiçbirine dokunulmadı)
+    // FETCH FUNCTIONS 
     const fetchClubs = async () => {
         if (!checkToken()) return;
         try {
@@ -266,9 +255,7 @@ const StudentLayout: React.FC = () => {
 
             const data = await res.json();
 
-            showToast(data.message, "Yeni deneyimlere hak kazandınız.");  // ✔ Artık alert yok, toast var
-
-            // Sayfayı güncelle
+            showToast(data.message, "Yeni deneyimlere hak kazandınız.");  
             fetchClubEvents();
             fetchMyEvents();
 
@@ -303,10 +290,8 @@ const StudentLayout: React.FC = () => {
 
             const data = await res.json();
 
-            // Başarılı mesaj
             showToast("Etkinlikten ayrıldınız!", "Etkinlik listenizden kaldırıldı.");
 
-            // Listeleri güncelle
             fetchClubEvents();
             fetchMyEvents();
 
@@ -330,7 +315,6 @@ const StudentLayout: React.FC = () => {
         } catch { }
     };
 
-    // LOAD ALL
     useEffect(() => {
         fetchClubs();
         fetchMyEvents();
@@ -346,7 +330,7 @@ const StudentLayout: React.FC = () => {
     }, [notificationsFilter]);
 
     const filteredClubs = clubs
-        .filter((club: any) => !club.isMember) // 1) Üye olunmayan kulüpler
+        .filter((club: any) => !club.isMember) 
         .filter((club: any) => {
             const matchesSearch =
                 (club.name || "").toLowerCase().includes(searchTerm.toLowerCase());
@@ -356,16 +340,14 @@ const StudentLayout: React.FC = () => {
 
             return matchesSearch && matchesDept;
         })
-        .sort((a, b) => a.name.localeCompare(b.name, "tr"));  // 2) Alfabetik sırala
+        .sort((a, b) => a.name.localeCompare(b.name, "tr")); 
 
 
-    // Sayfalama için
     const indexOfLastClub = currentPage * clubsPerPage;
     const indexOfFirstClub = indexOfLastClub - clubsPerPage;
     const paginatedClubs = filteredClubs.slice(indexOfFirstClub, indexOfLastClub);
 
     const totalPages = Math.ceil(filteredClubs.length / clubsPerPage);
-
 
     const filteredNotifications =
         notificationsFilter === "unread"
@@ -400,7 +382,7 @@ const StudentLayout: React.FC = () => {
                 ))}
             </div>
 
-            {/* 🔵 SOL SİDEBAR (AdminLayout ile aynı tasarım + daha büyük yazılar) */}
+            {/* 🔵 SOL SİDEBAR */}
             <div className="fixed top-0 left-0 h-screen w-[420px] border-r-2 border-[#3b82f6] flex flex-col p-6 shadow-2xl bg-[#0d102e]/90 backdrop-blur z-20">
 
 
@@ -408,7 +390,7 @@ const StudentLayout: React.FC = () => {
                 {/* Logo */}
                 <div className="mb-10 flex flex-col items-center">
                     <img
-                        src="/BCO.ad4f0f99-09ed-44fd-91a4-f12d13d596e8.png"
+                        src="ögrenci_paneli_logosu.png"
                         alt="U2C Logo"
                         className="w-32 h-32 object-contain drop-shadow-lg"
                     />
@@ -558,7 +540,7 @@ const StudentLayout: React.FC = () => {
                         <ClubEventsPage
                             clubEvents={clubEvents.filter(ev => {
                                 const end = new Date(ev.EndDate || ev.endDate);
-                                return end >= new Date(); // sadece bitmemiş etkinlikleri gönder
+                                return end >= new Date(); 
                             })}
                             handleJoinEvent={handleJoinEvent}
                             formatDate={formatDate}
@@ -569,8 +551,8 @@ const StudentLayout: React.FC = () => {
 
                     {activeMenu === "past-events" && (
                         <PastEventsPage
-                            pastEvents={joinedPastEvents}   // ✔ Katıldığın geçmiş
-                            missedEvents={missedEvents}     // ✔ Kaçırdığın geçmiş
+                            pastEvents={joinedPastEvents}   
+                            missedEvents={missedEvents}     
                             formatDate={formatDate}
                         />
 

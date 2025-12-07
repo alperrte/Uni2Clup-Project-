@@ -1,5 +1,4 @@
-﻿// JoinedEventsPage.tsx
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 
 
 interface EventItem {
@@ -48,7 +47,7 @@ const JoinedEventsPage: React.FC<JoinedEventsPageProps> = ({
             if (filterType === "active") return status?.label === "Devam Ediyor";
             if (filterType === "upcoming") return status?.label === "Yaklaşıyor";
 
-            return true; // tümü
+            return true; 
         })
         .sort((a, b) => {
             const sA = getEventStatus(a.StartDate || a.startDate, a.EndDate || a.endDate);
@@ -59,13 +58,12 @@ const JoinedEventsPage: React.FC<JoinedEventsPageProps> = ({
         });
 
 
-    // ⏰ Sayfayı yenilemeden otomatik güncelleme için canlı zaman
     const [currentTime, setCurrentTime] = useState(new Date());
 
     useEffect(() => {
         const timer = setInterval(() => {
             setCurrentTime(new Date());
-        }, 1000); // her 1 saniyede bir kontrol
+        }, 1000);
 
         return () => clearInterval(timer);
     }, []);
@@ -73,10 +71,10 @@ const JoinedEventsPage: React.FC<JoinedEventsPageProps> = ({
 
     
 
-    // ⛔ Bitiş tarihi geçmiş etkinlikleri listeden çıkar
+ 
     const activeEvents = myEvents.filter(event => {
         const end = new Date(event.EndDate || event.endDate || "");
-        return end > currentTime; // ⬅ canlı zaman ile karşılaştır
+        return end > currentTime; 
     });
 
 
@@ -160,7 +158,7 @@ const JoinedEventsPage: React.FC<JoinedEventsPageProps> = ({
            transition-all duration-300 rounded-2xl p-6"
                             >
 
-                                {/* 🟡🟢 ETİKET BURAYA EKLENİR */}
+                                {/* ETİKET*/}
                                 {(() => {
                                     const status = getEventStatus(event.StartDate || event.startDate, event.EndDate || event.endDate);
                                     return status ? (

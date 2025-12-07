@@ -1,40 +1,34 @@
-﻿// App.tsx — Final ve StudentLayout dahil edilen sürüm
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
 
+// Giriş Paneli Importları
+import LoginPage from "./pages/LoginPages/LoginPage";
 
-// Login
-import LoginPage from "./pages/LoginPage";
-
-// Admin
+// Yönetici Paneli Importları
 import AdminLayout from "./components/AdminLayout";
 import AddUserPage from "./pages/AdminPages/AddUserPage";
 import UserListPage from "./pages/AdminPages/UserListPage";
 import StudentApplicationsPage from "./pages/AdminPages/StudentApplicationsPage";
 import ClubManagementPage from "./pages/AdminPages/ClubManagementPage";
 import StatusPage from "./pages/AdminPages/StatusPage";
-
-
-
-
-
-
-// Club Manager
-import ClubManagerRoutes from "./pages/EventPages/ClubManagerRoutes";
-import CreateAnnouncementPage from "./pages/EventPages/CreateAnnouncementPage";
-import CancelledEventsPage from "./pages/EventPages/CancelledEventsPage";
-
-// 🟦 Student Paneli
-import StudentLayout from "./components/StudentLayout";
-import AIRecommendationsPage from "./pages/AIRecommendationsPage";
-
-
-//Password 
-import ForgotPassword from "./password/ForgotPassword";
-import ResetPassword from "./password/ResetPassword";
-import ChangePassword from "./password/ChangePassword";
 import PastManagersPage from "./pages/AdminPages/PastManagersPage";
+
+// Kulüp Yöneticisi Paneli Importları
+import ClubManagerRoutes from "./pages/ClubManagerPages/ClubManagerRoutes";
+import CreateAnnouncementPage from "./pages/ClubManagerPages/CreateAnnouncementPage";
+
+// öğrenci Paneli
+import StudentLayout from "./components/StudentLayout";
+
+//Yapay Zeka Öneri Sayfası
+import AIRecommendationsPage from "./pages/StudentPages/AIRecommendationsPage";
+
+//şifre işlemleri 
+import ForgotPassword from "./pages/PasswordPages/ForgotPassword";
+import ResetPassword from "./pages/PasswordPages/ResetPassword";
+import ChangePassword from "./pages/PasswordPages/ChangePassword";
+
 
 interface UserData {
     name: string;
@@ -42,19 +36,15 @@ interface UserData {
     token: string;
 }
 
-
-// GLOBAL TOKEN / STATUS INTERCEPTOR
 const originalFetch = window.fetch;
 window.fetch = async (url, options) => {
     const response = await originalFetch(url, options);
 
-    // Kullanıcı pasif → backend 403 gönderir
     if (response.status === 403) {
         window.location.href = "/status";
         return response;
     }
 
-    // Token bozuk / expired → backend 401 gönderir
     if (response.status === 401) {
         localStorage.clear();
         window.location.href = "/";
@@ -113,7 +103,7 @@ const App: React.FC = () => {
         setUser(null);
     };
 
-    // ---- ADMIN ROUTES ----
+    // ---- Yönetici Routeları ----
     const AdminRoutes = () => (
         <AdminLayout handleLogout={handleLogout}>
             <Routes>
@@ -126,21 +116,14 @@ const App: React.FC = () => {
                 <Route path="academics" element={<UserListPage targetRole="Academic" />} />
                 <Route path="club-managers" element={<UserListPage targetRole="ClubManager" />} />
                 <Route path="admins" element={<UserListPage targetRole="Admin" />} />
-
                 <Route path="applications" element={<StudentApplicationsPage />} />
                 <Route path="clubs" element={<ClubManagementPage />} />
-
                 <Route path="past-managers" element={<PastManagersPage />} />
-
                 <Route path="*" element={<Navigate to="add-user" replace />} />
-
-
 
             </Routes>
         </AdminLayout>
     );
-
-
 
     return (
         <Router>
