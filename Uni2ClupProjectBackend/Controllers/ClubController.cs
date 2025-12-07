@@ -284,6 +284,32 @@ Saygılarımızla,<br>
         }
 
 
+        [HttpPut("toggle-active/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ToggleClubActive(int id)
+        {
+            var club = await _db.Clubs.FindAsync(id);
+            if (club == null)
+                return NotFound(new { message = "❌ Kulüp bulunamadı." });
+
+            club.IsActive = !club.IsActive;
+
+            if (club.IsActive)
+                club.ClosedAt = null;
+            else
+                club.ClosedAt = DateTime.UtcNow;
+
+            await _db.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = club.IsActive ? "Kulüp aktifleştirildi." : "Kulüp pasif hale getirildi.",
+                isActive = club.IsActive,
+                closedAt = club.ClosedAt
+            });
+        }
+
+
         //  Kulüp sil
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
@@ -299,6 +325,8 @@ Saygılarımızla,<br>
             return Ok(new { message = "🗑️ Kulüp başarıyla silindi." });
         }
     }
+
+
 
     // DTOs
     public class ClubCreateDto

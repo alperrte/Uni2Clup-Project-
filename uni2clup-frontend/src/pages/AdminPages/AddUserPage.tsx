@@ -142,7 +142,7 @@ const AddUserPage: React.FC = () => {
                         {/* İsim */}
                         <input
                             name="name"
-                            placeholder="İsim"
+                            placeholder="Ad"
                             value={form.name}
                             onChange={handleChange}
                             required
@@ -152,7 +152,7 @@ const AddUserPage: React.FC = () => {
                         {/* Soyisim */}
                         <input
                             name="surname"
-                            placeholder="Soyisim"
+                            placeholder="Soyad"
                             value={form.surname}
                             onChange={handleChange}
                             required
