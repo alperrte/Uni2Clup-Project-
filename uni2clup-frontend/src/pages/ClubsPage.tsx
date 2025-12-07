@@ -1,5 +1,5 @@
-﻿// ClubsPage.tsx
-import React from "react";
+﻿import React from "react";
+import { useNavigate } from "react-router-dom";
 
 interface ClubsPageProps {
     clubs: any[];
@@ -21,6 +21,7 @@ interface ClubsPageProps {
 }
 
 
+
 const ClubsPage: React.FC<ClubsPageProps> = ({
     clubs,
     currentPage,
@@ -35,6 +36,8 @@ const ClubsPage: React.FC<ClubsPageProps> = ({
     selectedDept,
     setSelectedDept
 }) => {
+
+const navigate = useNavigate();
 
     return (
         <div className="text-white">
@@ -73,7 +76,19 @@ const ClubsPage: React.FC<ClubsPageProps> = ({
                         </option>
                     ))}
                 </select>
-            </div>
+
+            {/* 🤖 Yapay Zeka Kulüp Öneri Butonu */}
+            <button
+                onClick={() => navigate("/recommendations")}
+                className="w-1/3 p-3 rounded-lg font-semibold 
+                   bg-gradient-to-r from-purple-600 to-blue-600 
+                   text-white hover:scale-105 transition-all shadow-lg"
+            >
+                🤖 Kararsız Hissediyorum
+            </button>
+
+        </div>
+
 
             {/* Kulüp Kartları */}
             {clubs.length === 0 ? (

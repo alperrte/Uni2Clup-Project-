@@ -320,4 +320,3 @@ Saygılarımızla,<br>
         public string? Description { get; set; }
     }
 }
-
