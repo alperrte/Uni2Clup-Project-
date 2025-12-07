@@ -160,124 +160,138 @@ using (var scope = app.Services.CreateScope())
 
 
         var clubs = new List<Club>
-        {
-         new Club {
-    Name = "Yazılım Mühendisliği Kulübü",
-    DepartmentId = deptSoftware!.Id,
-    Description = "Yazılım geliştirme, kodlama atölyeleri, hackathonlar ve sektörel seminerler düzenleyen mühendislik odaklı kulüp.",
-    IsActive = true, CreatedAt = DateTime.UtcNow
-},
+{
+    // ========== YAZILIM MÜHENDİSLİĞİ ==========
+    new Club {
+        Name = "Yazılım Geliştirme ve Teknoloji Kulübü",
+        DepartmentId = deptSoftware!.Id,
+        Description = "Modern yazılım geliştirme teknikleri, web & mobil uygulamalar, yapay zekâ ve siber güvenlik üzerine teknik eğitimler ve proje çalışmaları yürütür.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
+    new Club {
+        Name = "Hackathon ve Ürün Geliştirme Kulübü",
+        DepartmentId = deptSoftware!.Id,
+        Description = "Öğrencilerin gerçek problemler için hızlı prototip geliştirerek takım çalışması, algoritma tasarımı ve ürün geliştirme becerileri kazandığı uygulamalı bir topluluktur.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
 
-new Club {
-    Name = "Bilgisayar Teknolojileri ve Yapay Zekâ Kulübü",
-    DepartmentId = deptComputer!.Id,
-    Description = "Bilgisayar mühendisliği öğrencileri için yapay zekâ, veri bilimi, algoritmalar ve donanım temelli projeler geliştiren kulüp.",
-    IsActive = true, CreatedAt = DateTime.UtcNow
-},
+    // ========== BİLGİSAYAR MÜHENDİSLİĞİ ==========
+    new Club {
+        Name = "Yapay Zekâ ve Veri Bilimi Araştırma Kulübü",
+        DepartmentId = deptComputer!.Id,
+        Description = "Veri bilimi, makine öğrenmesi, derin öğrenme ve yapay zekâ alanlarında araştırmalar, modelleme çalışmaları ve yarışma hazırlıkları yapan akademik bir topluluktur.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
+    new Club {
+        Name = "Siber Güvenlik ve Etik Hacker Kulübü",
+        DepartmentId = deptComputer!.Id,
+        Description = "Ağ güvenliği, kriptoloji, sızma testleri ve dijital savunma uygulamaları üzerine atölye ve simülasyon tabanlı çalışmalar düzenler.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
 
-new Club {
-    Name = "Elektrik-Elektronik ve Robotik Sistemler Kulübü",
-    DepartmentId = deptEEE!.Id,
-    Description = "Elektronik devreler, robotik sistemler, gömülü yazılım ve IoT projeleri üzerine çalışan teknik kulüp.",
-    IsActive = true, CreatedAt = DateTime.UtcNow
-},
+    // ========== ELEKTRİK-ELEKTRONİK MÜH. ==========
+    new Club {
+        Name = "Robotik Sistemler ve Otomasyon Kulübü",
+        DepartmentId = deptEEE!.Id,
+        Description = "Robot tasarımı, sensör teknolojileri, devre sistemleri ve gömülü yazılım üzerine uygulamalı projeler ve yarışma takımları oluşturur.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
+    new Club {
+        Name = "Enerji Sistemleri ve Elektrik Teknolojileri Kulübü",
+        DepartmentId = deptEEE!.Id,
+        Description = "Yenilenebilir enerji, güç sistemleri, elektrik makineleri ve enerji verimliliği üzerine akademik çalışmalar ve teknik geziler düzenler.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
 
-new Club {
-    Name = "Endüstri ve Yönetim Bilimleri Kulübü",
-    DepartmentId = deptIE!.Id,
-    Description = "Verimlilik, süreç yönetimi, operasyon araştırmaları ve kurumsal yönetim becerilerini geliştiren akademik kulüp.",
-    IsActive = true, CreatedAt = DateTime.UtcNow
-},
+    // ========== ENDÜSTRİ MÜHENDİSLİĞİ ==========
+    new Club {
+        Name = "Süreç Yönetimi ve Yalın Üretim Kulübü",
+        DepartmentId = deptIE!.Id,
+        Description = "Operasyon analizi, yalın üretim, süreç optimizasyonu ve verimlilik mühendisliği alanlarında uygulamalar ve proje çalışmaları yürütür.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
+    new Club {
+        Name = "Proje Yönetimi ve Liderlik Kulübü",
+        DepartmentId = deptIE!.Id,
+        Description = "PMI metodolojisi, risk yönetimi, planlama, inovasyon ve kurumsal strateji üzerine eğitimler veren profesyonel bir kulüptür.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
 
-new Club {
-    Name = "Makine Tasarım ve İmalat Kulübü",
-    DepartmentId = deptME!.Id,
-    Description = "Mekanik tasarım, CAD/CAM, üretim teknolojileri ve mühendislik projeleri üzerine çalışmalar yapan kulüp.",
-    IsActive = true, CreatedAt = DateTime.UtcNow
-},
+    // ========== MAKİNE MÜHENDİSLİĞİ ==========
+    new Club {
+        Name = "Mekanik Tasarım ve CAD Kulübü",
+        DepartmentId = deptME!.Id,
+        Description = "3D modelleme, mekanik sistem tasarımı, CAD/CAM yazılımları ve imalat teknikleri üzerine uygulamalı çalışmalar yürütür.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
+    new Club {
+        Name = "Termodinamik ve Enerji Sistemleri Kulübü",
+        DepartmentId = deptME!.Id,
+        Description = "Enerji dönüşüm süreçleri, akışkanlar mekaniği, motor sistemleri ve yenilikçi mühendislik çözümleri üzerine akademik faaliyetler düzenler.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
 
-new Club {
-    Name = "İnşaat Teknolojileri ve Yapı Bilimleri Kulübü",
-    DepartmentId = deptCE!.Id,
-    Description = "Yapı mühendisliği, yapı malzemeleri, statik-dinamik analiz ve mimari projelerde faaliyet gösteren kulüp.",
-    IsActive = true, CreatedAt = DateTime.UtcNow
-},
+    // ========== İNŞAAT MÜHENDİSLİĞİ ==========
+    new Club {
+        Name = "Yapı Tasarım ve Teknolojileri Kulübü",
+        DepartmentId = deptCE!.Id,
+        Description = "Yapı statiği, modern yapı malzemeleri, mimari tasarım ve deprem mühendisliği üzerine teknik etkinlikler düzenler.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
+    new Club {
+        Name = "Geoteknik ve Arazi İnceleme Kulübü",
+        DepartmentId = deptCE!.Id,
+        Description = "Zemin mekaniği, şantiye uygulamaları, arazi analizi ve saha çalışmaları üzerine öğrencileri pratik becerilerle buluşturan bir topluluktur.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
 
-new Club {
-    Name = "Çevre ve Sürdürülebilir Kalkınma Kulübü",
-    DepartmentId = deptENV!.Id,
-    Description = "Çevre sorunları, sürdürülebilirlik, iklim değişikliği ve yeşil teknoloji projeleri geliştiren topluluk.",
-    IsActive = true, CreatedAt = DateTime.UtcNow
-},
+    // ========== İŞLETME ==========
+    new Club {
+        Name = "Girişimcilik ve Startup Geliştirme Kulübü",
+        DepartmentId = deptBUS!.Id,
+        Description = "İş planı geliştirme, girişim fikri üretme, yatırımcı sunumları, inovasyon ve pazarlama stratejileri üzerine etkinlikler yürütür.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
+    new Club {
+        Name = "Pazarlama ve Marka Yönetimi Kulübü",
+        DepartmentId = deptBUS!.Id,
+        Description = "Dijital pazarlama, marka stratejileri, tüketici davranışı ve sektör analizleri üzerine çalıştay ve workshop düzenleyen bir topluluktur.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
 
-new Club {
-    Name = "İşletme ve Finans Kulübü",
-    DepartmentId = deptBUS!.Id,
-    Description = "İşletme yönetimi, finans, pazarlama, organizasyon ve girişimcilik alanlarında etkinlikler düzenleyen kulüp.",
-    IsActive = true, CreatedAt = DateTime.UtcNow
-},
+    // ========== PSİKOLOJİ ==========
+    new Club {
+        Name = "Psikolojik Araştırmalar ve Klinik Çalışmalar Kulübü",
+        DepartmentId = deptPSY!.Id,
+        Description = "Klinik psikoloji, bilişsel davranış modelleri, mental sağlık ve akademik araştırmalar üzerine uygulama ve seminerler düzenler.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
+    new Club {
+        Name = "İnsan Davranışı ve Sosyal Etkileşim Kulübü",
+        DepartmentId = deptPSY!.Id,
+        Description = "Sosyal psikoloji, iletişim becerileri, topluluk davranışları ve öğrenci yaşamı üzerine bilimsel analizler ve etkinlikler gerçekleştirir.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
 
-new Club {
-    Name = "Ekonomi ve Analitik Araştırmalar Kulübü",
-    DepartmentId = deptECO!.Id,
-    Description = "Ekonomik analiz, veri yorumlama, makro-mikro ekonomi çalışmaları ve akademik araştırmalar yapan kulüp.",
-    IsActive = true, CreatedAt = DateTime.UtcNow
-},
+    // ========== HUKUK ==========
+    new Club {
+        Name = "Hukuki Farkındalık ve Toplumsal Adalet Kulübü",
+        DepartmentId = deptLAW!.Id,
+        Description = "Temel hukuk eğitimleri, dava analizleri, etik tartışmalar ve sosyal adalet projeleri üzerine çalışmalar yürütür.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    },
+    new Club {
+        Name = "Moot Court ve Akademik Tartışma Kulübü",
+        DepartmentId = deptLAW!.Id,
+        Description = "Öğrencilerin mahkeme simülasyonlarına hazırlanarak savunma, analiz ve ikna becerilerini geliştirdikleri akademik bir topluluk.",
+        IsActive = true, CreatedAt = DateTime.UtcNow
+    }
+};
 
-new Club {
-    Name = "Psikoloji ve İnsan Davranışları Kulübü",
-    DepartmentId = deptPSY!.Id,
-    Description = "Psikoloji bilimi, insan davranışları, mental sağlık, araştırma ve seminer çalışmaları yürüten kulüp.",
-    IsActive = true, CreatedAt = DateTime.UtcNow
-},
-
-new Club {
-    Name = "Hukuk ve Adalet Çalışmaları Kulübü",
-    DepartmentId = deptLAW!.Id,
-    Description = "Hukuki farkındalık, dava analizleri, akademik çalışmalar ve sosyal hukuk projeleri düzenleyen kulüp.",
-    IsActive = true, CreatedAt = DateTime.UtcNow
-},
-
-new Club {
-    Name = "Güzel Sanatlar ve Tasarım Kulübü",
-    DepartmentId = deptFA!.Id,
-    Description = "Resim, heykel, müzik, sinema, tiyatro ve diğer sanat dallarında projeler ve atölyeler oluşturan kulüp.",
-    IsActive = true, CreatedAt = DateTime.UtcNow
-},
-
-new Club {
-    Name = "Matematik Araştırmaları ve Analiz Kulübü",
-    DepartmentId = deptMATH!.Id,
-    Description = "Teorik matematik, uygulamalı matematik, modelleme ve bilimsel araştırmalar üzerine çalışan akademik kulüp.",
-    IsActive = true, CreatedAt = DateTime.UtcNow
-},
-
-new Club {
-    Name = "Fizik ve Bilimsel Keşifler Kulübü",
-    DepartmentId = deptPHY!.Id,
-    Description = "Deneysel fizik, astronomi, teorik çalışmalar ve bilimsel keşifler konusunda etkinlikler düzenleyen kulüp.",
-    IsActive = true, CreatedAt = DateTime.UtcNow
-},
-
-new Club {
-    Name = "Kimya ve Laboratuvar Teknolojileri Kulübü",
-    DepartmentId = deptCHEM!.Id,
-    Description = "Kimyasal analizler, laboratuvar çalışmaları, araştırma projeleri ve bilimsel aktiviteler gerçekleştiren kulüp.",
-    IsActive = true, CreatedAt = DateTime.UtcNow
-},
-
-new Club {
-    Name = "Biyoloji ve Genetik Araştırmalar Kulübü",
-    DepartmentId = deptBIO!.Id,
-    Description = "Biyoloji, biyoteknoloji, genetik ve laboratuvar araştırmaları alanında etkinlikler düzenleyen bilim kulübü.",
-    IsActive = true, CreatedAt = DateTime.UtcNow
-},
-
-        };
 
         db.Clubs.AddRange(clubs);
         db.SaveChanges();
-        Console.WriteLine("✅ 11 varsayılan kulüp oluşturuldu");
+        Console.WriteLine("✅ 20 varsayılan kulüp oluşturuldu");
     }
 }
 

@@ -27,6 +27,8 @@ import CancelledEventsPage from "./pages/EventPages/CancelledEventsPage";
 
 // 🟦 Student Paneli
 import StudentLayout from "./components/StudentLayout";
+import AIRecommendationsPage from "./pages/AIRecommendationsPage";
+
 
 //Password 
 import ForgotPassword from "./password/ForgotPassword";
@@ -193,7 +195,7 @@ const App: React.FC = () => {
                         {/* ⭐ StudentLayout burada */}
                         <Route path="/student/*" element={<StudentLayout />} />
                         <Route path="/academic/*" element={<StudentLayout />} />
-
+                        <Route path="/recommendations" element={<AIRecommendationsPage />} />
                         <Route path="*" element={<Navigate to="/student" replace />} />
                     </>
                 )}
