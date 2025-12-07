@@ -59,6 +59,24 @@ const StudentLayout: React.FC = () => {
         return end && new Date(end) < new Date();
     });
 
+    const getEventStatus = (start: string, end: string) => {
+        const now = new Date();
+        const s = new Date(start);
+        const e = new Date(end);
+
+        // Etkinlik şu an devam ediyor mu?
+        if (s <= now && now <= e) {
+            return { label: "Devam Ediyor", color: "bg-green-600 bg-gradient-to-r from-green-500/70 to-green-700/40 text-white" };
+        }
+
+        // Etkinlik gelecekte mi? (yakın uzak fark etmez)
+        if (s > now) {
+            return { label: "Yaklaşıyor", color: "bg-yellow-600 text-black bg-gradient-to-r from-yellow-500/70 to-yellow-700/40"   };
+        }
+
+        return null; // geçmiş etkinliklere etiket yok
+    };
+
 
     const handleLogout = () => {
         localStorage.removeItem("token");
@@ -531,6 +549,7 @@ const StudentLayout: React.FC = () => {
                             myEvents={myEvents}
                             formatDate={formatDate}
                             handleLeaveEventStarter={handleLeaveEventStarter}
+                            getEventStatus={getEventStatus}
                         />
                     )}
 
@@ -543,6 +562,7 @@ const StudentLayout: React.FC = () => {
                             })}
                             handleJoinEvent={handleJoinEvent}
                             formatDate={formatDate}
+                            getEventStatus={getEventStatus}
                         />
 
                     )}

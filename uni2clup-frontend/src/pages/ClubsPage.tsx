@@ -96,9 +96,15 @@ const ClubsPage: React.FC<ClubsPageProps> = ({
                         return (
                             <div
                                 key={club.id}
-                                className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e]
-                                           border border-[#3b82f6]/40 rounded-xl p-4
-                                           shadow-xl hover:border-[#3b82f6] transition-all duration-300"
+                                className="bg-gradient-to-br from-[#1f1b4e] via-[#242050] to-[#1b1b3a]
+           border border-[#3b82f6]/40 shadow-xl
+           hover:shadow-[#3b82f6]/30 hover:scale-[1.01]
+           transition-all duration-300 rounded-2xl p-6"
+
+
+
+
+
                             >
                                 <div className="flex items-start space-x-4 mb-2">
                                     <div

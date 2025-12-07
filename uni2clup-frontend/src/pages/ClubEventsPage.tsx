@@ -25,12 +25,15 @@ interface ClubEventsPageProps {
     clubEvents: EventItem[];
     handleJoinEvent: (id: number) => void;
     formatDate: (date: string | null | undefined) => string;
+    getEventStatus: (start: string, end: string) => { label: string; color: string } | null;
+
 }
 
 const ClubEventsPage: React.FC<ClubEventsPageProps> = ({
     clubEvents,
     handleJoinEvent,
-    formatDate
+    formatDate,
+    getEventStatus
 }) => {
 
     const [filterType, setFilterType] = useState("all");
@@ -53,24 +56,37 @@ const ClubEventsPage: React.FC<ClubEventsPageProps> = ({
     
 
     
-    const now = new Date();
+    
 
-    const filteredEvents = clubEvents.filter(ev => {
-        const start = new Date(ev.startDate || ev.StartDate);
-        const end = new Date(ev.endDate || ev.EndDate);
+    const filteredEvents = clubEvents
+        .filter(ev => {
+            const start = new Date(ev.startDate || ev.StartDate);
+            const end = new Date(ev.endDate || ev.EndDate);
 
-        // Devam Eden Etkinlikler
-        if (filterType === "active") {
-            return start <= now && end >= now;
-        }
+            if (filterType === "active") {
+                return start <= currentTime && end >= currentTime;
+            }
 
-        // Yaklaşan Etkinlikler
-        if (filterType === "upcoming") {
-            return start > now;
-        }
+            if (filterType === "upcoming") {
+                return start > currentTime;
+            }
 
-        return true; // Tümü
-    });
+            // Genel liste için yine bitmiş etkinlikleri gizleyelim
+            return end >= currentTime;
+        })
+
+        .sort((a, b) => {
+            const statusA = getEventStatus(a.StartDate || a.startDate, a.EndDate || a.endDate);
+            const statusB = getEventStatus(b.StartDate || b.startDate, b.EndDate || b.endDate);
+
+            const order = {
+                "Devam Ediyor": 1,
+                "Yaklaşıyor": 2
+            };
+
+            return order[statusA?.label || "Yaklaşıyor"] - order[statusB?.label || "Yaklaşıyor"];
+        });
+
 
 
     return (
@@ -117,22 +133,19 @@ const ClubEventsPage: React.FC<ClubEventsPageProps> = ({
 
                             <button
                                 onClick={() => { setFilterType("all"); setShowFilterMenu(false); }}
-                                className="flex items-center gap-2 text-white hover:text-blue-400"
-                            >
+                                className="px-5 py-3 hover:bg-[#1d2760] cursor-pointer text-white">
                                 🔵 Tümü
                             </button>
 
                             <button
                                 onClick={() => { setFilterType("active"); setShowFilterMenu(false); }}
-                                className="flex items-center gap-2 text-green-400 hover:text-green-500"
-                            >
+                                className="px-5 py-3 hover:bg-green-500/20 cursor-pointer text-green-400">
                                 🟢 Devam Ediyor
                             </button>
 
                             <button
                                 onClick={() => { setFilterType("upcoming"); setShowFilterMenu(false); }}
-                                className="flex items-center gap-2 text-yellow-300 hover:text-yellow-400"
-                            >
+                                className="px-5 py-3 hover:bg-yellow-500/20 cursor-pointer text-yellow-300">
                                 🟡 Yaklaşıyor
                             </button>
 
@@ -155,10 +168,21 @@ const ClubEventsPage: React.FC<ClubEventsPageProps> = ({
                         {filteredEvents.map((event) => (
                         <div
                             key={event.id}
-                            className="bg-gradient-to-r from-[#1a1a2e] to-[#2a2a3e]
-                                       border border-[#3b82f6]/60 rounded-xl p-6 shadow-xl
-                                       hover:scale-[1.01] transition-all duration-300"
-                        >
+                                className="relative bg-gradient-to-br from-[#1f1b4e] via-[#242050] to-[#1b1b3a]
+           border border-[#3b82f6]/40 shadow-xl
+           hover:shadow-[#3b82f6]/30 hover:scale-[1.01]
+           transition-all duration-300 rounded-2xl p-6"
+                            >
+                                {/* 🟡🟢 ETİKET BURAYA EKLENECEK */}
+                                {(() => {
+                                    const status = getEventStatus(event.StartDate || event.startDate, event.EndDate || event.endDate);
+                                    return status ? (
+                                        <span className={`absolute top-3 right-3 px-3 py-1 rounded-full text-sm text-white ${status.color}`}>
+                                            {status.label}
+                                        </span>
+                                    ) : null;
+                                })()}
+
                             <h3 className="text-xl font-bold text-[#3b82f6] mb-3">
                                 {event.Name || event.name}
                             </h3>
