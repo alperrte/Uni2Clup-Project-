@@ -59,6 +59,106 @@ public class StudentPanelController : ControllerBase
         return Ok(clubs);
     }
 
+    
+    [HttpGet("events/{eventId}/rating-status")]
+    public async Task<IActionResult> RatingStatus(int eventId)
+    {
+        int userId = GetUserId();
+
+        bool alreadyRated = await _db.EventRatings
+            .AnyAsync(r => r.EventId == eventId && r.UserId == userId);
+
+        return Ok(new { alreadyRated });
+    }
+
+
+    public class RatingDto
+    {
+        public int Q1 { get; set; }
+        public int Q2 { get; set; }
+        public int Q3 { get; set; }
+        public int Q4 { get; set; }
+        public int Q5 { get; set; }
+    }
+
+    [HttpPost("events/{eventId}/rate")]
+    public async Task<IActionResult> RateEvent(int eventId, [FromBody] RatingDto dto)
+    {
+        int userId = GetUserId();
+
+        var ev = await _db.Events.FindAsync(eventId);
+        if (ev == null)
+            return NotFound(new { message = "Etkinlik bulunamadı." });
+
+        // Türkiye saati
+        var tz = TimeZoneInfo.FindSystemTimeZoneById("Turkey Standard Time");
+        var turkeyNow = TimeZoneInfo.ConvertTime(DateTime.UtcNow, tz);
+
+        // ❗ DB’deki tarih zaten Türkiye saati → UTC gibi davranmıyoruz
+        var eventEndInTurkey = ev.EndDate;
+
+        // DEBUG LOG
+        Console.WriteLine("========== EVENT END DEBUG ==========");
+        Console.WriteLine("DB EndDate (raw) : " + ev.EndDate.ToString("yyyy-MM-dd HH:mm:ss"));
+        Console.WriteLine("Turkey Now       : " + turkeyNow.ToString("yyyy-MM-dd HH:mm:ss"));
+        Console.WriteLine("Comparison evEnd > now = " + (eventEndInTurkey > turkeyNow));
+        Console.WriteLine("======================================");
+
+        // Etkinlik bitmeden oylama yapılamaz
+        if (eventEndInTurkey > turkeyNow)
+            return BadRequest(new { message = "Etkinlik bitmeden puanlama yapılamaz." });
+
+        // Daha önce puanladı mı?
+        bool alreadyRated = await _db.EventRatings
+            .AnyAsync(r => r.EventId == eventId && r.UserId == userId);
+
+        if (alreadyRated)
+            return BadRequest(new { message = "Bu etkinlik için zaten puan verdiniz." });
+
+        // Puan kaydet
+        var rate = new EventRating
+        {
+            EventId = eventId,
+            UserId = userId,
+            Q1 = dto.Q1,
+            Q2 = dto.Q2,
+            Q3 = dto.Q3,
+            Q4 = dto.Q4,
+            Q5 = dto.Q5
+        };
+
+        _db.EventRatings.Add(rate);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Puanlama başarıyla kaydedildi." });
+    }
+
+
+
+
+
+    private async Task AddSurveyNotification(int eventId)
+    {
+        var ev = await _db.Events.Include(e => e.Club).FirstAsync(e => e.Id == eventId);
+
+        var participants = await _db.EventParticipants
+            .Where(p => p.EventId == eventId)
+            .ToListAsync();
+
+        foreach (var p in participants)
+        {
+            _db.Notifications.Add(new Notification
+            {
+                UserId = p.UserId,
+                Title = "Etkinlik Değerlendirme Anketi",
+                Message = $"{ev.Name} etkinliği sona erdi. Lütfen değerlendirme anketini doldurun.",
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+
+        await _db.SaveChangesAsync();
+    }
+
 
     [HttpPost("clubs/{clubId}/join")]
     public async Task<IActionResult> JoinClub(int clubId)
@@ -211,6 +311,21 @@ public class StudentPanelController : ControllerBase
                 e.EndDate
             })
             .ToListAsync();
+
+        foreach (var ev in events)
+        {
+            bool alreadyNotified = await _db.Notifications.AnyAsync(n =>
+                n.UserId == userId &&
+                n.Title == "Etkinlik Değerlendirme Anketi" &&
+                n.Message.Contains(ev.Name));
+
+            bool alreadyRated = await _db.EventRatings.AnyAsync(r =>
+                r.EventId == ev.Id && r.UserId == userId);
+
+            if (!alreadyNotified && !alreadyRated)
+                await AddSurveyNotification(ev.Id);
+        }
+
 
         return Ok(events);
     }

@@ -10,6 +10,9 @@ interface Event {
     EndDate: string;
     ClubName: string;
     Description: string;
+    ratingPercent?: number;
+    ratingCount?: number;
+
 }
 
 const TURKEY_TIME_ZONE = "Europe/Istanbul";
@@ -135,6 +138,25 @@ const EventPage: React.FC = () => {
                     ClubName: e.clubName ?? e.ClubName,
                     Description: e.description ?? e.Description,
                 }));
+
+
+            // Her etkinlik için değerlendirme yüzdesi çek
+            for (let ev of normalized) {
+                try {
+                    const r = await fetch(`${API_URL}/api/events/${ev.id}/ratings-summary`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+
+                    if (r.ok) {
+                        const rd = await r.json();
+                        ev.ratingPercent = rd.percent;
+                        ev.ratingCount = rd.total;
+                    }
+                } catch (err) {
+                    console.error("Rating fetch error:", err);
+                }
+            }
+
 
 
             setEvents(normalized);
@@ -399,7 +421,33 @@ const EventPage: React.FC = () => {
                                                     {formatForDisplay(ev.EndDate)}
                                                 </p>
                                             </div>
+
+
+
                                         </div>
+
+                                        {ev.ratingPercent !== undefined && (
+                                            <div className="mt-4 bg-blue-900/40 border border-blue-400/40 p-4 rounded-2xl shadow-md">
+                                                <p className="text-blue-300 text-sm">Etkinlik Değerlendirme Sonucu</p>
+
+                                                <div className="flex items-center gap-4 mt-2">
+                                                    <div className="text-4xl font-extrabold text-blue-400">
+                                                        %{ev.ratingPercent}
+                                                    </div>
+
+                                                    <div className="text-gray-300 text-sm">
+                                                        <b>{ev.ratingCount}</b> öğrenci değerlendirdi
+                                                    </div>
+                                                </div>
+
+                                                <div className="w-full bg-blue-950 rounded-full h-3 mt-3">
+                                                    <div
+                                                        className="bg-blue-500 h-3 rounded-full"
+                                                        style={{ width: `${ev.ratingPercent}%` }}
+                                                    ></div>
+                                                </div>
+                                            </div>
+                                        )}
 
                                         <p className="text-gray-300 mt-3">
                                             ℹ️ <b>Açıklama:</b> {ev.Description}
