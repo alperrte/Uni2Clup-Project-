@@ -376,6 +376,36 @@ namespace Uni2ClupProjectBackend.Controllers
             return Ok(cancelledEvents);
         }
 
+        // 6) Etkinlik Değerlendirme Özeti
+        [HttpGet("{eventId}/ratings-summary")]
+        [Authorize(Roles = "ClubManager")]
+        public async Task<IActionResult> GetRatingSummary(int eventId)
+        {
+            var ratings = await _db.EventRatings
+                .Where(r => r.EventId == eventId)
+                .ToListAsync();
+
+            if (!ratings.Any())
+                return Ok(new { percent = 0, total = 0 });
+
+            // Her öğrenci 5 soru × 5 puan = max 25 puan verebilir
+            int maxPossiblePoints = ratings.Count * 25;
+
+            // Tüm öğrencilerin verdiği toplam puan
+            int totalGivenPoints = ratings.Sum(r => r.Q1 + r.Q2 + r.Q3 + r.Q4 + r.Q5);
+
+            // Gerçek beğenilme yüzdesi
+            double percent = Math.Round((double)totalGivenPoints / maxPossiblePoints * 100, 2);
+
+            return Ok(new
+            {
+                percent,
+                total = ratings.Count
+            });
+        }
+
+
+
 
         //Etkinlik İptal Et 
         [HttpPut("cancel/{id}")]
