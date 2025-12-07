@@ -177,7 +177,6 @@ const AddUserPage: React.FC = () => {
                             onChange={handleChange}
                             className="w-full p-4 bg-[#0f0f1a] rounded-lg text-white border border-[#3b82f6]/20 cursor-pointer"
                         >
-                            <option value="Academic">Akademisyen</option>
                             <option value="Admin">Yönetici</option>
                         </select>
 
