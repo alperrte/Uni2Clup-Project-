@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+﻿import React, { useEffect, useState, useCallback } from "react";
 
 const API_URL = "http://localhost:8080";
 const TURKEY_TIMEZONE = "Europe/Istanbul";
@@ -85,7 +85,8 @@ const AnnouncementsListPage: React.FC = () => {
             <div className="max-w-5xl mx-auto py-10 space-y-8">
 
                 {/* ÜST BÖLÜM */}
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 bg-gradient-to-br from-[#1c1f44] to-[#111326] border border-[#3b82f6]/30 rounded-3xl p-8 shadow-2xl">
+                <div className="relative bg-gradient-to-br from-[#1f1b4e] via-[#242050] to-[#1b1b3a] border border-[#3b82f6]/40 shadow-[0_0_25px_rgba(59,130,246,0.25)] hover:shadow-[#3b82f6]/30 hover:scale-[1.01] transition-all duration-300 rounded-3xl p-8 overflow-hidden flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+
                     <div>
                         <p className="text-sm uppercase tracking-[0.4em] text-[#93c5fd] mb-2">Kulüp Duyuruları</p>
                         <h1 className="text-4xl font-extrabold">Mevcut Duyurular</h1>

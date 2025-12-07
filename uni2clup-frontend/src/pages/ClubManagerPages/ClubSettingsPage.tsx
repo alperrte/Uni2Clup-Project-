@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 
 const API_URL = "http://localhost:8080";
 
@@ -16,6 +16,9 @@ const ClubSettingsPage: React.FC = () => {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
     const token = localStorage.getItem("token");
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [successMessage, setSuccessMessage] = useState("");
+
 
     const fetchClub = async () => {
         try {
@@ -63,11 +66,16 @@ const ClubSettingsPage: React.FC = () => {
                 throw new Error(data.message || "Açıklama güncellenemedi.");
             }
 
-            alert(data.message || "Açıklama güncellendi.");
+            setSuccessMessage(data.message || "✔ Açıklama güncellendi.");
+            setShowSuccessModal(true);
+
             setClub({ ...club, description });
+
         } catch (err: any) {
             console.error(err);
-            alert(err.message || "Açıklama güncellenemedi.");
+            setSuccessMessage(err.message || "❌ Açıklama güncellenemedi.");
+            setShowSuccessModal(true);
+
         } finally {
             setSaving(false);
         }
@@ -104,7 +112,8 @@ const ClubSettingsPage: React.FC = () => {
         <div className="relative text-white">
             <div className="absolute inset-0 -z-10 opacity-40 blur-3xl bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900"></div>
             <div className="max-w-5xl mx-auto py-10 space-y-8">
-                <div className="bg-gradient-to-br from-[#1c1f44] to-[#111326] border border-[#3b82f6]/30 rounded-3xl p-8 shadow-2xl">
+                <div className="bg-gradient-to-br from-[#1f1b4e] via-[#242050] to-[#1b1b3a] border border-[#3b82f6]/40 rounded-3xl p-8 shadow-[0_0_25px_rgba(59,130,246,0.25)] hover:shadow-[#3b82f6]/30 hover:scale-[1.01] transition-all duration-300">
+
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                         <div>
                             <p className="text-sm uppercase tracking-[0.4em] text-[#93c5fd] mb-2">Kulüp Ayarları</p>
@@ -135,6 +144,26 @@ const ClubSettingsPage: React.FC = () => {
                     </button>
                 </div>
             </div>
+
+            {showSuccessModal && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999]">
+                    <div className="bg-[#1a1a2e] p-8 rounded-2xl border border-[#3b82f6]/30 shadow-2xl w-[90%] max-w-md text-center">
+
+                        <h2 className="text-2xl font-bold text-white mb-4">
+                            {successMessage}
+                        </h2>
+
+                        <button
+                            onClick={() => setShowSuccessModal(false)}
+                            className="mt-4 bg-[#4e3df5] hover:bg-[#3f2de8] text-white px-6 py-3 rounded-xl font-semibold transition"
+                        >
+                            Tamam
+                        </button>
+                    </div>
+                </div>
+            )}
+
+
         </div>
     );
 };
