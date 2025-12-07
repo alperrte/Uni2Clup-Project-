@@ -12,7 +12,7 @@ using Uni2ClupProjectBackend.Data;
 namespace Uni2ClupProjectBackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251202210241_InitialCreate")]
+    [Migration("20251207164037_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -280,6 +280,47 @@ namespace Uni2ClupProjectBackend.Migrations
                     b.ToTable("Events");
                 });
 
+            modelBuilder.Entity("Uni2ClupProjectBackend.Models.EventRating", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("EventId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Q1")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Q2")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Q3")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Q4")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Q5")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("RatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("EventRatings");
+                });
+
             modelBuilder.Entity("Uni2ClupProjectBackend.Models.PasswordResetToken", b =>
                 {
                     b.Property<int>("Id")
@@ -467,6 +508,25 @@ namespace Uni2ClupProjectBackend.Migrations
                         .IsRequired();
 
                     b.Navigation("Club");
+                });
+
+            modelBuilder.Entity("Uni2ClupProjectBackend.Models.EventRating", b =>
+                {
+                    b.HasOne("Uni2ClupProjectBackend.Models.Event", "Event")
+                        .WithMany()
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Uni2ClupProjectBackend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Event");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Uni2ClupProjectBackend.Models.User", b =>

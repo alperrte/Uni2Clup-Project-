@@ -252,6 +252,38 @@ namespace Uni2ClupProjectBackend.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "EventRatings",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    EventId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    Q1 = table.Column<int>(type: "int", nullable: false),
+                    Q2 = table.Column<int>(type: "int", nullable: false),
+                    Q3 = table.Column<int>(type: "int", nullable: false),
+                    Q4 = table.Column<int>(type: "int", nullable: false),
+                    Q5 = table.Column<int>(type: "int", nullable: false),
+                    RatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EventRatings", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_EventRatings_Events_EventId",
+                        column: x => x.EventId,
+                        principalTable: "Events",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_EventRatings_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_Announcements_EventId",
                 table: "Announcements",
@@ -280,6 +312,16 @@ namespace Uni2ClupProjectBackend.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_EventParticipants_UserId",
                 table: "EventParticipants",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EventRatings_EventId",
+                table: "EventRatings",
+                column: "EventId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EventRatings_UserId",
+                table: "EventRatings",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
@@ -315,6 +357,9 @@ namespace Uni2ClupProjectBackend.Migrations
 
             migrationBuilder.DropTable(
                 name: "EventParticipants");
+
+            migrationBuilder.DropTable(
+                name: "EventRatings");
 
             migrationBuilder.DropTable(
                 name: "Notifications");
