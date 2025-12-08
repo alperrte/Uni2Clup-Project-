@@ -24,7 +24,7 @@ interface ClubIconData {
 
 interface ProfilePageProps {
     profile: ProfileData | null;
-    getClubIcon: (clubName: string) => ClubIconData;
+    getClubIcon: (clubName: string, department?: string) => ClubIconData;
     handleLeaveClub: (clubId: number) => void;   
     myEvents: any[];
     pastEvents: any[];
@@ -183,53 +183,38 @@ hover:shadow-[0_0_40px_rgba(59,130,246,0.25)]
                                 {profile.clubs
                                     .sort((a, b) => a.name.localeCompare(b.name, "tr"))
                                     .map((club) => {
-                                        const iconData = getClubIcon(club.name);
+                                        const iconData = getClubIcon(club.name, club.departmentName);
+
 
                                         return (
                                             <div
                                                 key={club.id}
-                                                className="bg-gradient-to-br from-[#1f1b4e] via-[#242050] to-[#1b1b3a]
-           border border-[#3b82f6]/40 shadow-xl
-           hover:shadow-[#3b82f6]/30 hover:scale-[1.01]
-           transition-all duration-300 rounded-2xl p-6"
+                                                className="bg-gradient-to-br from-[#1f1b4e] via-[#242050] to-[#1b1b3a] border border-[#3b82f6]/40 shadow-xl hover:shadow-[#3b82f6]/30 hover:scale-[1.01] transition-all duration-300 rounded-2xl p-6 flex items-center justify-between gap-4"
+
                                             >
-                                                {/* İKON + METİN */}
-                                                <div className="flex items-center gap-4">
-                                                    <div
-                                                        className={`
-                                    w-12 h-12 rounded-full flex items-center justify-center text-xl
-                                    bg-gradient-to-br ${iconData.color}
-                                    shadow-lg
-                                `}
-                                                    >
-                                                        {iconData.icon}
+
+                                                    {/* İKON + METİN */}
+                                                    <div className="flex items-center gap-4">
+                                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br ${iconData.color}`}>
+                                                            <span className="text-white text-xl">{iconData.icon}</span>
+                                                        </div>
+
+                                                        <div>
+                                                            <h2 className="text-xl font-bold">{club.name}</h2>
+                                                            <p className="text-gray-300 text-sm">{club.departmentName}</p>
+                                                        </div>
                                                     </div>
 
-                                                    <div>
-                                                        <p className="text-white text-lg font-semibold">
-                                                            {club.name}
-                                                        </p>
-                                                        <p className="text-gray-400 text-sm">
-                                                            {club.departmentName}
-                                                        </p>
-                                                    </div>
+                                                    {/* AYRIL BUTONU */}
+                                                    <button
+                                                        onClick={() => handleLeaveClub(club.id)}
+                                                        className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-all duration-300 hover:scale-105"
+                                                    >
+                                                        Ayrıl
+                                                    </button>
+
                                                 </div>
 
-                                                {/* AYRIL BUTONU */}
-                                                <button
-                                                    onClick={() => handleLeaveClub(club.id)}
-                                                    className="
-                                px-4 py-2
-                                rounded-lg
-                                bg-red-600 hover:bg-red-700
-                                text-white font-medium
-                                transition-all duration-300
-                                hover:scale-105
-                            "
-                                                >
-                                                    Ayrıl
-                                                </button>
-                                            </div>
                                         );
                                     })}
                             </div>
