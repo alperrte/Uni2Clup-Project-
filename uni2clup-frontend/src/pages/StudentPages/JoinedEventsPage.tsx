@@ -17,6 +17,8 @@ interface EventItem {
     clubName?: string;
     Description?: string;
     description?: string;
+    isCancelled?: boolean;
+
 }
 
 interface JoinedEventsPageProps {
@@ -39,6 +41,7 @@ const JoinedEventsPage: React.FC<JoinedEventsPageProps> = ({
 
 
     const filteredEvents = myEvents
+        .filter(ev => !ev.isCancelled)
         .filter(ev => {
             const start = new Date(ev.StartDate || ev.startDate);
             const end = new Date(ev.EndDate || ev.endDate);
