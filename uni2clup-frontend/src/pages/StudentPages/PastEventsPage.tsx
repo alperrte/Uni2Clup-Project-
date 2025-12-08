@@ -24,12 +24,14 @@ interface PastEventsPageProps {
     pastEvents: EventItem[];
     missedEvents: EventItem[];
     formatDate: (date: string | null | undefined) => string;
+    refreshPastEvents: () => void;
 }
 
 const PastEventsPage: React.FC<PastEventsPageProps> = ({
     pastEvents,
     missedEvents,
-    formatDate
+    formatDate,
+    refreshPastEvents
 }) => {
     const [activeTab, setActiveTab] = useState<"joinedPast" | "missed">("joinedPast");
 
@@ -65,6 +67,13 @@ const API_URL = "http://localhost:8080";
             },
             body: JSON.stringify(ratings),
         });
+        if (res.ok) {
+            // 🔥 Listeyi yenile (yeşil "Değerlendirdiniz" yazısı hemen çıksın)
+            refreshPastEvents();
+
+            // Modalı kapat
+            setModalOpen(false);
+        }
     };
 
     const [refresh, setRefresh] = useState(0);

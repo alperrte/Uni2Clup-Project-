@@ -18,6 +18,8 @@ interface EventItem {
     Description?: string;
     description?: string;
     isJoined?: boolean;
+    isCancelled?: boolean;
+
 }
 
 interface ClubEventsPageProps {
@@ -58,6 +60,7 @@ const ClubEventsPage: React.FC<ClubEventsPageProps> = ({
     
 
     const filteredEvents = clubEvents
+        .filter(ev => !ev.isCancelled)
         .filter(ev => {
             const start = new Date(ev.startDate || ev.StartDate);
             const end = new Date(ev.endDate || ev.EndDate);

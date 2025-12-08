@@ -565,7 +565,9 @@ const StudentLayout: React.FC = () => {
 
                     {activeMenu === "club-events" && (
                         <ClubEventsPage
-                            clubEvents={clubEvents.filter(ev => {
+                            clubEvents={clubEvents
+                                .filter(ev => !ev.isCancelled)  
+                                .filter(ev => {
                                 const end = new Date(ev.EndDate || ev.endDate);
                                 return end >= new Date(); 
                             })}
@@ -581,6 +583,7 @@ const StudentLayout: React.FC = () => {
                             pastEvents={joinedPastEvents}   
                             missedEvents={missedEvents}     
                             formatDate={formatDate}
+                            refreshPastEvents={fetchPastEvents} 
                         />
 
                     )}

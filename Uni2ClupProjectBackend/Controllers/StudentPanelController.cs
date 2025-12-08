@@ -238,7 +238,8 @@ public class StudentPanelController : ControllerBase
                 ep.Event.Capacity,
                 ep.Event.Description,
                 ep.Event.StartDate,
-                ep.Event.EndDate
+                ep.Event.EndDate,
+                isCancelled = ep.Event.IsCancelled
             })
             .ToListAsync();
 
@@ -273,7 +274,8 @@ public class StudentPanelController : ControllerBase
                 ClubName = e.Club.Name,   // ✔ kulüp adı
                 e.Description,
                 e.StartDate,
-                e.EndDate
+                e.EndDate,
+                isCancelled = e.IsCancelled
             })
             .ToListAsync();
 
@@ -308,7 +310,8 @@ public class StudentPanelController : ControllerBase
                 ClubName = e.Club.Name,
                 e.Description,
                 e.StartDate,
-                e.EndDate
+                e.EndDate,
+                isCancelled = e.IsCancelled
             })
             .ToListAsync();
 
