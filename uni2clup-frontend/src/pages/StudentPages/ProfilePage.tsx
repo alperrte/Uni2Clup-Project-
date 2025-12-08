@@ -4,6 +4,7 @@ interface ClubItem {
     id: number;
     name: string;
     departmentName?: string;
+    description?: string;
     isMember?: boolean; 
 }
 
@@ -81,92 +82,102 @@ hover:shadow-[0_0_40px_rgba(59,130,246,0.25)]
                     {/* İstatistik Kutuları */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8 mt-6">
 
-                        {/* Toplam Kulüp Sayısı */}
-                        <div className="bg-gradient-to-br from-[#1f1b4e] via-[#242050] to-[#1b1b3a]
-           border border-[#3b82f6]/40 shadow-xl
-           hover:shadow-[#3b82f6]/30 hover:scale-[1.01]
-           transition-all duration-300 rounded-2xl p-6"
-                        >
-                            <div className="text-3xl font-bold text-white">
+                        {/* Üye Kulüp Sayısı */}
+                        <div className="
+        bg-gradient-to-br from-[#2d1b69] via-[#3b82f6]/80 to-[#60a5fa]/70
+        border border-[#3b82f6]/50 
+        shadow-[0_0_25px_rgba(59,130,246,0.35)]
+        hover:shadow-[0_0_40px_rgba(59,130,246,0.45)]
+        hover:scale-[1.02]
+        transition-all duration-300
+        rounded-2xl p-6 flex flex-col items-center
+    ">
+                            <div className="text-4xl font-bold text-white drop-shadow-md">
                                 {profile?.clubs?.length ?? 0}
                             </div>
-                            <div className="text-gray-300 text-sm">Üye Olduğu Kulüp Sayısı</div>
+                            <div className="text-gray-100 text-sm mt-2">
+                                Üye Olduğu Kulüp Sayısı
+                            </div>
                         </div>
 
-                        {/* Katıldığı Etkinlik Sayısı */}
-                        <div className="bg-gradient-to-br from-[#1f1b4e] via-[#242050] to-[#1b1b3a]
-           border border-[#3b82f6]/40 shadow-xl
-           hover:shadow-[#3b82f6]/30 hover:scale-[1.01]
-           transition-all duration-300 rounded-2xl p-6"
-                        >
-                            <div className="text-3xl font-bold text-white">
+                        {/* Katıldığı Etkinlik */}
+                        <div className="
+        bg-gradient-to-br from-[#2d1b69] via-[#3b82f6]/80 to-[#60a5fa]/70
+        border border-[#3b82f6]/50 
+        shadow-[0_0_25px_rgba(59,130,246,0.35)]
+        hover:shadow-[0_0_40px_rgba(59,130,246,0.45)]
+        hover:scale-[1.02]
+        transition-all duration-300
+        rounded-2xl p-6 flex flex-col items-center
+    ">
+                            <div className="text-4xl font-bold text-white drop-shadow-md">
                                 {myEvents.length}
-
                             </div>
-                            <div className="text-gray-300 text-sm">Katıldığı Etkinlik Sayısı</div>
+                            <div className="text-gray-100 text-sm mt-2">
+                                Katıldığı Etkinlik Sayısı
+                            </div>
                         </div>
 
-                        {/* Bildirim Sayısı */}
-                        <div className="bg-gradient-to-br from-[#1f1b4e] via-[#242050] to-[#1b1b3a]
-           border border-[#3b82f6]/40 shadow-xl
-           hover:shadow-[#3b82f6]/30 hover:scale-[1.01]
-           transition-all duration-300 rounded-2xl p-6"
-                        >
-                            <div className="text-3xl font-bold text-white">
+                        {/* Kaçırdığı Etkinlik */}
+                        <div className="
+        bg-gradient-to-br from-[#2d1b69] via-[#3b82f6]/80 to-[#60a5fa]/70
+        border border-[#3b82f6]/50 
+        shadow-[0_0_25px_rgba(59,130,246,0.35)]
+        hover:shadow-[0_0_40px_rgba(59,130,246,0.45)]
+        hover:scale-[1.02]
+        transition-all duration-300
+        rounded-2xl p-6 flex flex-col items-center
+    ">
+                            <div className="text-4xl font-bold text-white drop-shadow-md">
                                 {pastEvents.length}
-
                             </div>
-                            <div className="text-gray-300 text-sm">Kaçırdığı Etkinlik Sayısı</div>
+                            <div className="text-gray-100 text-sm mt-2">
+                                Kaçırdığı Etkinlik Sayısı
+                            </div>
                         </div>
 
                     </div>
+
+
 
 
 
                     {/* Name */}
-                    <div
-                        className="bg-gradient-to-br from-[#1f1b4e] via-[#242050] to-[#1b1b3a]
-           border border-[#3b82f6]/40 shadow-xl
-           hover:shadow-[#3b82f6]/30 hover:scale-[1.01]
-           transition-all duration-300 rounded-2xl p-6 mb-8"
-                    >
-                        <h2 className="text-2xl font-bold mb-2">
-                            {profile.name} {profile.surname}
-                        </h2>
-
-                        <p className="text-gray-200 text-lg">
-                            {profile.email}
-                        </p>
+                    <div className="
+    bg-gradient-to-br from-[#1b1c2e]/60 via-[#151627]/70 to-[#0f1020]/90
+    border border-[#3b82f6]/40
+    shadow-[0_0_25px_rgba(0,0,0,0.25)]
+    hover:shadow-[0_0_45px_rgba(59,130,246,0.25)]
+    transition-all duration-300
+    hover:scale-[1.01]
+    rounded-2xl p-8 mb-8
+">
+                        <h2 className="text-3xl font-bold text-white mb-2">{profile.name} {profile.surname}</h2>
+                        <p className="text-gray-300 text-lg">{profile.email}</p>
                     </div>
+
 
 
                    
                     
 
-                    <div
-                        className="bg-gradient-to-br from-[#1f1b4e] via-[#242050] to-[#1b1b3a]
-           border border-[#3b82f6]/40 shadow-xl
-           hover:shadow-[#3b82f6]/30 hover:scale-[1.01]
-           transition-all duration-300 rounded-2xl p-6 mb-8"
-                    >
+                    <div className="
+    bg-gradient-to-br from-[#1b1c2e]/60 via-[#151627]/70 to-[#0f1020]/90
+    border border-[#3b82f6]/40
+    shadow-[0_0_25px_rgba(0,0,0,0.25)]
+    hover:shadow-[0_0_45px_rgba(59,130,246,0.25)]
+    transition-all duration-300
+    hover:scale-[1.01]
+    rounded-2xl p-8 mb-8
+">
                         <div className="flex items-center gap-4">
-                            <div
-                                className="
-                w-12 h-12 flex items-center justify-center rounded-lg
-                bg-gradient-to-br from-[#2d1b69] to-[#3b82f6]
-                text-white text-2xl shadow-lg
-            "
-                            >
+                            <div className="w-14 h-14 flex items-center justify-center rounded-xl 
+            bg-gradient-to-br from-[#2d1b69] to-[#3b82f6] text-white text-3xl shadow-lg">
                                 🎓
                             </div>
-
                             <div>
-                                <h3 className="text-xl font-semibold text-[#3b82f6]">
-                                    Bölüm
-                                </h3>
-                                <p className="text-gray-200 text-lg mt-1">
-                                    {profile.departmentName ?? "Bilinmiyor"}
-                                </p>
+                                <h3 className="text-xl font-semibold text-[#3b82f6]">Bölüm</h3>
+                                <p className="text-gray-200 text-lg mt-1">{profile.departmentName ?? "Bilinmiyor"}</p>
                             </div>
                         </div>
                     </div>
@@ -189,31 +200,55 @@ hover:shadow-[0_0_40px_rgba(59,130,246,0.25)]
                                         return (
                                             <div
                                                 key={club.id}
-                                                className="bg-gradient-to-br from-[#1f1b4e] via-[#242050] to-[#1b1b3a] border border-[#3b82f6]/40 shadow-xl hover:shadow-[#3b82f6]/30 hover:scale-[1.01] transition-all duration-300 rounded-2xl p-6 flex items-center justify-between gap-4"
-
+                                                className="
+        relative
+        bg-gradient-to-br from-[#1b1c2e]/60 via-[#151627]/70 to-[#0f1020]/90
+        backdrop-blur-xl
+        border border-[#3b82f6]/40
+        rounded-2xl p-6
+        shadow-[0_0_25px_rgba(0,0,0,0.25)]
+        hover:shadow-[0_0_45px_rgba(59,130,246,0.25)]
+        transition-all duration-300
+        hover:scale-[1.01]
+        flex items-center justify-between gap-4
+    "
                                             >
-
-                                                    {/* İKON + METİN */}
-                                                    <div className="flex items-center gap-4">
-                                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br ${iconData.color}`}>
-                                                            <span className="text-white text-xl">{iconData.icon}</span>
-                                                        </div>
-
-                                                        <div>
-                                                            <h2 className="text-xl font-bold">{club.name}</h2>
-                                                            <p className="text-gray-300 text-sm">{club.departmentName}</p>
-                                                        </div>
+                                                {/* İKON + METİN */}
+                                                <div className="flex items-center gap-4">
+                                                    <div
+                                                        className={`
+                w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center 
+                bg-gradient-to-br ${iconData.color}
+                shadow-[0_0_15px_rgba(255,255,255,0.15)]
+            `}
+                                                    >
+                                                        <span className="text-white text-xl">{iconData.icon}</span>
                                                     </div>
 
-                                                    {/* AYRIL BUTONU */}
-                                                    <button
-                                                        onClick={() => handleLeaveClub(club.id)}
-                                                        className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-all duration-300 hover:scale-105"
-                                                    >
-                                                        Ayrıl
-                                                    </button>
-
+                                                    <div>
+                                                        <h2 className="text-xl font-semibold text-white">{club.name}</h2>
+                                                        <p className="text-gray-300 text-sm">{club.departmentName}</p>
+                                                        <p className="text-gray-200 text-sm mt-1 leading-relaxed">
+                                                            {club.description || "Açıklama bulunmuyor."}
+                                                        </p>
+                                                    </div>
                                                 </div>
+
+                                                {/* AYRIL BUTONU — SAYFA STİLİNE UYUMLU MAVİ/MOR */}
+                                                <button
+                                                    onClick={() => handleLeaveClub(club.id)}
+                                                    className="
+            px-5 py-2 rounded-xl font-semibold text-white
+            bg-gradient-to-r from-[#3b82f6] to-[#4f46e5]
+            shadow-[0_4px_14px_rgba(59,130,246,0.45)]
+            hover:from-[#60a5fa] hover:to-[#6d5cff]
+            transition-all duration-300 hover:scale-105
+        "
+                                                >
+                                                    Ayrıl
+                                                </button>
+                                            </div>
+
 
                                         );
                                     })}

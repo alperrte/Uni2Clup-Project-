@@ -436,6 +436,7 @@ public class StudentPanelController : ControllerBase
             {
                 cm.Club.Id,
                 cm.Club.Name,
+                description = cm.Club.Description,
                 departmentName = cm.Club.Department != null ? cm.Club.Department.Name : "-"
             })
             .ToListAsync();
