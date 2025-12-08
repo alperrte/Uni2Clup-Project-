@@ -180,7 +180,7 @@ public class StudentPanelController : ControllerBase
         {
             UserId = userId,
             Title = "Kulüp Üyeliği",
-            Message = $"{club.Name} kulübüne katıldınız."
+            Message = $"{club.Name} katılımınız gerçekleşmiştir."
         });
         await _db.SaveChangesAsync();
 
@@ -210,7 +210,7 @@ public class StudentPanelController : ControllerBase
             {
                 UserId = userId,
                 Title = "Kulüp Üyeliği",
-                Message = $"{club.Name} kulübünden ayrıldınız."
+                Message = $"{club.Name} üyeliğinden ayrıldınız."
             });
 
             await _db.SaveChangesAsync();
