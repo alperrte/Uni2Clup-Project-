@@ -186,28 +186,46 @@ const StudentLayout: React.FC = () => {
         } catch { }
     };
 
-    const handleJoinClub = async (clubId: number) => {
+    const handleJoinClub = async (clubId) => {
         if (!checkToken()) return;
 
         setConfirmModal({
             show: true,
             title: "Kulübe katılmak istediğinize emin misiniz?",
             message: "Bu işlemi onayladığınızda kulübe katılacaksınız.",
-            description: "Kulübe katıldığınızda kulüp profilinize eklenecektir.",
+            description: "Kulüp profilinize eklenecektir.",
             onConfirm: async () => {
-                await fetch(`${API_URL}/api/studentpanel/clubs/${clubId}/join`, {
-                    method: "POST",
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                try {
+                    const token = localStorage.getItem("token");
 
-                fetchClubs();
-                fetchProfile();
-                fetchNotifications();
-                showToast("Kulübe başarıyla katıldınız!", "Kulübünüz profilinize eklendi.");
+                    const res = await fetch(`${API_URL}/api/studentpanel/clubs/${clubId}/join`, {
+                        method: "POST",
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
 
+                    if (!res.ok) throw new Error("Katılım başarısız.");
+
+                    // 🔥 ÖNEMLİ: UI ANINDA GÜNCELLENSİN
+                    setClubs(prev =>
+                        prev.map(club =>
+                            club.id === clubId ? { ...club, isMember: true } : club
+                        )
+                    );
+
+                    // 🔥 PROFİLİ GÜNCELLE
+                    fetchProfile();
+
+                    // (isteğe bağlı)
+                    fetchNotifications();
+
+                    showToast("Kulübe başarıyla katıldınız!", "Kulübünüz profilinize eklendi.");
+                } catch (err) {
+                    console.error(err);
+                }
             }
         });
     };
+
 
 
     const handleLeaveClub = async (clubId: number) => {
