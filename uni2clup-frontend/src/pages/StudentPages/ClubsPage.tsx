@@ -4,12 +4,12 @@ import { useNavigate } from "react-router-dom";
 interface ClubsPageProps {
     clubs: any[];
     currentPage: number;
-    totalPages: number;
     setCurrentPage: (page: number) => void;
 
     handleJoinClub: (clubId: number) => void;
     handleLeaveClub: (clubId: number) => void;
-    getClubIcon: (name: string) => any;
+    getClubIcon: (name: string, departmentName?: string) => any;
+
 
 
     searchTerm: string;
@@ -25,7 +25,6 @@ interface ClubsPageProps {
 const ClubsPage: React.FC<ClubsPageProps> = ({
     clubs,
     currentPage,
-    totalPages,
     setCurrentPage,
     handleJoinClub,
     handleLeaveClub,
@@ -37,7 +36,38 @@ const ClubsPage: React.FC<ClubsPageProps> = ({
     setSelectedDept
 }) => {
 
-const navigate = useNavigate();
+    const navigate = useNavigate();
+
+    // 1️⃣ Arama ve filtre uygulanmış kulüpler
+    const filteredClubs = clubs.filter((club) => {
+        const matchSearch =
+            club.name.toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchDept =
+            selectedDept === "" || selectedDept === "Tüm Bölümler"
+                ? true
+                : club.departmentName === departments.find(d => d.id == selectedDept)?.name;
+
+
+
+        return matchSearch && matchDept;
+    });
+
+    // 2️⃣ Sayfalama hesaplama artık filteredClubs üzerinden yapılacak
+    const itemsPerPage = 4; // sen kaç kullanıyorsan
+    const startIndex = (currentPage - 1) * itemsPerPage;
+
+    const paginatedClubs = filteredClubs
+        .sort((a, b) => a.name.localeCompare(b.name, "tr"))
+        .slice(startIndex, startIndex + itemsPerPage);
+
+    // 3️⃣ Toplam sayfa sayısı hesapla
+    const totalFilteredPages = Math.ceil(filteredClubs.length / itemsPerPage);
+
+    React.useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, selectedDept]);
+
 
     return (
         <div className="text-white">
@@ -49,8 +79,6 @@ const navigate = useNavigate();
                 Kulüpler
             </h1>
 
-
-      
 
             {/* Arama + Filtre */}
             <div className="flex gap-4 mb-6">
@@ -91,7 +119,8 @@ const navigate = useNavigate();
 
 
             {/* Kulüp Kartları */}
-            {clubs.length === 0 ? (
+            {filteredClubs.length === 0 ? (
+
                 <div className="text-center py-12">
                     <p className="text-gray-400 text-lg">
                         Henüz kulüp bulunmamaktadır.
@@ -101,12 +130,11 @@ const navigate = useNavigate();
                     <div className="flex flex-col gap-6 w-[80%] mx-auto">
 
 
-                        {clubs
-                            .sort((a, b) => a.name.localeCompare(b.name, "tr"))   
-                            .map((club) => {
+                        {paginatedClubs.map((club) => {
 
 
-                        const iconData = getClubIcon(club.name);
+                            const iconData = getClubIcon(club.name, club.departmentName);
+
 
                         return (
                             <div
@@ -179,14 +207,16 @@ const navigate = useNavigate();
                             </button>
 
                             <span className="text-lg text-gray-300">
-                                Sayfa {currentPage} / {totalPages}
+                                Sayfa {currentPage} / {totalFilteredPages}
+
                             </span>
 
                             <button
-                                disabled={currentPage === totalPages}
+                                disabled={currentPage === totalFilteredPages}
+
                                 onClick={() => setCurrentPage(currentPage + 1)}
                                 className={`px-4 py-2 rounded-lg bg-[#1a1a2e] border border-[#3b82f6]
-        ${currentPage === totalPages ? "opacity-40 cursor-not-allowed" : "hover:bg-[#3b82f6]"}`}
+        ${currentPage === totalFilteredPages ? "opacity-40 cursor-not-allowed" : "hover:bg-[#3b82f6]"}`}
                             >
                                 Sonraki ▶
                             </button>

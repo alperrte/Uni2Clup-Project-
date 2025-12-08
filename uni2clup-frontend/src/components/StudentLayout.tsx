@@ -101,13 +101,7 @@ const StudentLayout: React.FC = () => {
         return `${day} ${time}`;
     };
 
-    const getClubIcon = (name: string) => {
-        return {
-            icon: "★",
-            color: "from-[#2d1b69] to-[#3b82f6]"
-        };
-    };
-
+    
     const checkToken = useCallback(() => {
         if (!token) {
             window.location.href = "/login";
@@ -315,6 +309,7 @@ const StudentLayout: React.FC = () => {
         } catch { }
     };
 
+
     useEffect(() => {
         fetchClubs();
         fetchMyEvents();
@@ -329,30 +324,44 @@ const StudentLayout: React.FC = () => {
         fetchNotifications();
     }, [notificationsFilter]);
 
-    const filteredClubs = clubs
-        .filter((club: any) => !club.isMember) 
-        .filter((club: any) => {
-            const matchesSearch =
-                (club.name || "").toLowerCase().includes(searchTerm.toLowerCase());
+    
 
-            const matchesDept =
-                selectedDept === "" || club.departmentId === Number(selectedDept);
-
-            return matchesSearch && matchesDept;
-        })
-        .sort((a, b) => a.name.localeCompare(b.name, "tr")); 
+  
 
 
-    const indexOfLastClub = currentPage * clubsPerPage;
-    const indexOfFirstClub = indexOfLastClub - clubsPerPage;
-    const paginatedClubs = filteredClubs.slice(indexOfFirstClub, indexOfLastClub);
 
-    const totalPages = Math.ceil(filteredClubs.length / clubsPerPage);
+    const getClubIcon = (name: string, department?: string) => {
+        // 🔥 Türkçe karakter normalize fonksiyonu
+        const normalizeTR = (str: string) =>
+            str
+                .replace(/İ/g, "i")
+                .replace(/I/g, "ı")
+                .toLocaleLowerCase("tr")
+                .trim();
 
-    const filteredNotifications =
-        notificationsFilter === "unread"
-            ? notifications.filter((n: any) => !n.isRead)
-            : notifications;
+        const dep = normalizeTR(department || name || "");
+
+        // 🔥 16 bölümün tamamı burada eşleşiyor
+        if (dep === "bilgisayar mühendisliği") return { icon: "💻", color: "from-blue-600 to-cyan-500" };
+        if (dep === "biyoloji") return { icon: "🧬", color: "from-green-500 to-emerald-600" };
+        if (dep === "çevre mühendisliği") return { icon: "🌿", color: "from-green-400 to-lime-500" };
+        if (dep === "elektrik-elektronik mühendisliği") return { icon: "⚡", color: "from-yellow-400 to-amber-500" };
+        if (dep === "endüstri mühendisliği") return { icon: "🏭", color: "from-gray-400 to-gray-600" };
+        if (dep === "fizik") return { icon: "⚛️", color: "from-purple-600 to-indigo-600" };
+        if (dep === "güzel sanatlar") return { icon: "🎨", color: "from-pink-500 to-purple-500" };
+        if (dep === "hukuk") return { icon: "⚖️", color: "from-yellow-600 to-orange-500" };
+        if (dep === "iktisat") return { icon: "📊", color: "from-blue-500 to-blue-700" };
+        if (dep === "işletme") return { icon: "💼", color: "from-indigo-600 to-purple-600" };
+        if (dep === "inşaat mühendisliği") return { icon: "🏗️", color: "from-orange-500 to-yellow-600" };
+        if (dep === "kimya") return { icon: "🧪", color: "from-green-600 to-teal-500" };
+        if (dep === "makine mühendisliği") return { icon: "🔧", color: "from-gray-500 to-gray-700" };
+        if (dep === "matematik") return { icon: "➗", color: "from-blue-400 to-blue-600" };
+        if (dep === "psikoloji") return { icon: "🧠", color: "from-pink-400 to-purple-400" };
+        if (dep === "yazılım mühendisliği") return { icon: "👨‍💻", color: "from-indigo-500 to-blue-500" };
+
+        // 🔥 Hiçbirine uymayanlar
+        return { icon: "⭐", color: "from-[#2d1b69] to-[#3b82f6]" };
+    };
 
 
 
@@ -383,7 +392,8 @@ const StudentLayout: React.FC = () => {
             </div>
 
             {/* 🔵 SOL SİDEBAR */}
-            <div className="fixed top-0 left-0 h-screen w-[420px] border-r-2 border-[#3b82f6] flex flex-col p-6 shadow-2xl bg-[#0d102e]/90 backdrop-blur z-20">
+            <div className="fixed top-0 left-0 h-screen w-90 border-r-2 border-[#3b82f6] flex flex-col p-6 shadow-2xl bg-[#0d102e]/90 backdrop-blur z-20">
+
 
 
 
@@ -510,9 +520,8 @@ const StudentLayout: React.FC = () => {
 
                     {activeMenu === "clubs" && (
                         <ClubsPage
-                            clubs={paginatedClubs}
+                            clubs={clubs} 
                             currentPage={currentPage}
-                            totalPages={totalPages}
                             setCurrentPage={setCurrentPage}
                             searchTerm={searchTerm}
                             setSearchTerm={setSearchTerm}
