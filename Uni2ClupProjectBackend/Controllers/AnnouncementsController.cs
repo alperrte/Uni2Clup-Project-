@@ -67,7 +67,7 @@ namespace Uni2ClupProjectBackend.Controllers
                 {
                     UserId = m.UserId,
                     Title = "Yeni Duyuru",
-                    Message = $"{ev.Club.Name}: {dto.Message}",   // ✔ Kulüp adı + açıklama
+                    Message = $"{ev.Club.Name} yeni bir duyuru yaptı: {dto.Message}",   // ✔ Kulüp adı + açıklama
                     CreatedAt = DateTime.UtcNow
                 });
 

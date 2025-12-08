@@ -11,6 +11,11 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({
     handleMarkAsRead,
     formatDate
 }) => {
+
+
+   
+
+
     return (
         <div className="text-white">
             <h1 className="text-4xl font-bold mb-2">Bildirimler</h1>
