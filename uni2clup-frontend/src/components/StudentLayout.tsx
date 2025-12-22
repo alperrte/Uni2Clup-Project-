@@ -66,7 +66,7 @@ const StudentLayout: React.FC = () => {
             return { label: "Devam Ediyor", color: "bg-green-600 bg-gradient-to-r from-green-500/70 to-green-700/40 text-white" };
         }
 
-        // Etkinlik gelecekte mi? (yakın uzak fark etmez)
+        // Etkinlik gelecekte mi? 
         if (s > now) {
             return { label: "Yaklaşıyor", color: "bg-yellow-600 text-black bg-gradient-to-r from-yellow-500/70 to-yellow-700/40"   };
         }
@@ -205,17 +205,17 @@ const StudentLayout: React.FC = () => {
 
                     if (!res.ok) throw new Error("Katılım başarısız.");
 
-                    // 🔥 ÖNEMLİ: UI ANINDA GÜNCELLENSİN
+                    
                     setClubs(prev =>
                         prev.map(club =>
                             club.id === clubId ? { ...club, isMember: true } : club
                         )
                     );
 
-                    // 🔥 PROFİLİ GÜNCELLE
+                    
                     fetchProfile();
 
-                    // (isteğe bağlı)
+                    
                     fetchNotifications();
 
                     showToast("Kulübe başarıyla katıldınız!", "Kulübünüz profilinize eklendi.");
@@ -349,7 +349,6 @@ const StudentLayout: React.FC = () => {
 
 
     const getClubIcon = (name: string, department?: string) => {
-        // 🔥 Türkçe karakter normalize fonksiyonu
         const normalizeTR = (str: string) =>
             str
                 .replace(/İ/g, "i")
@@ -359,7 +358,7 @@ const StudentLayout: React.FC = () => {
 
         const dep = normalizeTR(department || name || "");
 
-        // 🔥 16 bölümün tamamı burada eşleşiyor
+        
         if (dep === "bilgisayar mühendisliği") return { icon: "💻", color: "from-blue-600 to-cyan-500" };
         if (dep === "biyoloji") return { icon: "🧬", color: "from-green-500 to-emerald-600" };
         if (dep === "çevre mühendisliği") return { icon: "🌿", color: "from-green-400 to-lime-500" };
@@ -377,7 +376,7 @@ const StudentLayout: React.FC = () => {
         if (dep === "psikoloji") return { icon: "🧠", color: "from-pink-400 to-purple-400" };
         if (dep === "yazılım mühendisliği") return { icon: "👨‍💻", color: "from-indigo-500 to-blue-500" };
 
-        // 🔥 Hiçbirine uymayanlar
+        
         return { icon: "⭐", color: "from-[#2d1b69] to-[#3b82f6]" };
     };
 

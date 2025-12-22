@@ -38,7 +38,7 @@ const ClubsPage: React.FC<ClubsPageProps> = ({
 
     const navigate = useNavigate();
 
-    // 1️⃣ Arama ve filtre uygulanmış kulüpler
+ 
     const filteredClubs = clubs.filter((club) => {
         const matchSearch = club.name.toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -47,21 +47,21 @@ const ClubsPage: React.FC<ClubsPageProps> = ({
                 ? true
                 : club.departmentName === departments.find(d => d.id == selectedDept)?.name;
 
-        const notMember = !club.isMember; // 🎯 en kritik satır: üyesi olunan kulüpler listeden kalkar
+        const notMember = !club.isMember; 
 
         return matchSearch && matchDept && notMember;
     });
 
 
-    // 2️⃣ Sayfalama hesaplama artık filteredClubs üzerinden yapılacak
-    const itemsPerPage = 4; // sen kaç kullanıyorsan
+
+    const itemsPerPage = 4; 
     const startIndex = (currentPage - 1) * itemsPerPage;
 
     const paginatedClubs = filteredClubs
         .sort((a, b) => a.name.localeCompare(b.name, "tr"))
         .slice(startIndex, startIndex + itemsPerPage);
 
-    // 3️⃣ Toplam sayfa sayısı hesapla
+  
     const totalFilteredPages = Math.ceil(filteredClubs.length / itemsPerPage);
 
     React.useEffect(() => {

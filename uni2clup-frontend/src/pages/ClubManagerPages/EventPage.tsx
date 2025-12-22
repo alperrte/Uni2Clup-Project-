@@ -256,7 +256,7 @@ const EventPage: React.FC = () => {
 
     return (
         <>
-            {/* ✔ Başarı Modalı */}
+            {/* Başarı Modalı */}
             {successModalOpen && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[9999]">
                     <div className="bg-[#0f0f1a] p-6 rounded-2xl border border-green-500/40 w-full max-w-md text-center">
@@ -295,7 +295,7 @@ const EventPage: React.FC = () => {
                         <div className="flex flex-col sm:flex-row items-end md:items-center gap-3 relative">
 
 
-                            {/* 🔴 İptal Edilen Etkinlikler Butonu */}
+                            {/* İptal Edilen Etkinlikler Butonu */}
                             <button
                                 onClick={() => window.location.href = "/club/cancelled-events"}
                                 className="px-6 py-3 rounded-2xl bg-gradient-to-r from-red-600 to-red-800 text-white font-semibold shadow-lg hover:scale-105 transition-all"
@@ -303,7 +303,7 @@ const EventPage: React.FC = () => {
                                 ❌ İptal Edilenler
                             </button>
 
-                            {/* 🔍 Arama Kutusu */}
+                            {/* Arama Kutusu */}
                             <input
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -311,7 +311,7 @@ const EventPage: React.FC = () => {
                                 className="px-4 py-3 rounded-2xl bg-[#1a1a2e] border border-[#3b82f6]/40 w-48 text-white"
                             />
 
-                            {/* 🟦 Durum Filtresi */}
+                            {/* Durum Filtresi */}
                             <div className="relative z-50">
                                 <button
                                     onClick={() => setOpen((prev) => !prev)}
@@ -612,7 +612,7 @@ const EventPage: React.FC = () => {
 
                         <h2 className="text-3xl font-bold text-white mb-6">Katılan Öğrenciler</h2>
 
-                        {/* 🔍 Arama Kutusu */}
+                        {/* Arama Kutusu */}
                         <input
                             type="text"
                             placeholder="Email ile ara..."

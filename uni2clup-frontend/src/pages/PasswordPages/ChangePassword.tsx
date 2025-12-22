@@ -58,7 +58,7 @@ const ChangePassword: React.FC = () => {
 
     const email = localStorage.getItem("tempEmail");
 
-    // MODAL STATES
+
     const [modal, setModal] = useState<{
         type: "success" | "error" | "";
         message: string;
@@ -103,7 +103,6 @@ const ChangePassword: React.FC = () => {
                 return;
             }
 
-            // Başarılı
             setModal({ type: "success", message: data.message });
 
             setTimeout(() => {

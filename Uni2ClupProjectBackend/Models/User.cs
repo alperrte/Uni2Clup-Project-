@@ -30,10 +30,10 @@ namespace Uni2ClupProjectBackend.Models
 
         public int? ClubId { get; set; }
 
-        // Bölüm ID
+        
         public int? DepartmentId { get; set; }
 
-        // 🔥 EKSİK OLAN — %100 EKLENMESİ GEREKEN NAVIGATION
+        
         [ForeignKey("DepartmentId")]
         public Department? Department { get; set; }
 

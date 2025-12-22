@@ -48,11 +48,9 @@ namespace Uni2ClupProjectBackend.Controllers
             };
 
             _db.Announcements.Add(announcement);
-            await _db.SaveChangesAsync(); // ✔ İlk kayıt
+            await _db.SaveChangesAsync(); 
 
-            // ------------------------------------------------------------
-            // ⭐⭐ YENİ EKLENDİ: Üyelere bildirim + mail gönderme
-            // ------------------------------------------------------------
+
             var members = await _db.ClubMembers
                 .Where(cm => cm.ClubId == ev.ClubId)
                 .Include(cm => cm.User)
@@ -67,7 +65,7 @@ namespace Uni2ClupProjectBackend.Controllers
                 {
                     UserId = m.UserId,
                     Title = "Yeni Duyuru",
-                    Message = $"{ev.Club.Name} yeni bir duyuru yaptı: {dto.Message}",   // ✔ Kulüp adı + açıklama
+                    Message = $"{ev.Club.Name} yeni bir duyuru yaptı: {dto.Message}",   
                     CreatedAt = DateTime.UtcNow
                 });
 

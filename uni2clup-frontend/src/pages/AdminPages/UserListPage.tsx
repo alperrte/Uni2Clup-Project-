@@ -336,7 +336,7 @@ const UserListPage: React.FC<UserListPageProps> = ({ targetRole }) => {
                 setSuccessMessage("Yöneticilik başarıyla kaldırıldı.");
                 setShowSuccessModal(true);
 
-                // listeden düşür
+
                 setUsers(prev => prev.filter(u => u.id !== pendingToggleUserId));
 
                 setTimeout(() => setShowSuccessModal(false), 3000);

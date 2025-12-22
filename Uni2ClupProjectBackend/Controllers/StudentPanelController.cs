@@ -90,19 +90,15 @@ public class StudentPanelController : ControllerBase
         if (ev == null)
             return NotFound(new { message = "Etkinlik bulunamadı." });
 
-        // Türkiye saati
+
         var tz = TimeZoneInfo.FindSystemTimeZoneById("Turkey Standard Time");
         var turkeyNow = TimeZoneInfo.ConvertTime(DateTime.UtcNow, tz);
 
-        // ❗ DB’deki tarih zaten Türkiye saati → UTC gibi davranmıyoruz
+
         var eventEndInTurkey = ev.EndDate;
 
-        // DEBUG LOG
-        Console.WriteLine("========== EVENT END DEBUG ==========");
-        Console.WriteLine("DB EndDate (raw) : " + ev.EndDate.ToString("yyyy-MM-dd HH:mm:ss"));
-        Console.WriteLine("Turkey Now       : " + turkeyNow.ToString("yyyy-MM-dd HH:mm:ss"));
-        Console.WriteLine("Comparison evEnd > now = " + (eventEndInTurkey > turkeyNow));
-        Console.WriteLine("======================================");
+
+
 
         // Etkinlik bitmeden oylama yapılamaz
         if (eventEndInTurkey > turkeyNow)
@@ -234,7 +230,7 @@ public class StudentPanelController : ControllerBase
                 ep.Event.Id,
                 ep.Event.Name,
                 ep.Event.Location,
-                ClubName = ep.Event.Club.Name,   // ✔ DÜZELTİLDİ
+                ClubName = ep.Event.Club.Name,   
                 ep.Event.Capacity,
                 ep.Event.Description,
                 ep.Event.StartDate,
@@ -271,7 +267,7 @@ public class StudentPanelController : ControllerBase
                 e.Name,
                 e.Location,
                 e.Capacity,
-                ClubName = e.Club.Name,   // ✔ kulüp adı
+                ClubName = e.Club.Name,   
                 e.Description,
                 e.StartDate,
                 e.EndDate,

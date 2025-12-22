@@ -53,7 +53,7 @@ const CancelledEventsPage: React.FC = () => {
         }
     };
 
-    // 🔍 Arama Filtresi
+    // Arama Filtresi
     useEffect(() => {
         const term = searchTerm.toLowerCase();
 
@@ -72,11 +72,11 @@ const CancelledEventsPage: React.FC = () => {
     return (
         <div className="relative min-h-screen text-white">
 
-            {/* 🔥 ARKA PLAN */}
+            {/* ARKA PLAN */}
             <div className="absolute inset-0 -z-10 opacity-50 blur-[120px] 
                 bg-gradient-to-br from-[#2d1b69] via-[#0f0f1a] to-[#3b82f6]"></div>
 
-            {/* ✨ Yıldız Efekti */}
+            {/* Yıldız Efekti */}
             <div className="absolute inset-0 -z-10 pointer-events-none">
                 {[...Array(25)].map((_, i) => (
                     <div
@@ -93,7 +93,7 @@ const CancelledEventsPage: React.FC = () => {
 
             <div className="max-w-6xl mx-auto py-12 px-4 space-y-10 relative z-10">
 
-                {/* 🟦 ÜST BAŞLIK */}
+                {/* ÜST BAŞLIK */}
                 <div className="bg-gradient-to-br from-[#1c1f44] to-[#111326] 
                     border border-[#3b82f6]/30 rounded-3xl p-10 shadow-2xl">
 
@@ -106,7 +106,7 @@ const CancelledEventsPage: React.FC = () => {
                             İptal Edilmiş Etkinlikler
                         </h1>
 
-                        {/* 🔍 Arama Kutusu */}
+                        {/* Arama Kutusu */}
                         <input
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -122,7 +122,7 @@ const CancelledEventsPage: React.FC = () => {
                     </p>
                 </div>
 
-                {/* 📌 İPTAL EDİLENLER */}
+                {/* İPTAL EDİLENLER */}
                 {loading ? (
                     <div className="text-center py-20 text-gray-400 text-xl">Yükleniyor...</div>
                 ) : filtered.length === 0 ? (
@@ -138,7 +138,7 @@ const CancelledEventsPage: React.FC = () => {
                                     bg-[#0f0f1a]/80 shadow-xl p-8 hover:shadow-red-900/30 
                                     transition-all">
 
-                                {/* 🔴 Badge */}
+                                {/* Badge */}
                                 <div className="absolute top-4 right-4 px-4 py-1 rounded-full 
                                     text-sm font-semibold shadow-lg 
                                     bg-gradient-to-r from-red-600 to-red-800">

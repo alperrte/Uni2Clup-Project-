@@ -16,7 +16,6 @@ const questions = [
 
 const SurveyModal: React.FC<Props> = ({ eventName, onClose, onSubmit }) => {
 
-    // SAYFA SCROLL KİLİTLER
     useEffect(() => {
         document.body.style.overflow = "hidden";
 

@@ -106,7 +106,7 @@ const ClubManagerLayout: React.FC<LayoutProps> = ({ children, handleLogout }) =>
 w-48 sm:w-56 md:w-64 lg:w-72 xl:w-80
 bg-gradient-to-br from-[#0a0a1a] via-[#0f0f2a] to-[#1a1a3a] border-r-2 border-[#3b82f6] flex flex-col justify-between p-6 shadow-2xl">
 
-                {/* 🔵 SOL ÜST LOGO (Sabit) */}
+                {/* 🔵 SOL ÜST LOGO */}
                 <div className="mb-6 text-center mt-4 flex flex-col items-center justify-center">
                     {/* Glow arka plan */}
                     <div className="absolute w-48 h-48 bg-[#3b82f6] blur-3xl opacity-20 rounded-full"></div>

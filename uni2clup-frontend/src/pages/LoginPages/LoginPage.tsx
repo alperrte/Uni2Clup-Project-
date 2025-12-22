@@ -22,12 +22,12 @@ const LoginPage = ({ onLoginSuccess }) => {
     const [showRegisterError, setShowRegisterError] = useState(false);
     const [registerErrorMessage, setRegisterErrorMessage] = useState("");
 
-    // ✅ Bölüm listesi
+    // Bölüm listesi
     const [departments, setDepartments] = useState([]);
 
     const API_URL = "http://localhost:8080";
 
-    // ✅ Bölümleri backend’den çek
+    // Bölümleri backend’den çek
     useEffect(() => {
         fetch(`${API_URL}/api/Department`)
             .then((res) => res.json())

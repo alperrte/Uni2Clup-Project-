@@ -338,7 +338,7 @@ namespace Uni2ClupProjectBackend.Controllers
             return Ok(participants);
         }
 
-        // 🔥 İptal Edilen Etkinlikleri Listele
+        // İptal Edilen Etkinlikleri Listele
         [HttpGet("cancelled")]
         [Authorize(Roles = "Admin,ClubManager")]
         public async Task<IActionResult> GetCancelledEvents()
