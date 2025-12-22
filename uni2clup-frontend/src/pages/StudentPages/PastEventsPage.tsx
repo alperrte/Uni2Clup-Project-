@@ -68,10 +68,10 @@ const API_URL = "http://localhost:8080";
             body: JSON.stringify(ratings),
         });
         if (res.ok) {
-            // 🔥 Listeyi yenile (yeşil "Değerlendirdiniz" yazısı hemen çıksın)
+   
             refreshPastEvents();
 
-            // Modalı kapat
+  
             setModalOpen(false);
         }
     };
@@ -94,7 +94,7 @@ const API_URL = "http://localhost:8080";
                 }
             }
 
-            // state’i tetiklemek için yeniden set'le
+  
             setRefresh((prev) => prev + 1);
         };
 

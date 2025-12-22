@@ -16,7 +16,7 @@ namespace Uni2ClupProjectBackend.Controllers
             _db = db;
         }
 
-        // 📋 Tüm bölümleri listele
+        // Tüm bölümleri listele
         [HttpGet]
         public async Task<IActionResult> GetAllDepartments()
         {

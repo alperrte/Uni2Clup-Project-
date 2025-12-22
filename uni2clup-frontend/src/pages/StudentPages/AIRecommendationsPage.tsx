@@ -86,7 +86,7 @@ const AIRecommendationsPage = () => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#0a0a1a] via-[#0f0f2a] to-[#1a1a3a] text-white relative">
 
-            {/* 🔙 Geri Butonu */}
+            {/* Geri Butonu */}
             <button
                 onClick={() => navigate("/student")}
                 className="absolute top-6 left-6 px-4 py-2 rounded-lg bg-[#1d1d2d] border border-[#3b82f6]/40 hover:bg-[#2d2d3d] transition"
@@ -94,7 +94,7 @@ const AIRecommendationsPage = () => {
                 ◀ Geri
             </button>
 
-            {/* 🔄 Yenile Butonu */}
+            {/* Yenile Butonu */}
             <button
                 onClick={fetchRecommendations}
                 className="absolute top-6 right-6 px-4 py-2 rounded-lg bg-[#1d1d2d] border border-[#3b82f6]/40 hover:bg-[#2d2d3d] transition"
@@ -102,7 +102,7 @@ const AIRecommendationsPage = () => {
                 🔄 Yenile
             </button>
 
-            {/* 🌟 Toast Mesajı */}
+            {/* Toast Mesajı */}
             {toast && (
                 <div className="fixed top-5 right-5 bg-purple-700 text-white px-5 py-3 rounded-xl shadow-lg animate-slide-in">
                     {toast}

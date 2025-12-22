@@ -105,7 +105,7 @@ const MembersPage: React.FC = () => {
                         Üyeleri görüntüleyebilir ve kulüpten çıkarabilirsiniz.
                     </p>
 
-                    {/* 🔍 Arama Kutusu */}
+                    {/* Arama Kutusu */}
                     <div className="mt-6">
                         <input
                             value={search}
@@ -172,7 +172,7 @@ const MembersPage: React.FC = () => {
                 )}
             </div>
 
-            {/* 📌 Çıkarma Nedeni Modal */}
+            {/* Çıkarma Nedeni Modal */}
             {removeModalOpen && (
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
                     <div className="bg-[#1a1a2e] p-6 rounded-xl w-full max-w-md border border-[#3b82f6]">
@@ -205,7 +205,7 @@ const MembersPage: React.FC = () => {
                 </div>
             )}
 
-            {/* 📌 Emin misiniz Modal */}
+            {/* Emin misiniz Modal */}
             {confirmModalOpen && (
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
                     <div className="bg-[#1a1a2e] p-6 rounded-xl w-full max-w-md border border-red-500">

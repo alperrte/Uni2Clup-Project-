@@ -38,17 +38,17 @@ const ClubEventsPage: React.FC<ClubEventsPageProps> = ({
 }) => {
 
     const [filterType, setFilterType] = useState("all");
-    // 🔵 Filtre menüsü için gerekli state
+    // Filtre menüsü için gerekli state
     const [showFilterMenu, setShowFilterMenu] = useState(false);
 
 
-    // ⏰ Sayfayı yenilemeden canlı zaman takibi
+    // Sayfayı yenilemeden canlı zaman takibi
     const [currentTime, setCurrentTime] = useState(new Date());
 
     useEffect(() => {
         const timer = setInterval(() => {
             setCurrentTime(new Date());
-        }, 1000); // her saniye kontrol
+        }, 1000); 
 
         return () => clearInterval(timer);
     }, []);

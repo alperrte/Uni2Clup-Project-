@@ -129,7 +129,7 @@ const App: React.FC = () => {
         <Router>
             <Routes>
 
-                {/* 🟦 LOGIN her zaman Router içinde */}
+                {/*  LOGIN her zaman Router içinde */}
                 <Route
                     path="/"
                     element={
@@ -147,12 +147,12 @@ const App: React.FC = () => {
                 <Route path="/reset-password/:token" element={<ResetPassword />} />
                 <Route path="/change-password" element={<ChangePassword />} />
 
-                {/* 🟥 ADMIN */}
+                {/* ADMIN */}
                 {user?.role === "Admin" && (
                     <Route path="/admin/*" element={<AdminRoutes />} />
                 )}
 
-                {/* 🟪 CLUB MANAGER */}
+                {/* CLUB MANAGER */}
                 {user?.role === "ClubManager" && (
                     <>
                         <Route
@@ -172,7 +172,7 @@ const App: React.FC = () => {
                 )}
 
 
-                {/* 🟦 STUDENT & ACADEMIC */}
+                {/* STUDENT & ACADEMIC */}
                 {(user?.role === "Student" || user?.role === "Academic") && (
                     <>
                         {/* ⭐ StudentLayout burada */}

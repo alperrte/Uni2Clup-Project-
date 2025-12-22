@@ -90,7 +90,6 @@ const ResetPassword: React.FC = () => {
                 return;
             }
 
-            // ✔ Başarı
             setModal({
                 type: "success",
                 message: data.message,

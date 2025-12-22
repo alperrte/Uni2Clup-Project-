@@ -21,9 +21,7 @@ namespace Uni2ClupProjectBackend.Controllers
             _db = db;
         }
 
-        // --------------------------------------------------------
-        // 🔥 SON – STABİL – KARARLI KULÜP ÖNERİ MOTORU
-        // --------------------------------------------------------
+
         [HttpGet("recommend-clubs")]
         [Authorize(Roles = "Student,Academic")]
         public async Task<IActionResult> RecommendClubs()
@@ -54,9 +52,7 @@ namespace Uni2ClupProjectBackend.Controllers
                 if (!candidateClubs.Any())
                     return BadRequest("Önerilebilecek kulüp kalmadı.");
 
-                // --------------------------------------------------------
-                // CASE 1 — Kullanıcının hiç kulübü yoksa bölüm bazlı öneri
-                // --------------------------------------------------------
+
                 if (!myClubs.Any())
                 {
                     var deptId = user.DepartmentId;
@@ -84,11 +80,6 @@ namespace Uni2ClupProjectBackend.Controllers
                     });
                 }
 
-                // --------------------------------------------------------
-                // CASE 2 — Kullanıcının kulüpleri var → AI devreye giriyor
-                // --------------------------------------------------------
-
-                // Kullanıcı kulüplerinden rastgele bir referans seç
                 var refClub = myClubs.OrderBy(x => Guid.NewGuid()).First();
 
                 string prompt = $@"
@@ -165,9 +156,7 @@ Dikkat: Kesinlikle sadece verilen ID'lerden birini seç. Yeni ID üretme.
             }
         }
 
-        // --------------------------------------------------------
-        // 🔥 AI Reason TEMİZLEME FİLTRESİ — ID:3 vb. hepsini yok eder
-        // --------------------------------------------------------
+
         private string CleanReason(string text)
         {
             if (string.IsNullOrWhiteSpace(text))

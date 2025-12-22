@@ -20,7 +20,7 @@ namespace Uni2ClupProjectBackend.Models
         public int Q4 { get; set; }
         public int Q5 { get; set; }
 
-        // Puanlama tarihi
+        
         public DateTime RatedAt { get; set; } = DateTime.UtcNow;
     }
 }

@@ -87,7 +87,6 @@ namespace Uni2ClupProjectBackend.Controllers
                 CreatedAt = DateTime.UtcNow
             });
 
-            // 📩 ***Mail gönderimi (AdminController ile aynı tarzda)***
             await _emailService.SendEmailAsync(
                 user.Email,
                 $"{club.Name} Kulübünden Çıkarıldınız",
